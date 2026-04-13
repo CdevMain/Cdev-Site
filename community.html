@@ -1,0 +1,695 @@
+﻿
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Carlos Eduardo - Comunidade & Open Source</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            ink: '#080e10',
+            ink2: '#0c1518',
+            ink3: '#111d21',
+            mist: '#e8f2f5',
+            muted: '#4a6570',
+            accent: '#1e6275',
+            aqua: '#2b8ba5',
+            java: '#e07b24',
+            line: 'rgba(30,98,117,.18)',
+            lineStrong: 'rgba(30,98,117,.45)',
+            faint: 'rgba(30,98,117,.07)'
+          },
+          fontFamily: {
+            display: ['Syne', 'sans-serif'],
+            mono: ['DM Mono', 'monospace']
+          },
+          boxShadow: {
+            glow: '0 0 30px rgba(30,98,117,.35)'
+          },
+          keyframes: {
+            fadeup: {
+              '0%': { opacity: '0', transform: 'translateY(26px)' },
+              '100%': { opacity: '1', transform: 'translateY(0)' }
+            },
+            orbpulse: {
+              '0%,100%': { transform: 'translate(-50%,-50%) scale(1)', opacity: '1' },
+              '50%': { transform: 'translate(-50%,-50%) scale(1.2)', opacity: '.5' }
+            }
+          },
+          animation: {
+            fadeup: 'fadeup .7s ease forwards',
+            orbpulse: 'orbpulse 7s ease-in-out infinite'
+          }
+        }
+      }
+    };
+  </script>
+  <style type="text/tailwindcss">
+    @layer base {
+      :root {
+        --line: rgba(30,98,117,.18);
+        --line-strong: rgba(30,98,117,.45);
+        --faint: rgba(30,98,117,.07);
+        --fd: 'Syne', sans-serif;
+        --fm: 'DM Mono', monospace;
+      }
+
+      html {
+        scroll-behavior: smooth;
+        zoom: 1.25;
+      }
+
+      @supports not (zoom: 1) {
+        html { font-size: 125%; }
+      }
+
+      body {
+        @apply bg-ink text-mist font-display overflow-x-hidden;
+        cursor: none;
+      }
+      body, body * { cursor: none; }
+
+      body::before {
+        content: '';
+        position: fixed;
+        inset: 0;
+        z-index: 1;
+        pointer-events: none;
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+        opacity: .5;
+      }
+
+      @media (pointer: coarse) {
+        body, body * { cursor: auto; }
+        #cur { display: none; }
+      }
+    }
+
+    @layer components {
+      .navbar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 50;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1.4rem 3rem;
+        border-bottom: 1px solid transparent;
+        transition: border-color .3s, background .3s;
+      }
+      .navbar.scrolled {
+        background: rgba(8,14,16,.92);
+        backdrop-filter: blur(20px);
+        border-color: var(--line);
+      }
+      .nav-logo {
+        display: flex;
+        align-items: center;
+        gap: .75rem;
+        font-family: var(--fm);
+        font-size: .82rem;
+        letter-spacing: .2em;
+        text-transform: uppercase;
+        color: #2b8ba5;
+        text-decoration: none;
+      }
+      .nav-links {
+        display: flex;
+        align-items: center;
+        gap: 2.5rem;
+        list-style: none;
+      }
+      .nav-link {
+        font-size: .75rem;
+        font-weight: 500;
+        letter-spacing: .14em;
+        text-transform: uppercase;
+        color: #4a6570;
+        text-decoration: none;
+        transition: color .2s;
+        position: relative;
+      }
+      .nav-link::after {
+        content: '';
+        position: absolute;
+        bottom: -3px;
+        left: 0;
+        width: 0;
+        height: 1px;
+        background: #2b8ba5;
+        transition: width .25s;
+      }
+      .nav-link:hover { color: #e8f2f5; }
+      .nav-link:hover::after { width: 100%; }
+      .nav-link.active {
+        color: #2b8ba5;
+        border-bottom: 1px solid #2b8ba5;
+      }
+      .nav-pill {
+        color: #2b8ba5;
+        border: 1px solid var(--line-strong);
+        padding: .3rem .8rem;
+        border-radius: 2px;
+        font-size: .75rem;
+        letter-spacing: .14em;
+        text-transform: uppercase;
+        text-decoration: none;
+      }
+      .nav-pill:hover { background: var(--faint); }
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: .6rem;
+        padding: .9rem 2.2rem;
+        border-radius: 2px;
+        font-family: var(--fd);
+        font-size: .8rem;
+        font-weight: 700;
+        letter-spacing: .12em;
+        text-transform: uppercase;
+        text-decoration: none;
+        transition: all .25s;
+        cursor: none;
+      }
+      .btn-primary {
+        background: linear-gradient(135deg, #1e6275 0%, #2b8ba5 100%);
+        color: #e8f2f5;
+        border: 1px solid rgba(43,139,165,.35);
+        box-shadow: 0 0 30px rgba(30,98,117,.3);
+      }
+      .btn-primary:hover {
+        background: linear-gradient(135deg, #2b8ba5 0%, #3aa1bb 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 40px rgba(30,98,117,.5);
+      }
+      .btn-ghost {
+        border: 1px solid var(--line-strong);
+        color: #4a6570;
+      }
+      .btn-ghost:hover { color: #2b8ba5; border-color: #2b8ba5; transform: translateY(-2px); }
+      .section-label {
+        @apply font-mono text-[0.7rem] uppercase tracking-[0.24em] text-aqua flex items-center gap-3;
+      }
+      .section-title {
+        @apply text-[clamp(1.9rem,3.8vw,3.2rem)] font-extrabold leading-tight;
+      }
+      .card {
+        @apply bg-ink2 border border-line p-7 transition hover:bg-ink3;
+      }
+      .tag {
+        @apply font-mono text-[0.6rem] uppercase tracking-[0.18em] px-2.5 py-1 rounded-sm border border-lineStrong text-aqua bg-faint;
+      }
+      .tag-java {
+        @apply text-java border-[rgba(224,123,36,.35)] bg-[rgba(224,123,36,.08)];
+      }
+      .tag-js {
+        color: #f7df1e;
+        border-color: rgba(247,223,30,.4);
+        background: rgba(247,223,30,.12);
+      }
+      .tag-ts {
+        color: #3178c6;
+        border-color: rgba(49,120,198,.35);
+        background: rgba(49,120,198,.12);
+      }
+      .tag-react {
+        color: #61dafb;
+        border-color: rgba(97,218,251,.35);
+        background: rgba(97,218,251,.12);
+      }
+      .tag-vue {
+        color: #42b883;
+        border-color: rgba(66,184,131,.35);
+        background: rgba(66,184,131,.12);
+      }
+      .tag-node {
+        color: #3c873a;
+        border-color: rgba(60,135,58,.35);
+        background: rgba(60,135,58,.12);
+      }
+      .tag-php {
+        color: #8892bf;
+        border-color: rgba(136,146,191,.35);
+        background: rgba(136,146,191,.12);
+      }
+      .tag-csharp {
+        color: #9b4f96;
+        border-color: rgba(155,79,150,.35);
+        background: rgba(155,79,150,.12);
+      }
+      .tag-postgres {
+        color: #336791;
+        border-color: rgba(51,103,145,.35);
+        background: rgba(51,103,145,.12);
+      }
+      .tag-tailwind {
+        color: #38bdf8;
+        border-color: rgba(56,189,248,.35);
+        background: rgba(56,189,248,.12);
+      }
+      .tag-twig {
+        color: #76a075;
+        border-color: rgba(118,160,117,.35);
+        background: rgba(118,160,117,.12);
+      }
+      .tag-sql {
+        color: #2b8ba5;
+        border-color: rgba(43,139,165,.35);
+        background: rgba(43,139,165,.12);
+      }
+      .tag-sqlite {
+        color: #006090;
+        border-color: rgba(0,96,144,.35);
+        background: rgba(0,96,144,.12);
+      }
+      .tag-wordpress {
+        color: #21759b;
+        border-color: rgba(33,117,155,.35);
+        background: rgba(33,117,155,.12);
+      }
+      .tag-css {
+        color: #264de4;
+        border-color: rgba(38,77,228,.35);
+        background: rgba(38,77,228,.12);
+      }
+      .tag-docker {
+        color: #2496ed;
+        border-color: rgba(36,150,237,.35);
+        background: rgba(36,150,237,.12);
+      }
+      .tag-figma {
+        color: #f24e1e;
+        border-color: rgba(242,78,30,.35);
+        background: rgba(242,78,30,.12);
+      }
+      .icon-chip {
+        @apply h-11 w-11 rounded-lg border border-[rgba(224,123,36,.25)] bg-[rgba(224,123,36,.08)] flex items-center justify-center;
+      }
+    }
+
+    @layer utilities {
+      .text-outline {
+        -webkit-text-stroke: 1.5px theme('colors.accent');
+        color: transparent;
+      }
+      .grid-mask {
+        background-image:
+          linear-gradient(var(--line) 1px, transparent 1px),
+          linear-gradient(90deg, var(--line) 1px, transparent 1px);
+        background-size: 64px 64px;
+        mask-image: radial-gradient(ellipse 80% 70% at 30% 50%, black 20%, transparent 100%);
+      }
+      .reveal {
+        opacity: 0;
+        transform: translateY(30px);
+        transition: opacity .75s ease, transform .75s ease;
+      }
+      .reveal.vis {
+        opacity: 1;
+        transform: translateY(0);
+      }
+      .timeline-dot {
+        position: absolute;
+        left: -1.65rem;
+        top: .4rem;
+        width: .6rem;
+        height: .6rem;
+        border-radius: 999px;
+        background: #080e10;
+        border: 2px solid #2b8ba5;
+        box-shadow: 0 0 10px rgba(43,139,165,.35);
+      }
+    }
+
+    #cur {
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 9999;
+      pointer-events: none;
+    }
+    #cdot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: #2b8ba5;
+      position: absolute;
+      transform: translate(-50%, -50%);
+      transition: width .15s, height .15s;
+      box-shadow: 0 0 12px rgba(43,139,165,.9);
+    }
+    #cring {
+      width: 38px;
+      height: 38px;
+      border-radius: 999px;
+      border: 1.5px solid #1e6275;
+      position: absolute;
+      transform: translate(-50%, -50%);
+      transition: width .25s, height .25s, opacity .25s;
+      opacity: .4;
+    }
+    body.hov #cdot {
+      width: 14px;
+      height: 14px;
+      background: #ffffff;
+      box-shadow: 0 0 12px rgba(255,255,255,.9);
+    }
+    body.hov #cring {
+      width: 58px;
+      height: 58px;
+      opacity: .7;
+      border-color: #ffffff;
+    }
+    body.down #cdot { width: 6px; height: 6px; }
+    body.down #cring { width: 28px; height: 28px; opacity: .9; border-color: #2b8ba5; }
+
+    #shock {
+      position: fixed;
+      inset: 0;
+      z-index: 9990;
+      pointer-events: none;
+      overflow: hidden;
+    }
+    #shock-ring {
+      position: absolute;
+      border-radius: 50%;
+      border: 3px solid #2b8ba5;
+      box-shadow: 0 0 40px rgba(43,139,165,.6), 0 0 80px rgba(30,98,117,.6), inset 0 0 40px rgba(30,98,117,.6);
+      opacity: 0;
+      transform: translate(-50%, -50%) scale(0);
+    }
+    #shock-fill {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      transition: opacity .1s;
+    }
+
+    @media (min-width: 1024px) {
+      main > section:first-of-type {
+        padding-top: clamp(6rem, 8vw, 7.5rem);
+        padding-bottom: clamp(4rem, 6vw, 5.5rem);
+        padding-left: clamp(1.5rem, 3vw, 2.5rem);
+        padding-right: clamp(1.5rem, 3vw, 2.5rem);
+      }
+      #story,
+      #mods,
+      #craft {
+        padding-top: clamp(5rem, 7vw, 7rem);
+        padding-bottom: clamp(5rem, 7vw, 7rem);
+        padding-left: clamp(1.5rem, 3vw, 2.5rem);
+        padding-right: clamp(1.5rem, 3vw, 2.5rem);
+      }
+      footer {
+        padding-left: clamp(1.5rem, 3vw, 2.5rem);
+        padding-right: clamp(1.5rem, 3vw, 2.5rem);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="cur"><div id="cring"></div><div id="cdot"></div></div>
+
+  <div id="shock">
+    <div id="shock-fill"></div>
+    <div id="shock-ring"></div>
+  </div>
+
+  <nav id="nav" class="navbar">
+    <a class="nav-logo" href="index.html#hero">CDEV</a>
+
+    <ul class="nav-links">
+      <li><a class="nav-link" href="index.html#about" data-i="nav-about">Sobre</a></li>
+      <li><a class="nav-link" href="index.html#skills" data-i="nav-skills">Skills</a></li>
+      <li><a class="nav-link" href="index.html#projects" data-i="nav-projects">Projetos</a></li>
+      <li><a class="nav-link" href="index.html#contact" data-i="nav-contact">Contato</a></li>
+      <li><a class="nav-link" href="community.html" data-i="nav-community">Comunidade</a></li>
+    </ul>
+
+    <button id="ltoggle" class="btn btn-ghost text-[0.6rem] font-mono px-3 py-2">
+      <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.5">
+        <circle cx="12" cy="12" r="10"></circle>
+        <path d="M2 12h20"></path>
+        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+      </svg>
+      <span id="ltxt">EN</span>
+    </button>
+  </nav>
+
+  <main class="relative z-10">
+    <section class="relative pt-32 pb-20 px-6 lg:px-12 overflow-hidden">
+      <div class="absolute inset-0 grid-mask"></div>
+      <div class="absolute left-[20%] top-1/2 h-[480px] w-[480px] rounded-full bg-[radial-gradient(circle,rgba(30,98,117,.12)_0%,transparent_65%)] animate-orbpulse"></div>
+
+      <div class="relative mx-auto max-w-6xl">
+        <div class="flex items-center gap-2 font-mono text-[0.7rem] uppercase tracking-[0.2em] text-muted">
+          <a href="index.html" class="text-aqua hover:text-mist" data-i="crumb-home">Home</a>
+          <span>›</span>
+          <span data-i="crumb-community">Comunidade</span>
+        </div>
+        <div class="section-label mt-6" data-i="community-hero-label">Open Source & Comunidade</div>
+        <h1 class="mt-4 text-[clamp(2.8rem,7vw,5.8rem)] font-extrabold leading-[0.93]" data-i="community-hero-title">
+          Onde tudo<br/>
+          <span class="text-outline">começou.</span>
+        </h1>
+        <p class="mt-6 max-w-xl text-[0.98rem] leading-7 text-muted" data-i="community-hero-sub">
+          Anos construindo ferramentas, mods e experiências para comunidades. Java foi minha porta de entrada, e nunca mais saí.
+        </p>
+      </div>
+    </section>
+
+    <section id="story" class="px-6 lg:px-12 py-20 border-t border-line">
+      <div class="mx-auto max-w-6xl grid gap-12 lg:grid-cols-[1fr_1.5fr]">
+        <div class="reveal">
+          <div class="section-label" data-i="community-journey-label">A jornada</div>
+          <h2 class="section-title mt-4" data-i="community-journey-title">De servidor a<br/>empresa.</h2>
+        </div>
+        <div class="reveal">
+          <div class="space-y-4 text-[0.95rem] leading-7 text-muted">
+            <p data-i="community-journey-p1">
+              Durante anos, me aprofundei em <strong class="text-mist">Java</strong>, criando ferramentas internas para otimização de servidores, resolução de bugs críticos e aprimoramento de experiência tanto para usuários quanto para equipes de administração.
+            </p>
+            <p data-i="community-journey-p2">
+              A necessidade de storytelling e troubleshooting eficiente me ensinou a pensar em <strong class="text-mist">sistemas como usuário e como engenheiro</strong> ao mesmo tempo. Criei mods públicos que chegaram ao CurseForge, automatizei fluxos complexos com ferramentas próprias e liderei iniciativas de comunidade.
+            </p>
+            <p data-i="community-journey-p3">
+              Essa base sólida em Java e pensamento sistêmico foi o que permitiu expandir para <strong class="text-mist">outras linguagens e tecnologias</strong>, trabalhar com empresas e desenvolver projetos reais com a mesma seriedade de quem trata cada problema como se fosse o seu.
+            </p>
+          </div>
+
+          <div class="relative mt-10 pl-8">
+            <div class="space-y-7">
+              <div class="relative pl-4">
+                <span class="timeline-dot"></span>
+                <div class="font-mono text-[0.65rem] uppercase tracking-[0.2em] text-aqua" data-i="community-tl-1-year">Início 2016</div>
+                <div class="mt-1 font-semibold" data-i="community-tl-1-title">Primeiros passos com Java</div>
+                <p class="text-[0.85rem] text-muted" data-i="community-tl-1-desc">Explorando servidores, plugins e o ecossistema modding. Início em programação pelo caminho prático.</p>
+              </div>
+              <div class="relative pl-4">
+                <span class="timeline-dot"></span>
+                <div class="font-mono text-[0.65rem] uppercase tracking-[0.2em] text-aqua" data-i="community-tl-2-year">2019–2021</div>
+                <div class="mt-1 font-semibold" data-i="community-tl-2-title">Ferramentas de otimização & troubleshooting</div>
+                <p class="text-[0.85rem] text-muted" data-i="community-tl-2-desc">Automação de tarefas, detecção de bugs, melhoria de performance e experiência de usuário.</p>
+              </div>
+              <div class="relative pl-4">
+                <span class="timeline-dot"></span>
+                <div class="font-mono text-[0.65rem] uppercase tracking-[0.2em] text-aqua" data-i="community-tl-3-year">2022</div>
+                <div class="mt-1 font-semibold" data-i="community-tl-3-title">Fade-mod, primeiro mod público</div>
+                <p class="text-[0.85rem] text-muted" data-i="community-tl-3-desc">Implementação de comandos personalizados com lógica de sequência e controle de efeitos.</p>
+              </div>
+              <div class="relative pl-4">
+                <span class="timeline-dot"></span>
+                <div class="font-mono text-[0.65rem] uppercase tracking-[0.2em] text-aqua" data-i="community-tl-4-year">2024–2025</div>
+                <div class="mt-1 font-semibold" data-i="community-tl-4-title">Comunidade & suporte</div>
+                <p class="text-[0.85rem] text-muted" data-i="community-tl-4-desc">Contribuições em empresas pequenas e médias, mantendo a comunidade ativa.</p>
+              </div>
+              <div class="relative pl-4">
+                <span class="timeline-dot"></span>
+                <div class="font-mono text-[0.65rem] uppercase tracking-[0.2em] text-aqua" data-i="community-tl-5-year">2025–2026</div>
+                <div class="mt-1 font-semibold" data-i="community-tl-5-title">CommandSequencer, automação avançada</div>
+                <p class="text-[0.85rem] text-muted" data-i="community-tl-5-desc">Mod open source para sequenciamento de comandos e produtividade de administradores.</p>
+              </div>
+              <div class="relative pl-4">
+                <span class="timeline-dot"></span>
+                <div class="font-mono text-[0.65rem] uppercase tracking-[0.2em] text-aqua" data-i="community-tl-6-year">Hoje</div>
+                <div class="mt-1 font-semibold" data-i="community-tl-6-title">Empresas reais, Full Stack</div>
+                <p class="text-[0.85rem] text-muted" data-i="community-tl-6-desc">As portas abertas por Java levaram a trabalhos com PHP, Vue.js, C# e PostgreSQL.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <section id="mods" class="px-6 lg:px-12 py-24 bg-gradient-to-b from-ink2 to-ink border-y border-line">
+      <div class="mx-auto max-w-6xl">
+        <div class="reveal">
+          <div class="section-label" data-i="community-mods-label">Open Source</div>
+          <h2 class="section-title mt-4" data-i="community-mods-title">Mods & ferramentas.</h2>
+        </div>
+
+        <div class="mt-10 grid gap-6 md:grid-cols-2">
+          <article class="card reveal">
+            <div class="flex items-center justify-between">
+              <div class="icon-chip">
+                <svg viewBox="0 0 24 24" class="h-6 w-6" fill="none" stroke="#e07b24" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" />
+                  <line x1="7" y1="7" x2="7.01" y2="7" />
+                </svg>
+              </div>
+              <div class="flex gap-2">
+                <a href="https://github.com/CdevMain/Fade-mod" target="_blank" class="h-8 w-8 rounded-full border border-lineStrong text-muted grid place-items-center hover:text-aqua hover:border-aqua">
+                  <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22" />
+                  </svg>
+                </a>
+                <a href="https://www.curseforge.com/minecraft/mc-mods/nc-fade-command" target="_blank" class="h-8 w-8 rounded-full border border-lineStrong text-muted grid place-items-center hover:text-aqua hover:border-aqua">
+                  <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M7 17L17 7M17 7H7M17 7v10" />
+                  </svg>
+                </a>
+              </div>
+            </div>
+            <h3 class="mt-4 text-lg font-semibold">Fade-mod</h3>
+            <p class="mt-2 text-[0.85rem] text-muted" data-i="community-mods-fade-desc">Mod público para Minecraft com implementação de comandos de fade e efeitos de transição customizáveis. Disponível no CurseForge com suporte da comunidade.</p>
+            <div class="mt-4 flex flex-wrap gap-2">
+              <span class="tag tag-java">Java</span>
+              <span class="tag">Minecraft</span>
+              <span class="tag">CurseForge</span>
+              <span class="tag">Open Source</span>
+            </div>
+          </article>
+
+          <article class="card reveal" style="transition-delay:.08s">
+            <div class="flex items-center justify-between">
+              <div class="icon-chip">
+                <svg viewBox="0 0 24 24" class="h-6 w-6" fill="none" stroke="#e07b24" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="16 18 22 12 16 6" />
+                  <polyline points="8 6 2 12 8 18" />
+                  <line x1="2" y1="12" x2="22" y2="12" stroke-dasharray="3 3" />
+                </svg>
+              </div>
+              <div class="flex gap-2">
+                <a href="https://github.com/CdevMain/CommandSequencer-mod" target="_blank" class="h-8 w-8 rounded-full border border-lineStrong text-muted grid place-items-center hover:text-aqua hover:border-aqua">
+                  <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22" />
+                  </svg>
+                </a>
+              </div>
+            </div>
+            <h3 class="mt-4 text-lg font-semibold">CommandSequencer</h3>
+            <p class="mt-2 text-[0.85rem] text-muted" data-i="community-mods-command-desc">Ferramenta de produtividade para administradores de servidores Minecraft. Permite sequenciar e automatizar comandos complexos com lógica condicional e delays configuráveis.</p>
+            <div class="mt-4 flex flex-wrap gap-2">
+              <span class="tag tag-java">Java</span>
+              <span class="tag">Minecraft</span>
+              <span class="tag">Automação</span>
+              <span class="tag">Open Source</span>
+            </div>
+          </article>
+
+          <article class="card reveal" style="transition-delay:.16s">
+            <div class="flex items-center justify-between">
+              <div class="icon-chip">
+                <svg viewBox="0 0 24 24" class="h-6 w-6" fill="none" stroke="#e07b24" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
+                </svg>
+              </div>
+              <div class="flex gap-2">
+                <a href="https://github.com/CdevMain" target="_blank" class="h-8 w-8 rounded-full border border-lineStrong text-muted grid place-items-center hover:text-aqua hover:border-aqua">
+                  <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22" />
+                  </svg>
+                </a>
+              </div>
+            </div>
+            <h3 class="mt-4 text-lg font-semibold" data-i="community-mods-tools-title">Ferramentas de Servidor</h3>
+            <p class="mt-2 text-[0.85rem] text-muted" data-i="community-mods-tools-desc">Conjunto de ferramentas internas para otimização de servidores: detecção de memory leaks, análise de performance, automação de backups e relatórios de uso para equipes.</p>
+            <div class="mt-4 flex flex-wrap gap-2">
+              <span class="tag tag-java">Java</span>
+              <span class="tag">Performance</span>
+              <span class="tag">Otimização</span>
+              <span class="tag">DevOps</span>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="craft" class="px-6 lg:px-12 py-24">
+      <div class="mx-auto max-w-6xl">
+        <div class="reveal">
+          <div class="section-label" data-i="community-impact-label">Impacto</div>
+          <h2 class="section-title mt-4" data-i="community-impact-title">Em números.</h2>
+        </div>
+
+        <div class="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 reveal">
+          <div class="card">
+            <div class="text-2xl font-bold text-aqua">4+</div>
+            <div class="mt-2 text-[0.7rem] font-mono uppercase tracking-[0.2em] text-muted" data-i="community-stat-1-label">Anos no ecossistema</div>
+            <p class="mt-2 text-[0.85rem] text-muted" data-i="community-stat-1-desc">Construindo, aprendendo e entregando soluções dentro e fora do Minecraft.</p>
+          </div>
+          <div class="card">
+            <div class="text-2xl font-bold text-aqua">2</div>
+            <div class="mt-2 text-[0.7rem] font-mono uppercase tracking-[0.2em] text-muted" data-i="community-stat-2-label">Mods públicos</div>
+            <p class="mt-2 text-[0.85rem] text-muted" data-i="community-stat-2-desc">Fade-mod e CommandSequencer disponíveis no GitHub e CurseForge.</p>
+          </div>
+          <div class="card">
+            <div class="text-2xl font-bold text-aqua">∞</div>
+            <div class="mt-2 text-[0.7rem] font-mono uppercase tracking-[0.2em] text-muted" data-i="community-stat-3-label">Bugs resolvidos</div>
+            <p class="mt-2 text-[0.85rem] text-muted" data-i="community-stat-3-desc">Troubleshooting de servidores com ferramentas criadas do zero para cada problema.</p>
+          </div>
+          <div class="card">
+            <div class="text-2xl font-bold text-aqua">Java</div>
+            <div class="mt-2 text-[0.7rem] font-mono uppercase tracking-[0.2em] text-muted" data-i="community-stat-4-label">Linguagem de origem</div>
+            <p class="mt-2 text-[0.85rem] text-muted" data-i="community-stat-4-desc">A porta de entrada que abriu caminho para PHP, C#, TypeScript e além.</p>
+          </div>
+          <div class="card">
+            <div class="text-2xl font-bold text-aqua">Story</div>
+            <div class="mt-2 text-[0.7rem] font-mono uppercase tracking-[0.2em] text-muted" data-i="community-stat-5-label">Criação de conteúdo</div>
+            <p class="mt-2 text-[0.85rem] text-muted" data-i="community-stat-5-desc">Anos de storytelling, documentação e experiências de comunidade construídas com cuidado.</p>
+          </div>
+          <div class="card">
+            <div class="text-2xl font-bold text-aqua">100%</div>
+            <div class="mt-2 text-[0.7rem] font-mono uppercase tracking-[0.2em] text-muted" data-i="community-stat-6-label">Comprometimento</div>
+            <p class="mt-2 text-[0.85rem] text-muted" data-i="community-stat-6-desc">Cada projeto tratado como meu, da primeira linha de código à entrega final.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="px-6 lg:px-12 py-16 border-t border-line">
+      <div class="mx-auto max-w-6xl flex flex-wrap items-center justify-between gap-6">
+        <div class="text-[0.95rem] text-muted" data-i="community-cta-question">Quer ver os projetos profissionais?</div>
+        <div class="flex flex-wrap gap-4">
+          <a href="index.html#projects" class="btn btn-ghost" data-i="community-cta-projects">← Ver projetos</a>
+          <a href="index.html#contact" class="btn btn-primary" data-i="community-cta-contact">Entrar em contato</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="relative z-10 border-t border-line px-6 lg:px-12 py-6">
+    <div class="mx-auto max-w-6xl flex flex-wrap items-center justify-between gap-4 text-[0.65rem] font-mono uppercase tracking-[0.18em] text-muted">
+      <span data-i="footer-copy-short">© 2026 Carlos Eduardo Da Silva</span>
+      <a href="https://github.com/CdevMain" target="_blank" class="text-aqua hover:text-mist">github.com/CdevMain</a>
+    </div>
+  </footer>
+
+  <script src="assets/js/i18n.js"></script>
+  <script src="assets/js/site.js"></script>
+  <script>
+    window.addEventListener('scroll', () => {
+      const nav = document.getElementById('nav');
+      if (nav) nav.classList.toggle('scrolled', scrollY > 60);
+    });
+  </script>
+</body>
+</html>
