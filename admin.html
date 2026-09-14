@@ -55,6 +55,7 @@
       .feedback { min-height: 1.2rem; font-family: var(--fm); font-size: .68rem; letter-spacing: .06em; color: #4a6570; }
       .feedback[data-tone="success"] { color: #2b8ba5; }
       .feedback[data-tone="error"] { color: #e07b24; }
+      .notice { border: 1px solid rgba(224,123,36,.34); background: rgba(224,123,36,.08); color: #e8f2f5; border-radius: 8px; padding: 1rem; font-size: .85rem; }
       .admin-table { width: 100%; border-collapse: collapse; }
       .admin-table th { font-family: var(--fm); font-size: .62rem; color: #4a6570; letter-spacing: .18em; text-transform: uppercase; text-align: left; padding: .75rem; border-bottom: 1px solid var(--line); }
       .admin-table td { padding: .75rem; border-bottom: 1px solid var(--line); vertical-align: middle; color: #e8f2f5; font-size: .78rem; }
@@ -64,6 +65,26 @@
       .icon-btn:hover { color: #2b8ba5; border-color: #2b8ba5; }
       .icon-btn.danger:hover { color: #e07b24; border-color: #e07b24; }
       .icon-btn svg { width: .95rem; height: .95rem; }
+      .property-grid { display: grid; gap: 1.1rem; grid-template-columns: repeat(auto-fill, minmax(15.5rem, 1fr)); }
+      .property-card { border: 1px solid var(--line); background: rgba(17,29,33,.58); border-radius: 10px; overflow: hidden; display: flex; flex-direction: column; transition: border-color .2s; }
+      .property-card:hover { border-color: #2b8ba5; }
+      .property-cover { position: relative; aspect-ratio: 4 / 3; background: rgba(8,14,16,.86); overflow: hidden; }
+      .property-cover img { width: 100%; height: 100%; object-fit: cover; }
+      .property-cover .no-image { display: grid; place-items: center; height: 100%; color: #4a6570; font-family: var(--fm); font-size: .6rem; letter-spacing: .14em; text-transform: uppercase; }
+      .property-badge { position: absolute; top: .6rem; left: .6rem; display: inline-flex; align-items: center; gap: .35rem; padding: .3rem .55rem; border-radius: 999px; background: rgba(8,14,16,.78); backdrop-filter: blur(6px); font-family: var(--fm); font-size: .58rem; letter-spacing: .12em; text-transform: uppercase; color: #4a6570; }
+      .property-badge::before { content: ''; width: .4rem; height: .4rem; border-radius: 50%; background: #4a6570; }
+      .property-badge.is-active { color: #2b8ba5; }
+      .property-badge.is-active::before { background: #2b8ba5; box-shadow: 0 0 8px rgba(43,139,165,.7); }
+      .property-body { padding: 1rem 1.1rem 1.1rem; display: flex; flex-direction: column; gap: .65rem; flex: 1; }
+      .property-body h3 { font-size: 1.02rem; font-weight: 700; line-height: 1.25; }
+      .property-body .property-address { color: #4a6570; font-family: var(--fm); font-size: .64rem; letter-spacing: .06em; }
+      .property-actions { margin-top: auto; display: flex; gap: .5rem; padding-top: .3rem; }
+      .property-actions .btn { flex: 1; padding: .55rem .6rem; font-size: .62rem; }
+      .property-edit { border-top: 1px solid var(--line); margin-top: .2rem; padding-top: .65rem; display: none; gap: .5rem; flex-direction: column; }
+      .property-edit.open { display: flex; }
+      .property-edit input { font-size: .64rem; padding: .5rem .6rem; }
+      .property-edit-toggle { align-self: flex-start; color: #4a6570; font-family: var(--fm); font-size: .6rem; letter-spacing: .12em; text-transform: uppercase; text-decoration: underline; text-underline-offset: .2rem; }
+      .property-edit-toggle:hover { color: #2b8ba5; }
       .auth-state { max-width: 36rem; margin: 8rem auto; border: 1px solid var(--line); background: rgba(12,21,24,.72); border-radius: 8px; padding: 2rem; }
       .auth-state h1 { margin-top: 1rem; font-size: 2rem; font-weight: 800; }
       .auth-state p { margin-top: 1rem; color: #4a6570; line-height: 1.6; }
@@ -154,6 +175,18 @@
       <section class="panel mt-6 p-5">
         <div class="flex items-center justify-between gap-4">
           <div>
+            <div class="font-mono text-[0.68rem] uppercase tracking-[0.2em] text-aqua">Apartamentos</div>
+            <h2 class="mt-2 text-xl font-bold">Seus anuncios</h2>
+          </div>
+          <i class="text-aqua" data-lucide="layout-grid"></i>
+        </div>
+        <div id="property-grid" class="property-grid mt-5"></div>
+        <div id="property-grid-empty" class="notice mt-5" hidden>Nenhum apartamento cadastrado ainda. Crie um abaixo.</div>
+      </section>
+
+      <section class="panel mt-6 p-5">
+        <div class="flex items-center justify-between gap-4">
+          <div>
             <div class="font-mono text-[0.68rem] uppercase tracking-[0.2em] text-aqua">Planilhas</div>
             <h2 class="mt-2 text-xl font-bold">Imoveis e proprietarios</h2>
           </div>
@@ -165,6 +198,9 @@
           <input class="field" name="property_name" placeholder="Nome do imovel" required>
           <select name="owner_user_id" aria-label="Dono do imovel" required></select>
           <input class="field" name="year" type="number" min="2000" max="2100" value="2026" required>
+          <input class="field lg:col-span-2" name="cover_image_url" type="url" placeholder="URL da foto de capa">
+          <input class="field lg:col-span-2" name="listing_url" type="url" placeholder="Link do anuncio (Airbnb)">
+          <input class="field lg:col-span-4" name="address" placeholder="Endereco / bairro (ex: Guaiba, RS)">
           <label>
             <span class="mb-2 block font-mono text-[0.62rem] uppercase tracking-[0.16em] text-muted">Percentual</span>
             <input class="field" name="commission_percent" type="number" min="0" max="100" step="0.01" value="10" required>

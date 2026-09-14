@@ -116,6 +116,54 @@
     });
   };
 
+  const escapeAttr = (value) => String(value || '').replaceAll('"', '&quot;');
+  const escapeHtml = (value) => String(value || '').replace(/[&<>]/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[ch]));
+
+  const renderPropertyGrid = () => {
+    const grid = $('#property-grid');
+    const empty = $('#property-grid-empty');
+    if (!grid) return;
+    grid.innerHTML = '';
+    empty.hidden = state.spreadsheets.length > 0;
+
+    state.spreadsheets.forEach((sheet) => {
+      const card = document.createElement('article');
+      card.className = 'property-card';
+      card.dataset.propertyId = sheet.id;
+      card.innerHTML = `
+        <div class="property-cover">
+          ${sheet.cover_image_url
+            ? `<img src="${escapeAttr(sheet.cover_image_url)}" alt="${escapeAttr(sheet.property_name)}" loading="lazy">`
+            : `<div class="no-image">Sem foto</div>`}
+          <span class="property-badge ${sheet.active ? 'is-active' : ''}">${sheet.active ? 'Live' : 'Inativo'}</span>
+        </div>
+        <div class="property-body">
+          <div>
+            <h3>${escapeHtml(sheet.property_name)}</h3>
+            <div class="property-address">${escapeHtml(sheet.address) || `${sheet.year} · sem endereco`}</div>
+          </div>
+          <div class="property-actions">
+            <a class="btn btn-ghost" href="${sheet.listing_url ? escapeAttr(sheet.listing_url) : '#'}" target="_blank" rel="noopener" ${sheet.listing_url ? '' : 'aria-disabled="true" onclick="return false;" title="Sem link cadastrado"'}>
+              <i data-lucide="external-link"></i>Anuncio
+            </a>
+            <a class="btn btn-primary" href="dashboard.html?sheet=${sheet.id}">
+              <i data-lucide="table-2"></i>Planilha
+            </a>
+          </div>
+          <button type="button" class="property-edit-toggle" data-toggle-edit="${sheet.id}">Editar foto / link / endereco</button>
+          <form class="property-edit" data-edit-form="${sheet.id}">
+            <input class="field" name="cover_image_url" type="url" placeholder="URL da foto de capa" value="${escapeAttr(sheet.cover_image_url)}">
+            <input class="field" name="listing_url" type="url" placeholder="Link do anuncio (Airbnb)" value="${escapeAttr(sheet.listing_url)}">
+            <input class="field" name="address" placeholder="Endereco / bairro" value="${escapeAttr(sheet.address)}">
+            <button class="btn btn-primary" type="submit"><i data-lucide="check"></i>Salvar</button>
+          </form>
+        </div>
+      `;
+      grid.appendChild(card);
+    });
+    if (window.lucide) window.lucide.createIcons();
+  };
+
   const loadSettings = async () => {
     state.settings = await window.CDEVAuth.getSettings({ force: true });
     renderSettings();
@@ -132,17 +180,19 @@
     renderUsers();
     renderOwnerOptions();
     renderSpreadsheets();
+    renderPropertyGrid();
     renderStats();
   };
 
   const loadSpreadsheets = async () => {
     const { data, error } = await state.ctx.supabase
       .from('property_spreadsheets')
-      .select('id,title,property_name,owner_user_id,year,commission_rate,cleaning_fee_per_client,active,updated_at')
+      .select('id,title,property_name,owner_user_id,year,commission_rate,cleaning_fee_per_client,cover_image_url,listing_url,address,active,updated_at')
       .order('updated_at', { ascending: false });
     if (error) throw error;
     state.spreadsheets = data || [];
     renderSpreadsheets();
+    renderPropertyGrid();
   };
 
   const invokeAdminUsers = async (payload) => {
@@ -239,6 +289,37 @@
       }
     });
 
+    $('#property-grid').addEventListener('click', (event) => {
+      const toggle = event.target.closest('[data-toggle-edit]');
+      if (!toggle) return;
+      const form = $(`[data-edit-form="${toggle.dataset.toggleEdit}"]`);
+      if (form) form.classList.toggle('open');
+    });
+
+    $('#property-grid').addEventListener('submit', async (event) => {
+      const form = event.target.closest('[data-edit-form]');
+      if (!form) return;
+      event.preventDefault();
+      const id = form.dataset.editForm;
+      const data = new FormData(form);
+      try {
+        const { error } = await state.ctx.supabase
+          .from('property_spreadsheets')
+          .update({
+            cover_image_url: String(data.get('cover_image_url') || '').trim() || null,
+            listing_url: String(data.get('listing_url') || '').trim() || null,
+            address: String(data.get('address') || '').trim() || null,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', id);
+        if (error) throw error;
+        setStatus('Apartamento atualizado.', 'success');
+        await loadSpreadsheets();
+      } catch (error) {
+        setStatus(error.message || 'Nao foi possivel atualizar o apartamento.', 'error');
+      }
+    });
+
     $('#create-spreadsheet-form').addEventListener('submit', async (event) => {
       event.preventDefault();
       const form = new FormData(event.currentTarget);
@@ -255,7 +336,10 @@
           p_fixed_gas: fixedGas,
           p_fixed_electricity: fixedElectricity,
           p_fixed_internet: fixedInternet,
-          p_fixed_condo: Number(form.get('fixed_condo') || 0)
+          p_fixed_condo: Number(form.get('fixed_condo') || 0),
+          p_cover_image_url: String(form.get('cover_image_url') || '').trim() || null,
+          p_listing_url: String(form.get('listing_url') || '').trim() || null,
+          p_address: String(form.get('address') || '').trim() || null
         });
         if (error) throw error;
         setStatus(`Planilha criada: ${data}`, 'success');
