@@ -1,0 +1,22 @@
+# Cdev — Carlos Eduardo
+
+> Desenvolvedor Full Stack e Designer de Guaíba, RS, Brasil. Atua atualmente na Pristen e segue disponível para projetos freelance. Especialista em Frontend (Vue.js, React, TypeScript, Tailwind), Backend (Node.js, PHP, C#, PostgreSQL), UI/UX Design e DevOps/Data Mining. Começou na programação através de Java no ecossistema Minecraft, criando mods públicos e ferramentas de otimização de servidores.
+
+Este site é um portfólio pessoal. As páginas abaixo têm versões em Markdown equivalentes ao HTML, com o mesmo conteúdo, prontas para leitura por agentes de IA.
+
+## Páginas
+
+- [Home](https://cdev.com.br/index.md): Sobre, skills, projetos selecionados (Sympta, Pristen, Keramos Decorações) e contato.
+- [Comunidade](https://cdev.com.br/community.md): Jornada em Java/Minecraft, mods open source (Fade-mod, CommandSequencer) e histórico de contribuições.
+
+## Contato
+
+- E-mail: Cdev.main@gmail.com
+- WhatsApp: https://wa.me/5521980810556
+- GitHub: https://github.com/CdevMain
+- LinkedIn: https://www.linkedin.com/in/carlos-eduardo-058967230/
+
+## Optional
+
+- [Página HTML - Home](https://cdev.com.br/index.html)
+- [Página HTML - Comunidade](https://cdev.com.br/community.html)

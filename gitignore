@@ -1,0 +1,21 @@
+# Visual Studio
+.vs/
+*.suo
+*.user
+*.sqlite
+
+# Ambiente / segredos
+.env
+.env.local
+.env.*.local
+
+# Dependências
+node_modules/
+
+# Sistema
+.DS_Store
+Thumbs.db
+
+# Build
+dist/
+build/
