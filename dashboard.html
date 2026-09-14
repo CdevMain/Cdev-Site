@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CDEV - Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { theme: { extend: { colors: { ink: '#080e10', ink2: '#0c1518', ink3: '#111d21', mist: '#e8f2f5', muted: '#4a6570', accent: '#1e6275', aqua: '#2b8ba5', java: '#e07b24', line: 'rgba(30,98,117,.18)', lineStrong: 'rgba(30,98,117,.45)', faint: 'rgba(30,98,117,.07)' }, fontFamily: { display: ['Syne', 'sans-serif'], mono: ['DM Mono', 'monospace'] } } } };
+  </script>
+  <style type="text/tailwindcss">
+    @layer base {
+      :root { --line: rgba(30,98,117,.18); --line-strong: rgba(30,98,117,.45); --faint: rgba(30,98,117,.07); --fd: 'Syne', sans-serif; --fm: 'DM Mono', monospace; }
+      html { scroll-behavior: smooth; zoom: 1.25; }
+      @supports not (zoom: 1) { html { font-size: 125%; } }
+      body { @apply bg-ink text-mist font-display overflow-x-hidden; }
+      body:not(.auth-ready) main { visibility: hidden; }
+      body::before { content: ''; position: fixed; inset: 0; z-index: 1; pointer-events: none; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E"); opacity: .5; }
+    }
+    @layer components {
+      .nav-logo { font-family: var(--fm); font-size: .82rem; letter-spacing: .2em; text-transform: uppercase; color: #2b8ba5; text-decoration: none; }
+      .nav-link { font-size: .75rem; font-weight: 500; letter-spacing: .14em; text-transform: uppercase; color: #4a6570; transition: color .2s; }
+      .nav-link:hover, .nav-link.active { color: #2b8ba5; }
+      .section-label { font-family: var(--fm); font-size: .7rem; color: #2b8ba5; letter-spacing: .22em; text-transform: uppercase; display: flex; align-items: center; gap: .75rem; }
+      .section-label::before { content: ''; display: block; width: 28px; height: 1px; background: #2b8ba5; }
+      .btn { display: inline-flex; align-items: center; justify-content: center; gap: .55rem; min-height: 2.35rem; padding: .65rem .9rem; border-radius: 2px; font-size: .68rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; transition: all .25s; border: 1px solid var(--line-strong); color: #4a6570; }
+      .btn:hover:not(:disabled) { color: #2b8ba5; border-color: #2b8ba5; }
+      .btn:disabled { opacity: .38; }
+      .panel { border: 1px solid var(--line); background: rgba(12,21,24,.72); backdrop-filter: blur(18px); border-radius: 8px; }
+      .metric { border: 1px solid var(--line); background: rgba(17,29,33,.58); border-radius: 8px; padding: 1rem; }
+      .metric strong { display: block; font-family: var(--fm); color: #2b8ba5; font-size: 1.7rem; line-height: 1; }
+      .metric span { margin-top: .5rem; display: block; font-family: var(--fm); color: #4a6570; font-size: .62rem; letter-spacing: .18em; text-transform: uppercase; }
+      .data-table { width: 100%; border-collapse: collapse; }
+      .data-table th { font-family: var(--fm); font-size: .62rem; color: #4a6570; letter-spacing: .18em; text-transform: uppercase; text-align: left; padding: .8rem; border-bottom: 1px solid var(--line); }
+      .data-table td { padding: .8rem; border-bottom: 1px solid var(--line); color: #e8f2f5; font-size: .82rem; }
+      .field { width: 100%; min-width: 5.5rem; border: 1px solid var(--line); background: rgba(12,21,24,.78); color: #e8f2f5; border-radius: 2px; padding: .55rem .65rem; font-family: var(--fm); font-size: .68rem; outline: none; }
+      .field:disabled { color: #4a6570; opacity: .78; }
+      .sheet-list { display: grid; gap: .75rem; }
+      .sheet-card { width: 100%; text-align: left; border: 1px solid var(--line); background: rgba(17,29,33,.58); border-radius: 8px; padding: 1rem; transition: .2s; }
+      .sheet-card:hover, .sheet-card.active { border-color: #2b8ba5; background: rgba(30,98,117,.12); }
+      .sheet-card strong { display: block; color: #e8f2f5; }
+      .sheet-card span { display: block; margin-top: .35rem; color: #4a6570; font-family: var(--fm); font-size: .65rem; text-transform: uppercase; letter-spacing: .14em; }
+      .sheet-tabs { display: flex; gap: .5rem; flex-wrap: wrap; }
+      .sheet-tab { border: 1px solid var(--line); color: #4a6570; border-radius: 2px; padding: .55rem .75rem; font-family: var(--fm); font-size: .62rem; letter-spacing: .14em; text-transform: uppercase; }
+      .sheet-tab.active { border-color: #2b8ba5; color: #2b8ba5; background: rgba(30,98,117,.08); }
+      .sheet-summary { display: grid; gap: .75rem; grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr)); }
+      .sheet-summary div { border: 1px solid var(--line); border-radius: 8px; padding: .85rem; background: rgba(17,29,33,.48); }
+      .sheet-summary span { display: block; color: #4a6570; font-family: var(--fm); font-size: .6rem; letter-spacing: .16em; text-transform: uppercase; }
+      .sheet-summary strong { display: block; margin-top: .35rem; color: #2b8ba5; font-family: var(--fm); font-size: 1rem; }
+      .notice { border: 1px solid rgba(224,123,36,.34); background: rgba(224,123,36,.08); color: #e8f2f5; border-radius: 8px; padding: 1rem; font-size: .85rem; }
+      .auth-state { max-width: 36rem; margin: 8rem auto; border: 1px solid var(--line); background: rgba(12,21,24,.72); border-radius: 8px; padding: 2rem; }
+      .auth-state h1 { margin-top: 1rem; font-size: 2rem; font-weight: 800; }
+      .auth-state p { margin-top: 1rem; color: #4a6570; line-height: 1.6; }
+    }
+  </style>
+</head>
+<body>
+  <main class="relative z-10 px-6 py-8 lg:px-12" data-auth-status>
+    <nav class="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-5">
+      <a class="nav-logo" href="index.html#hero">CDEV</a>
+      <div class="flex flex-wrap items-center gap-6">
+        <a class="nav-link active" href="dashboard.html">Dashboard</a>
+        <a class="nav-link" href="admin.html">Admin</a>
+        <button class="btn" data-sign-out>Sair</button>
+      </div>
+    </nav>
+
+    <section class="mx-auto max-w-6xl pt-16">
+      <div class="section-label">Dashboard</div>
+      <div class="mt-5 flex flex-wrap items-end justify-between gap-5">
+        <div>
+          <h1 class="text-[clamp(2.5rem,6vw,5rem)] font-extrabold leading-[0.95]">Operacao<br><span class="text-transparent [-webkit-text-stroke:1px_rgba(232,242,245,.55)]">modular.</span></h1>
+          <p class="mt-4 max-w-2xl text-[0.95rem] leading-7 text-muted">Conteudo protegido por sessao, role e toggles globais.</p>
+        </div>
+        <div class="font-mono text-[0.68rem] uppercase tracking-[0.18em] text-muted"><span id="user-email" class="text-aqua"></span> / <span id="user-role"></span></div>
+      </div>
+
+      <div id="readonly-state" class="notice mt-8" hidden>Edicao desabilitada globalmente. O dashboard esta em modo somente leitura.</div>
+
+      <div class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div class="metric"><strong>24</strong><span>Registros</span></div>
+        <div class="metric"><strong>8</strong><span>Modulos</span></div>
+        <div class="metric"><strong>99%</strong><span>Integridade</span></div>
+        <div class="metric"><strong>Live</strong><span>Status</span></div>
+      </div>
+
+      <section id="spreadsheet-panel" class="mt-6 grid gap-6 lg:grid-cols-[0.34fr_0.66fr]" data-requires-setting="spreadsheet_visible">
+        <aside class="panel p-5">
+          <div class="font-mono text-[0.68rem] uppercase tracking-[0.2em] text-aqua">Planilhas</div>
+          <h2 class="mt-2 text-xl font-bold">Meus imoveis</h2>
+          <div id="spreadsheet-list" class="sheet-list mt-5"></div>
+        </aside>
+
+        <section class="panel p-5">
+          <div class="mb-5 flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <div class="font-mono text-[0.68rem] uppercase tracking-[0.2em] text-aqua" id="sheet-kicker">Tabela</div>
+              <h2 class="mt-2 text-xl font-bold" id="sheet-title">Selecione uma planilha</h2>
+            </div>
+            <button class="btn" id="save-sheet" data-edit-action>Salvar alteracoes</button>
+          </div>
+
+          <div id="sheet-empty" class="notice">Nenhuma planilha selecionada ou disponivel para este usuario.</div>
+          <div id="sheet-workspace" hidden>
+            <div class="sheet-summary mb-5" id="sheet-summary"></div>
+            <div class="sheet-tabs mb-4">
+              <button class="sheet-tab active" data-sheet-tab="summary">Tabela</button>
+              <button class="sheet-tab" data-sheet-tab="revenue">Receitas</button>
+              <button class="sheet-tab" data-sheet-tab="fixed">Despesas fixas</button>
+              <button class="sheet-tab" data-sheet-tab="variable">Despesas variadas</button>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="data-table" id="sheet-table"></table>
+            </div>
+          </div>
+        </section>
+      </section>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/js/supabase.config.js"></script>
+  <script src="assets/js/cdev-auth.js"></script>
+  <script src="assets/js/dashboard.js"></script>
+</body>
+</html>
