@@ -139,15 +139,18 @@
   }
 
   // ------------------------------------------------------------------ Editor baseado em formularios
+  // Variantes de layout vem do motor (CDEVSiteEngine.VARIANTS) para nunca ficarem dessincronizadas.
+  const V = (type) => (window.CDEVSiteEngine?.VARIANTS || {})[type] || [];
+  const IMG_HINT = 'https://... (foto do cliente ou banco de fotos)';
   const SECTION_SCHEMAS = {
-    hero: [['eyebrow', 'Chamada curta'], ['title', 'Título'], ['subtitle', 'Subtítulo', 'textarea'], ['image', 'Imagem (URL)'], ['buttonText', 'Texto do botão'], ['buttonUrl', 'Link do botão', 'text', '#contato, whatsapp ou https://...'], ['secondaryText', 'Botão secundário'], ['secondaryUrl', 'Link secundário']],
-    about: [['title', 'Título'], ['text', 'Texto', 'textarea'], ['image', 'Imagem (URL)'], ['highlights', 'Destaques (um por linha)', 'lines']],
-    services: [['title', 'Título'], ['subtitle', 'Subtítulo'], ['items', 'Serviços: nome | descrição | preço (um por linha)', 'rows', ['name', 'description', 'price']]],
-    gallery: [['title', 'Título'], ['images', 'Imagens: URL | legenda (uma por linha)', 'rows', ['src', 'alt']]],
-    testimonials: [['title', 'Título'], ['items', 'Depoimentos: nome | texto | origem', 'rows', ['name', 'text', 'role']]],
+    hero: [['variant', 'Layout', 'select', V('hero')], ['eyebrow', 'Chamada curta'], ['title', 'Título'], ['subtitle', 'Subtítulo', 'textarea'], ['image', 'Imagem (URL)', 'text', IMG_HINT], ['buttonText', 'Texto do botão'], ['buttonUrl', 'Link do botão', 'text', '#contato, whatsapp ou https://...'], ['secondaryText', 'Botão secundário'], ['secondaryUrl', 'Link secundário'], ['stats', 'Números de destaque: valor | legenda (um por linha)', 'rows', ['value', 'label']]],
+    about: [['variant', 'Layout', 'select', V('about')], ['eyebrow', 'Chamada curta'], ['title', 'Título'], ['text', 'Texto', 'textarea'], ['image', 'Imagem principal (URL)', 'text', IMG_HINT], ['image2', 'Imagem secundária (URL, opcional)', 'text', IMG_HINT], ['highlights', 'Destaques (um por linha)', 'lines'], ['stats', 'Números: valor | legenda', 'rows', ['value', 'label']]],
+    services: [['variant', 'Layout', 'select', V('services')], ['title', 'Título'], ['subtitle', 'Subtítulo'], ['items', 'Serviços: nome | descrição | preço | foto URL (um por linha)', 'rows', ['name', 'description', 'price', 'image']]],
+    gallery: [['variant', 'Layout', 'select', V('gallery')], ['title', 'Título'], ['subtitle', 'Subtítulo'], ['images', 'Imagens: URL | legenda (uma por linha)', 'rows', ['src', 'alt']]],
+    testimonials: [['title', 'Título'], ['rating', 'Nota média (ex: 4,9 no Google)'], ['items', 'Depoimentos: nome | texto | origem | foto URL', 'rows', ['name', 'text', 'role', 'photo']]],
     faq: [['title', 'Título'], ['items', 'Perguntas: pergunta | resposta', 'rows', ['q', 'a']]],
-    cta: [['title', 'Título'], ['text', 'Texto'], ['buttonText', 'Texto do botão'], ['buttonUrl', 'Link do botão', 'text', 'whatsapp, #contato ou https://...']],
-    contact: [['title', 'Título'], ['text', 'Texto']],
+    cta: [['eyebrow', 'Chamada curta'], ['title', 'Título'], ['text', 'Texto'], ['image', 'Foto de fundo (URL, opcional)', 'text', IMG_HINT], ['buttonText', 'Texto do botão'], ['buttonUrl', 'Link do botão', 'text', 'whatsapp, #contato ou https://...']],
+    contact: [['title', 'Título'], ['text', 'Texto'], ['formTitle', 'Título do formulário (envia pelo WhatsApp)']],
     location: [['title', 'Título'], ['text', 'Texto']]
   };
   const SECTION_NAMES = { hero: 'Hero (topo)', about: 'Sobre', services: 'Serviços', gallery: 'Galeria', testimonials: 'Depoimentos', faq: 'FAQ', cta: 'Chamada (CTA)', contact: 'Contato', location: 'Localização (mapa)' };
@@ -160,6 +163,10 @@
     let v = value;
     if (kind === 'rows') v = rowsToText(value, extra);
     if (kind === 'lines') v = (value || []).join('\n');
+    if (kind === 'select') {
+      const opts = (extra || []).map(([val, name]) => `<option value="${esc(val)}" ${String(v ?? extra[0]?.[0]) === val ? 'selected' : ''}>${esc(name)}</option>`).join('');
+      return `<div class="form-field full" style="margin-top:.6rem"><label>${esc(lbl)}</label><select class="field" ${base}>${opts}</select></div>`;
+    }
     const input = ['textarea', 'rows', 'lines'].includes(kind) ? `<textarea class="field" ${base} rows="${kind === 'textarea' ? 3 : 5}">${esc(v ?? '')}</textarea>` : `<input class="field" ${base} value="${esc(v ?? '')}" placeholder="${esc(typeof extra === 'string' ? extra : '')}">`;
     return `<div class="form-field full" style="margin-top:.6rem"><label>${esc(lbl)}</label>${input}</div>`;
   };
@@ -207,6 +214,7 @@
           <div class="form-field"><label>Título SEO</label><input class="field" data-g="seo.title" value="${esc(content.seo.title || '')}"></div>
           <div class="form-field"><label>Descrição SEO</label><input class="field" data-g="seo.description" value="${esc(content.seo.description || '')}"></div>
           <div class="form-field full"><label class="check"><input type="checkbox" data-g="settings.whatsappFloat" data-kind="bool" ${content.settings.whatsappFloat === false ? '' : 'checked'}> Botão flutuante de WhatsApp</label></div>
+          <div class="form-field full"><label class="check"><input type="checkbox" data-g="settings.topbar" data-kind="bool" ${content.settings.topbar ? 'checked' : ''}> Barra superior com telefone, horário e endereço</label></div>
         </div></div></section>
       <section class="panel"><div class="panel-head"><h2 class="block-title">Seções</h2>
         <div class="row"><select class="cc-select" data-add-type style="width:auto">${Object.entries(SECTION_NAMES).map(([k, t]) => `<option value="${k}">${esc(t)}</option>`).join('')}</select><button class="btn btn-sm" data-add>${icon('plus')}Adicionar</button></div></div>
@@ -308,8 +316,15 @@
       `<button class="btn btn-primary" data-new>${icon('plus')}Novo template</button>`)}
       <div class="grid-3">${rows.map((t) => { const th = Engine().resolveTheme(t.theme); return `
         <article class="panel" style="overflow:hidden">
-          <div style="height:6.5rem;background:linear-gradient(135deg,${esc(th.colors.primary)},${esc(th.colors.bg)});display:flex;align-items:flex-end;padding:.8rem">
-            <span style="font-family:'${esc(th.fonts.heading)}',serif;font-size:var(--fs-lg);font-weight:700;color:${esc(th.colors.text)}">${esc(t.content?.brand?.name || t.name)}</span></div>
+          ${(() => {
+            const hero = (t.content?.sections || []).find((x) => x.type === 'hero')?.data || {};
+            const photo = /^https:\/\//.test(hero.image || '') ? (hero.image.includes('images.unsplash.com') ? hero.image.split('?')[0] + '?auto=format&fit=crop&w=640&h=360&q=60' : hero.image) : '';
+            const bg = photo ? `linear-gradient(180deg,rgba(0,0,0,.05),rgba(0,0,0,.75)),url('${esc(photo)}') center/cover` : `linear-gradient(135deg,${esc(th.colors.primary)},${esc(th.colors.bg)})`;
+            const layout = { overlay: 'Foto inteira', center: 'Centralizado', split: 'Texto + foto' }[hero.variant || 'split'];
+            return `<div style="aspect-ratio:16/9;background:${bg};background-color:${esc(th.colors.bg)};display:flex;flex-direction:column;justify-content:flex-end;gap:.35rem;padding:.9rem;color:#fff">
+              <span style="font-family:'${esc(th.fonts.heading)}',serif;font-size:var(--fs-lg);font-weight:700;line-height:1.1;text-shadow:0 2px 12px rgba(0,0,0,.4)">${esc(t.content?.brand?.name || t.name)}</span>
+              <span style="display:flex;gap:.3rem;align-items:center">${['primary', 'accent', 'bg', 'surface'].map((k) => `<i title="${k}" style="width:.9rem;height:.9rem;border-radius:50%;background:${esc(th.colors[k])};border:1px solid rgba(255,255,255,.5)"></i>`).join('')}<span class="mono tiny" style="margin-left:auto;opacity:.85">${esc(layout)}</span></span></div>`;
+          })()}
           <div class="panel-body"><div class="row"><strong>${esc(t.name)}</strong>${t.active ? '' : '<span class="badge gray">inativo</span>'}<span class="spacer"></span><span class="mono tiny muted">${uses[t.id] || 0} sites</span></div>
             <div class="small muted" style="margin:.35rem 0 .8rem">${esc(t.segment)} · ${(t.sections || []).length} seções · ${esc(t.theme?.preset || '')}</div>
             <div class="row"><a class="btn btn-sm" href="/site?template=${encodeURIComponent(t.key)}" target="_blank">${icon('eye')}Ver</a><button class="btn btn-sm btn-primary" data-use="${t.id}">${icon('rocket')}Criar site</button><button class="icon-btn" data-edit="${t.id}">${icon('edit')}</button><button class="icon-btn" data-dup="${t.id}" title="Duplicar">${icon('copy')}</button></div></div>

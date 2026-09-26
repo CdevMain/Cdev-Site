@@ -88,6 +88,78 @@
       .auth-state { max-width: 36rem; margin: 8rem auto; border: 1px solid var(--line); background: rgba(12,21,24,.72); border-radius: 8px; padding: 2rem; }
       .auth-state h1 { margin-top: 1rem; font-size: var(--fs-2xl); font-weight: 800; }
       .auth-state p { margin-top: 1rem; color: #4a6570; line-height: 1.6; }
+
+      /* ---- Admin: dialogo, pills, cartoes de imovel, formularios ---- */
+      .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+      .ico { width: 1rem; height: 1rem; flex-shrink: 0; }
+      .btn-danger { border: 1px solid rgba(212,105,30,.5); color: #e07b24; }
+      .btn-danger:hover { background: rgba(212,105,30,.12); }
+      .btn.is-saving { position: relative; color: transparent !important; }
+      .btn.is-saving::after { content: ''; position: absolute; inset: 0; margin: auto; width: .85rem; height: .85rem; border-radius: 50%; border: 2px solid rgba(232,242,245,.35); border-top-color: #e8f2f5; animation: spin .7s linear infinite; }
+      @keyframes spin { to { transform: rotate(360deg); } }
+      .pill { display: inline-block; margin-left: .35rem; padding: .1rem .45rem; border-radius: 999px; border: 1px solid var(--line-strong); font-family: var(--fm); font-size: var(--fs-micro); color: #2b8ba5; vertical-align: middle; text-transform: lowercase; letter-spacing: .06em; }
+      .admin-table td span.pill { display: inline-block; max-width: none; }
+      .pill.warn { color: #e07b24; border-color: rgba(224,123,36,.5); }
+      .admin-table tr.is-inactive td { opacity: .55; }
+      .admin-table td.nowrap { white-space: nowrap; color: #6f8d98; font-family: var(--fm); font-size: var(--fs-xs); }
+      .muted-cell { text-align: center; color: #4a6570; padding: 1.5rem !important; }
+      #settings-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr)); column-gap: 2.5rem; }
+      #settings-list .admin-toggle:last-child { border-bottom: 1px solid var(--line); }
+      .admin-table select { min-width: 9.5rem; }
+      .admin-table td strong { overflow-wrap: normal; word-break: normal; }
+      .input-row { display: flex; gap: .4rem; align-items: center; }
+      .input-row .field { flex: 1; }
+      .search-box { display: flex; align-items: center; gap: .45rem; border: 1px solid var(--line); border-radius: 2px; padding: 0 .6rem; color: #4a6570; background: rgba(12,21,24,.78); }
+      .search-box svg { width: .95rem; height: .95rem; }
+      .search-box input { background: transparent; border: 0; outline: none; color: #e8f2f5; font-family: var(--fm); font-size: var(--fs-xs); padding: .55rem 0; width: 11rem; }
+      .lbl { display: grid; gap: .4rem; }
+      .lbl > span { font-family: var(--fm); font-size: var(--fs-micro); text-transform: uppercase; letter-spacing: var(--track-label); color: #6f8d98; }
+      .new-sheet { border: 1px dashed var(--line-strong); border-radius: 8px; padding: .85rem 1rem; }
+      .new-sheet > summary { cursor: pointer; list-style: none; display: flex; align-items: center; gap: .5rem; font-weight: 700; font-size: var(--fs-sm); color: #2b8ba5; }
+      .new-sheet > summary::-webkit-details-marker { display: none; }
+      .new-sheet > summary svg { width: 1rem; height: 1rem; transition: transform .2s; }
+      .new-sheet[open] > summary svg { transform: rotate(45deg); }
+      .property-card.is-archived { opacity: .65; }
+      .property-cover .no-image { display: grid; place-items: center; align-content: center; gap: .4rem; }
+      .property-cover .no-image svg { width: 1.6rem; height: 1.6rem; color: #2b8ba5; opacity: .6; }
+      .property-year { position: absolute; top: .6rem; right: .6rem; padding: .3rem .55rem; border-radius: 999px; background: rgba(8,14,16,.78); backdrop-filter: blur(6px); font-family: var(--fm); font-size: var(--fs-micro); color: #e8f2f5; }
+      .property-kpis { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .5rem; margin: 0; }
+      .property-kpis div:first-child { grid-column: 1 / -1; }
+      .property-kpis div:first-child dd { font-size: var(--fs-base); }
+      .property-kpis div { border: 1px solid var(--line); border-radius: 6px; padding: .45rem .5rem; min-width: 0; }
+      .property-kpis dt { font-family: var(--fm); font-size: var(--fs-micro); color: #4a6570; text-transform: uppercase; letter-spacing: .1em; }
+      .property-kpis dd { margin: .2rem 0 0; font-family: var(--fm); font-size: var(--fs-xs); color: #e8f2f5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .property-kpis dd.pos { color: #2aa0c6; } .property-kpis dd.neg { color: #d4691e; }
+      .property-owner { display: flex; align-items: center; gap: .4rem; color: #6f8d98; font-family: var(--fm); font-size: var(--fs-micro); min-width: 0; }
+      .property-owner svg { width: .9rem; height: .9rem; flex-shrink: 0; }
+      .property-owner span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .property-actions .btn { flex: 0 0 auto; }
+      .property-actions .btn-primary { flex: 1; min-width: 0; }
+      .property-actions .btn:not(.btn-primary) { width: 2.6rem; padding-inline: 0; justify-content: center; }
+      .admin-dialog { width: min(34rem, calc(100vw - 2rem)); padding: 0; border: 1px solid var(--line-strong); border-radius: 10px; background: #0c1518; color: #e8f2f5; box-shadow: 0 30px 80px rgba(0,0,0,.6); }
+      .admin-dialog.wide { width: min(46rem, calc(100vw - 2rem)); }
+      .admin-dialog::backdrop { background: rgba(4,8,9,.7); backdrop-filter: blur(3px); }
+      .admin-dialog[open] { animation: cd-rise .22s ease both; }
+      .admin-dialog header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1rem 1.2rem; border-bottom: 1px solid var(--line); }
+      .admin-dialog h2 { font-size: var(--fs-base); font-weight: 700; }
+      .dlg-body { padding: 1.1rem 1.2rem; display: grid; gap: .9rem; }
+      .dlg-text { color: #9fb3ba; font-size: var(--fs-sm); line-height: 1.6; }
+      .dlg-text strong { color: #e8f2f5; }
+      .dlg-field { display: grid; gap: .4rem; }
+      .dlg-field > span { font-family: var(--fm); font-size: var(--fs-micro); text-transform: uppercase; letter-spacing: .14em; color: #6f8d98; }
+      .dlg-grid { display: grid; gap: .8rem; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .dlg-grid .full { grid-column: 1 / -1; }
+      @media (max-width: 560px) { .dlg-grid { grid-template-columns: 1fr; } }
+      .dlg-check { display: flex; gap: .55rem; align-items: flex-start; color: #9fb3ba; font-size: var(--fs-sm); }
+      .dlg-error { color: #e07b24; font-family: var(--fm); font-size: var(--fs-xs); }
+      .admin-dialog footer { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: .5rem; padding: .9rem 1.2rem; border-top: 1px solid var(--line); }
+      .admin-dialog footer .btn-danger { margin-right: auto; }
+      .cred { display: grid; grid-template-columns: auto 1fr; gap: .45rem .8rem; align-items: center; font-size: var(--fs-xs); color: #6f8d98; }
+      .cred code { font-family: var(--fm); color: #e8f2f5; background: rgba(8,14,16,.8); border: 1px solid var(--line); border-radius: 4px; padding: .3rem .5rem; overflow-wrap: anywhere; }
+      .toast-region { position: fixed; right: 1.25rem; bottom: 1.25rem; z-index: 50; display: flex; flex-direction: column; gap: .55rem; pointer-events: none; }
+      .toast { pointer-events: auto; display: flex; align-items: center; gap: .6rem; min-width: 15rem; max-width: 24rem; border: 1px solid var(--line-strong); background: rgba(12,21,24,.96); backdrop-filter: blur(12px); border-radius: 8px; padding: .75rem .9rem; font-size: var(--fs-sm); box-shadow: 0 20px 50px rgba(0,0,0,.45); animation: cd-rise .2s ease both; }
+      .toast.is-error { border-color: rgba(224,123,36,.6); } .toast.is-error svg { color: #e07b24; } .toast.is-success svg { color: #2b8ba5; }
+      .toast.is-leaving { opacity: 0; transform: translateY(6px); transition: .2s; }
     }
   </style>
 </head>
@@ -106,144 +178,105 @@
       <div class="mt-5 flex flex-wrap items-end justify-between gap-5">
         <div>
           <h1 class="cd-display font-extrabold leading-[0.95]">Controle<br><span class="text-transparent [-webkit-text-stroke:1px_rgba(232,242,245,.55)]">global.</span></h1>
-          <p class="mt-4 max-w-2xl text-[length:var(--fs-base)] leading-7 text-muted">Gerencie usuarios, permissoes e modulos em tempo real.</p>
+          <p class="mt-4 max-w-2xl text-[length:var(--fs-base)] leading-7 text-muted">Usuários, permissões, módulos e os imóveis de cada proprietário.</p>
         </div>
-        <div class="font-mono text-[length:var(--fs-xs)] uppercase tracking-[var(--track-label)] text-muted">Sessao <span id="admin-email" class="text-aqua"></span></div>
+        <div class="font-mono text-[length:var(--fs-xs)] uppercase tracking-[var(--track-label)] text-muted">Sessão <span id="admin-email" class="text-aqua"></span></div>
       </div>
 
       <div class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <div class="stat"><strong id="stat-users">0</strong><span>Usuarios</span></div>
-        <div class="stat"><strong id="stat-active">0</strong><span>Ativos</span></div>
-        <div class="stat"><strong id="stat-admins">0</strong><span>Admins</span></div>
-        <div class="stat"><strong id="stat-modules">0</strong><span>Modulos ON</span></div>
+        <div class="stat"><strong id="stat-users">0</strong><span>Usuários</span></div>
+        <div class="stat"><strong id="stat-active">0</strong><span>Com acesso</span></div>
+        <div class="stat"><strong id="stat-sheets">0</strong><span>Planilhas ativas</span></div>
+        <div class="stat"><strong id="stat-modules">0</strong><span>Módulos ligados</span></div>
       </div>
 
-      <p id="admin-feedback" class="feedback mt-6"></p>
+      <p id="admin-feedback" class="sr-only" aria-live="polite"></p>
 
-      <div class="mt-4 grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
-        <section class="panel p-5">
+      <section class="panel p-5">
+        <div class="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <div class="font-mono text-[length:var(--fs-xs)] uppercase tracking-[var(--track-label)] text-aqua">Imóveis</div>
+            <h2 class="mt-2 text-[length:var(--fs-lg)] font-bold">Planilhas por imóvel</h2>
+          </div>
+          <i class="text-aqua" data-lucide="layout-grid"></i>
+        </div>
+        <div id="property-grid" class="property-grid mt-5"></div>
+        <div id="property-grid-empty" class="notice mt-5" hidden>Nenhum imóvel cadastrado ainda. Crie a primeira planilha abaixo.</div>
+
+        <details id="new-sheet" class="new-sheet mt-5">
+          <summary><i data-lucide="plus"></i>Nova planilha de imóvel</summary>
+          <form id="create-spreadsheet-form" class="mt-4 grid gap-3 md:grid-cols-2 lg:grid-cols-4" novalidate>
+            <label class="lbl"><span>Nome do imóvel</span><input class="field" name="property_name" placeholder="Ex.: HJ Flats" required></label>
+            <label class="lbl"><span>Título da planilha</span><input class="field" name="title" placeholder="Ex.: Tabela 2026 Airbnb" required></label>
+            <label class="lbl"><span>Dono (proprietário)</span><select name="owner_user_id" aria-label="Dono do imóvel" required></select></label>
+            <label class="lbl"><span>Ano</span><input class="field" name="year" type="number" min="2000" max="2100" required></label>
+            <label class="lbl lg:col-span-2"><span>Foto de capa (URL)</span><input class="field" name="cover_image_url" type="url" placeholder="https://..."></label>
+            <label class="lbl lg:col-span-2"><span>Link do anúncio</span><input class="field" name="listing_url" type="url" placeholder="https://airbnb.com/rooms/..."></label>
+            <label class="lbl lg:col-span-4"><span>Endereço / bairro</span><input class="field" name="address" placeholder="Ex.: Centro, Guaíba - RS"></label>
+            <label class="lbl"><span>Comissão coanfitrião (%)</span><input class="field" name="commission_percent" type="number" min="0" max="100" step="0.01" value="10" required></label>
+            <label class="lbl"><span>Limpeza por reserva (R$)</span><input class="field" name="cleaning_fee_per_client" type="number" min="0" step="0.01" value="380" required></label>
+            <label class="lbl"><span>Condomínio (R$/mês)</span><input class="field" name="fixed_condo" type="number" min="0" step="0.01" value="1536.30" required></label>
+            <label class="lbl"><span>Gás / Luz / Internet (R$/mês)</span><input class="field" name="fixed_bundle" type="text" value="70 / 265 / 123" required></label>
+            <button class="btn btn-primary lg:col-span-4" type="submit"><i data-lucide="plus"></i>Criar planilha com 12 meses</button>
+          </form>
+        </details>
+      </section>
+
+      <section class="panel p-5">
+          <div class="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <div class="font-mono text-[length:var(--fs-xs)] uppercase tracking-[var(--track-label)] text-aqua">Usuários</div>
+              <h2 class="mt-2 text-[length:var(--fs-lg)] font-bold">Acessos</h2>
+            </div>
+            <label class="search-box"><i data-lucide="search"></i><input id="user-search" type="search" placeholder="Buscar e-mail" aria-label="Buscar usuário"></label>
+          </div>
+
+          <form id="create-user-form" class="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-[1.3fr_1.1fr_0.8fr_auto_auto] items-center" novalidate>
+            <input class="field" name="email" type="email" placeholder="email@dominio.com" autocomplete="off" required aria-label="E-mail">
+            <div class="input-row">
+              <input class="field" name="password" type="password" placeholder="senha (mín. 8)" minlength="8" autocomplete="new-password" required aria-label="Senha">
+              <button class="icon-btn" type="button" data-gen-password title="Gerar senha forte"><i data-lucide="dices"></i></button>
+            </div>
+            <select name="role" aria-label="Perfil">
+              <option value="user">Proprietário</option>
+              <option value="admin">Administrador</option>
+            </select>
+            <label class="flex items-center gap-3 font-mono text-[length:var(--fs-micro)] uppercase tracking-[var(--track-label)] text-muted">
+              <input name="active" type="checkbox" checked> Acesso liberado
+            </label>
+            <button class="btn btn-primary" type="submit"><i data-lucide="user-plus"></i>Criar usuário</button>
+          </form>
+
+          <div class="mt-5 overflow-x-auto">
+            <table id="users-table" class="admin-table">
+              <thead><tr><th>Usuário</th><th>Perfil</th><th>Acesso</th><th>Último acesso</th><th></th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </section>
+
+      <section class="panel p-5">
           <div class="flex items-center justify-between gap-4">
             <div>
               <div class="font-mono text-[length:var(--fs-xs)] uppercase tracking-[var(--track-label)] text-aqua">Toggles</div>
-              <h2 class="mt-2 text-[length:var(--fs-lg)] font-bold">Modulos e acessos</h2>
+              <h2 class="mt-2 text-[length:var(--fs-lg)] font-bold">Módulos e acessos</h2>
             </div>
             <i class="text-aqua" data-lucide="sliders-horizontal"></i>
           </div>
           <div id="settings-list" class="mt-4"></div>
         </section>
-
-        <section class="panel p-5">
-          <div class="flex items-center justify-between gap-4">
-            <div>
-              <div class="font-mono text-[length:var(--fs-xs)] uppercase tracking-[var(--track-label)] text-aqua">Usuarios</div>
-              <h2 class="mt-2 text-[length:var(--fs-lg)] font-bold">Gerenciamento</h2>
-            </div>
-            <i class="text-aqua" data-lucide="users-round"></i>
-          </div>
-
-          <form id="create-user-form" class="mt-5 grid gap-3 md:grid-cols-[1fr_0.82fr_0.48fr_auto]">
-            <input class="field" name="email" type="email" placeholder="email@dominio.com" required>
-            <input class="field" name="password" type="password" placeholder="senha inicial" minlength="6" required>
-            <select name="role" aria-label="Role">
-              <option value="user">user</option>
-              <option value="admin">admin</option>
-            </select>
-            <label class="flex items-center gap-3 font-mono text-[length:var(--fs-micro)] uppercase tracking-[var(--track-label)] text-muted">
-              <input name="active" type="checkbox" checked> Ativo
-            </label>
-            <button class="btn btn-primary md:col-span-4" type="submit"><i data-lucide="user-plus"></i>Criar usuario</button>
-          </form>
-
-          <div class="mt-5 overflow-x-auto">
-            <table id="users-table" class="admin-table">
-              <thead>
-                <tr>
-                  <th>Usuario</th>
-                  <th>Role</th>
-                  <th>Acesso</th>
-                  <th>Ultimo login</th>
-                  <th>Acoes</th>
-                </tr>
-              </thead>
-              <tbody></tbody>
-            </table>
-          </div>
-        </section>
-      </div>
-
-      <section class="panel mt-6 p-5">
-        <div class="flex items-center justify-between gap-4">
-          <div>
-            <div class="font-mono text-[length:var(--fs-xs)] uppercase tracking-[var(--track-label)] text-aqua">Apartamentos</div>
-            <h2 class="mt-2 text-[length:var(--fs-lg)] font-bold">Seus anuncios</h2>
-          </div>
-          <i class="text-aqua" data-lucide="layout-grid"></i>
-        </div>
-        <div id="property-grid" class="property-grid mt-5"></div>
-        <div id="property-grid-empty" class="notice mt-5" hidden>Nenhum apartamento cadastrado ainda. Crie um abaixo.</div>
-      </section>
-
-      <section class="panel mt-6 p-5">
-        <div class="flex items-center justify-between gap-4">
-          <div>
-            <div class="font-mono text-[length:var(--fs-xs)] uppercase tracking-[var(--track-label)] text-aqua">Planilhas</div>
-            <h2 class="mt-2 text-[length:var(--fs-lg)] font-bold">Imoveis e proprietarios</h2>
-          </div>
-          <i class="text-aqua" data-lucide="table-2"></i>
-        </div>
-
-        <form id="create-spreadsheet-form" class="mt-5 grid gap-3 md:grid-cols-2 lg:grid-cols-4">
-          <input class="field" name="title" placeholder="Titulo da planilha" required>
-          <input class="field" name="property_name" placeholder="Nome do imovel" required>
-          <select name="owner_user_id" aria-label="Dono do imovel" required></select>
-          <input class="field" name="year" type="number" min="2000" max="2100" value="2026" required>
-          <input class="field lg:col-span-2" name="cover_image_url" type="url" placeholder="URL da foto de capa">
-          <input class="field lg:col-span-2" name="listing_url" type="url" placeholder="Link do anuncio (Airbnb)">
-          <input class="field lg:col-span-4" name="address" placeholder="Endereco / bairro (ex: Guaiba, RS)">
-          <label>
-            <span class="mb-2 block font-mono text-[length:var(--fs-micro)] uppercase tracking-[var(--track-label)] text-muted">Percentual</span>
-            <input class="field" name="commission_percent" type="number" min="0" max="100" step="0.01" value="10" required>
-          </label>
-          <label>
-            <span class="mb-2 block font-mono text-[length:var(--fs-micro)] uppercase tracking-[var(--track-label)] text-muted">Limpeza por cliente</span>
-            <input class="field" name="cleaning_fee_per_client" type="number" min="0" step="0.01" value="380" required>
-          </label>
-          <label>
-            <span class="mb-2 block font-mono text-[length:var(--fs-micro)] uppercase tracking-[var(--track-label)] text-muted">Condominio</span>
-            <input class="field" name="fixed_condo" type="number" min="0" step="0.01" value="1536.30" required>
-          </label>
-          <label>
-            <span class="mb-2 block font-mono text-[length:var(--fs-micro)] uppercase tracking-[var(--track-label)] text-muted">Gas / Luz / Internet</span>
-            <input class="field" name="fixed_bundle" type="text" value="70 / 265 / 123" required>
-          </label>
-          <button class="btn btn-primary lg:col-span-4" type="submit"><i data-lucide="plus"></i>Criar planilha</button>
-        </form>
-
-        <div class="mt-5 overflow-x-auto">
-          <table id="spreadsheets-table" class="admin-table">
-            <thead>
-              <tr>
-                <th>Planilha</th>
-                <th>Dono</th>
-                <th>Ano</th>
-                <th>%</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-        </div>
-      </section>
     </section>
     </main>
   </div>
 
-  <script src="https://unpkg.com/lucide@latest"></script>
+  <div id="toast-region" class="toast-region" aria-live="polite"></div>
+
+  <script src="/assets/js/icons.js?v=20260926c"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="/assets/js/supabase.config.js"></script>
   <script src="/assets/js/cdev-auth.js?v=20260926b"></script>
   <script src="/assets/js/admin-shell.js?v=20260926b"></script>
-  <script src="/assets/js/admin.js"></script>
-  <script>window.lucide && window.lucide.createIcons();</script>
+  <script src="/assets/js/sheet-calc.js?v=20260926c"></script>
+  <script src="/assets/js/admin.js?v=20260926c"></script>
 </body>
 </html>

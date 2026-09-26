@@ -131,6 +131,8 @@ os próximos limiares deixam de ser emitidos. Monitoramento alerta apenas `ONLIN
    1. `supabase/07_control_center.sql`
    2. `supabase/08_control_center_templates.sql`
    3. opcional: `supabase/09_control_center_cron.sql` (pg_cron verifica vencimentos mesmo sem a VPS)
+   4. `supabase/10_hardening.sql` (segurança: RLS revisada, funções internas fora do anon, índices)
+   5. `supabase/11_templates_v2.sql` (atualiza os 10 templates padrão para a v2 com fotos e layouts)
 2. **Deploy**: `git pull` na VPS (o painel já passa a ter `control.html`).
 3. **Worker**: seguir `ops/monitor/README.md` (Node ≥ 18, systemd timer, service key em `/etc/cdev-monitor.env`).
 4. **Demos**: DNS `*.sites` → IP da VPS e bloco Nginx de `ops/nginx/cdev-sites.conf.example`.
@@ -166,6 +168,19 @@ skeleton de carregamento, toasts de sucesso/erro com mensagens em português, e 
 - Worker contra o mesmo stack: transições de estado, incidente, alertas e bloqueio para anon.
 
 ---
+
+## 6b. Templates v2 (fotos + layouts por segmento)
+
+- Motor `assets/js/site-engine.js` v2: cada seção tem **variantes de layout**, escolhidas no editor (campo "Layout"):
+  - Hero: texto + foto, foto de fundo inteira (header transparente por cima) ou centralizado.
+  - Serviços: cards com foto, lista de preços estilo cardápio (com miniatura opcional) ou lista numerada.
+  - Galeria: grade, mosaico (1 destaque) ou colunas.
+  - Sobre: foto à esquerda/direita, com segunda foto sobreposta, selo e números.
+- Novos campos: números de destaque (`stats`), selo de avaliação, nota média nos depoimentos, foto nos depoimentos e nos serviços, foto de fundo no CTA, barra superior (telefone/horário/endereço) e rodapé completo.
+- Formulário de contato **sem backend**: monta a mensagem e abre o WhatsApp do cliente (custo zero).
+- Fotos: banco gratuito do Unsplash (uso comercial livre). O motor aplica tamanho, qualidade e `srcset` automaticamente; se uma foto falhar, aparece o degradê da marca (nunca imagem quebrada). No site final, troque pelas fotos reais do cliente.
+- Para editar os templates padrão: altere `tools/gen_templates.py` e rode `python3 tools/gen_templates.py` (gera o 08 e o 11).
+- Sites já criados guardam sua própria cópia do conteúdo: rodar o 11 não altera nenhum site existente.
 
 ## 7. Segurança
 

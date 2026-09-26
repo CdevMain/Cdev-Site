@@ -39,7 +39,13 @@
       .panel { border: 1px solid var(--line); background: rgba(12,21,24,.72); backdrop-filter: blur(18px); border-radius: 8px; }
       .metric { border: 1px solid var(--line); background: rgba(17,29,33,.58); border-radius: 8px; padding: 1rem; }
       .metric strong { display: block; font-family: var(--fm); color: #2b8ba5; font-size: var(--fs-xl); line-height: 1; }
-      .metric span { margin-top: .5rem; display: block; font-family: var(--fm); color: #4a6570; font-size: var(--fs-micro); letter-spacing: .18em; text-transform: uppercase; }
+      .metric span { display: block; font-family: var(--fm); color: #4a6570; font-size: var(--fs-micro); letter-spacing: .18em; text-transform: uppercase; }
+      .metric strong { margin-top: .55rem; font-variant-numeric: tabular-nums; }
+      .metric strong { white-space: nowrap; font-size: clamp(1.15rem, .85rem + .9vw, 1.6rem); }
+      .summary-card strong { white-space: nowrap; font-size: var(--fs-base); }
+      .summary-card.is-hero strong { font-size: var(--fs-lg); }
+      #spreadsheet-panel > aside { align-self: start; }
+      .metric small { display: block; margin-top: .45rem; font-family: var(--fm); color: #6f8d98; font-size: var(--fs-micro); line-height: 1.4; }
 
       /* Property list */
       .sheet-list { display: grid; gap: .65rem; }
@@ -64,12 +70,62 @@
       .segmented-tab.active { background: rgba(30,98,117,.28); color: #2b8ba5; }
 
       /* Summary cards with trend */
-      .sheet-summary { display: grid; gap: .75rem; grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr)); padding: 1.15rem; }
+      .sheet-summary { display: grid; gap: .75rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 11.5rem), 1fr)); padding: 1.15rem; }
       .summary-card { position: relative; border: 1px solid var(--line); border-radius: 8px; padding: .85rem .9rem; background: rgba(17,29,33,.48); overflow: hidden; }
       .summary-card span.summary-label { display: block; color: #4a6570; font-family: var(--fm); font-size: var(--fs-micro); letter-spacing: .14em; text-transform: uppercase; }
       .summary-card strong { display: block; margin-top: .4rem; color: #e8f2f5; font-family: var(--fm); font-size: var(--fs-lg); font-variant-numeric: tabular-nums; }
       .summary-card.is-positive strong { color: #2b8ba5; }
-      .summary-card.is-negative strong { color: #e07b24; }
+      .summary-card.is-negative strong { color: #d4691e; }
+      .summary-card.is-positive strong { color: #2aa0c6; }
+      .summary-card .summary-hint { display: block; margin-top: .3rem; color: #6f8d98; font-family: var(--fm); font-size: var(--fs-micro); line-height: 1.35; }
+      .summary-card.is-hero { border-color: var(--line-strong); background: rgba(30,98,117,.1); padding-bottom: 2rem; }
+      /* busca, acoes e estados */
+      .sheet-search { width: 100%; margin-top: .9rem; border: 1px solid var(--line); background: rgba(8,14,16,.6); color: #e8f2f5; border-radius: 4px; padding: .55rem .7rem; font-family: var(--fm); font-size: var(--fs-xs); outline: none; }
+      .sheet-search:focus { border-color: #2b8ba5; }
+      .sheet-list-empty { color: #6f8d98; font-size: var(--fs-sm); line-height: 1.5; }
+      .sheet-actions { display: flex; flex-wrap: wrap; gap: .5rem; }
+      #save-sheet.has-changes { box-shadow: 0 0 0 3px rgba(224,123,36,.25); }
+      .remote-change { margin: 1rem 1.15rem 0; display: flex; flex-wrap: wrap; align-items: center; gap: .8rem; justify-content: space-between; }
+      .fin-table tbody tr.is-future td { opacity: .55; }
+      .fin-table tbody tr.is-dirty td:first-child { box-shadow: inset 3px 0 0 #e07b24; }
+      .fin-table td.wide { min-width: 13rem; }
+      .month-name { font-weight: 600; }
+      .cell-text { text-align: left; resize: vertical; min-height: 2rem; line-height: 1.4; white-space: pre-wrap; font-family: var(--fm); }
+      .cell-input::placeholder { color: rgba(111,141,152,.55); font-size: .92em; }
+      /* grafico */
+      .sheet-chart { padding: 0 1.15rem 1rem; }
+      .chart-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: .5rem; margin-bottom: .4rem; }
+      .chart-title { font-weight: 700; font-size: var(--fs-sm); color: #e8f2f5; }
+      .chart-sub { font-family: var(--fm); font-size: var(--fs-micro); color: #6f8d98; }
+      .chart-wrap { position: relative; }
+      .chart-svg { width: 100%; height: auto; display: block; overflow: visible; }
+      .chart-grid { stroke: rgba(111,141,152,.14); stroke-width: 1; }
+      .chart-zero { stroke: rgba(111,141,152,.45); stroke-width: 1; }
+      .chart-y, .chart-x { fill: #6f8d98; font-family: 'DM Mono', monospace; font-size: 11px; }
+      .chart-val { fill: #e8f2f5; font-family: 'DM Mono', monospace; font-size: 11px; }
+      .fin-table th:first-child, .fin-table td:first-child { white-space: nowrap; }
+      .chart-bar { cursor: default; outline: none; }
+      .chart-bar.is-hover .hit, .chart-bar:focus-visible .hit { fill: rgba(43,139,165,.08); }
+      .chart-bar.is-hover .chart-x { fill: #e8f2f5; }
+      .chart-tip { position: absolute; z-index: 5; pointer-events: none; transform: translateY(-100%); min-width: 12rem; padding: .6rem .75rem; border: 1px solid var(--line-strong); border-radius: 8px; background: rgba(12,21,24,.97); box-shadow: 0 12px 30px rgba(0,0,0,.45); display: grid; gap: .2rem; font-size: var(--fs-xs); color: #6f8d98; }
+      .chart-tip strong { color: #e8f2f5; font-size: var(--fs-sm); }
+      .chart-tip b { color: #e8f2f5; font-weight: 600; font-family: var(--fm); }
+      .chart-tip em { color: #6f8d98; font-style: normal; font-weight: 400; }
+      /* impressao / PDF */
+      @media print {
+        body { background: #fff !important; color: #111 !important; }
+        body::before, .cc-side, .cc-top, .cc-scrim, #spreadsheet-panel > aside, .sheet-actions, .segmented-tabs, .notice, #toast-region, .section-label { display: none !important; }
+        .cc-shell { display: block !important; }
+        .cc-main { padding: 0 !important; }
+        .panel, .metric, .summary-card { background: #fff !important; border-color: #ccc !important; box-shadow: none !important; backdrop-filter: none !important; }
+        .cd-display { font-size: 28pt !important; color: #111 !important; }
+        .metric strong, .summary-card strong, .fin-table td, .fin-table th, .chart-title { color: #111 !important; }
+        .table-scroll { max-height: none !important; overflow: visible !important; }
+        .fin-table thead th, .fin-table tbody td:first-child, .fin-table tfoot td { position: static !important; background: #fff !important; color: #111 !important; }
+        .fin-table tbody tr:nth-child(even) td { background: #f4f6f7 !important; }
+        #spreadsheet-panel { display: block !important; }
+        * { animation: none !important; }
+      }
       .summary-delta { display: inline-flex; align-items: center; gap: .2rem; margin-top: .35rem; font-family: var(--fm); font-size: var(--fs-micro); letter-spacing: .04em; color: #4a6570; }
       .summary-delta.is-up { color: #2b8ba5; }
       .summary-delta.is-down { color: #e07b24; }
@@ -136,29 +192,30 @@
       </header>
 
     <section class="mx-auto max-w-6xl cd-page">
-      <div class="section-label">Dashboard</div>
+      <div class="section-label">Planilhas</div>
       <div class="mt-5 flex flex-wrap items-end justify-between gap-5">
         <div>
-          <h1 class="cd-display font-extrabold leading-[0.95]">Operacao<br><span class="text-transparent [-webkit-text-stroke:1px_rgba(232,242,245,.55)]">modular.</span></h1>
-          <p class="mt-4 max-w-2xl text-[length:var(--fs-base)] leading-7 text-muted">Conteudo protegido por sessao, role e toggles globais.</p>
+          <h1 class="cd-display font-extrabold leading-[0.95]">Resultados<br><span class="text-transparent [-webkit-text-stroke:1px_rgba(232,242,245,.55)]">dos imóveis.</span></h1>
+          <p class="mt-4 max-w-2xl text-[length:var(--fs-base)] leading-7 text-muted">Faturamento, despesas e lucro de cada imóvel, mês a mês.</p>
         </div>
         <div class="font-mono text-[length:var(--fs-xs)] uppercase tracking-[var(--track-label)] text-muted"><span id="user-email" class="text-aqua"></span> / <span id="user-role"></span></div>
       </div>
 
-      <div id="readonly-state" class="notice mt-8" hidden>Edicao desabilitada globalmente. O dashboard esta em modo somente leitura.</div>
+      <div id="readonly-state" class="notice mt-8" hidden></div>
 
       <div class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <div class="metric"><strong>24</strong><span>Registros</span></div>
-        <div class="metric"><strong>8</strong><span>Modulos</span></div>
-        <div class="metric"><strong>99%</strong><span>Integridade</span></div>
-        <div class="metric"><strong>Live</strong><span>Status</span></div>
+        <div class="metric" id="kpi-profit"><span>Lucro no ano</span><strong>—</strong><small></small></div>
+        <div class="metric" id="kpi-occupancy"><span>Ocupação</span><strong>—</strong><small></small></div>
+        <div class="metric" id="kpi-adr"><span>Diária média</span><strong>—</strong><small></small></div>
+        <div class="metric" id="kpi-bookings"><span>Reservas</span><strong>—</strong><small></small></div>
       </div>
 
       <section id="spreadsheet-panel" class="mt-6 grid gap-6 lg:grid-cols-[22rem_1fr]" data-requires-setting="spreadsheet_visible">
         <aside class="panel p-5">
           <div class="font-mono text-[length:var(--fs-xs)] uppercase tracking-[var(--track-label)] text-aqua">Planilhas</div>
-          <h2 class="mt-2 text-[length:var(--fs-lg)] font-bold">Meus imoveis</h2>
-          <div id="spreadsheet-list" class="sheet-list mt-5"></div>
+          <h2 class="mt-2 text-[length:var(--fs-lg)] font-bold">Imóveis</h2>
+          <input id="sheet-search" class="sheet-search" type="search" placeholder="Buscar imóvel ou ano..." aria-label="Buscar planilha" hidden>
+          <div id="spreadsheet-list" class="sheet-list mt-5" role="tablist" aria-label="Planilhas"></div>
         </aside>
 
         <section class="panel overflow-hidden">
@@ -167,16 +224,30 @@
               <div class="font-mono text-[length:var(--fs-xs)] uppercase tracking-[var(--track-label)] text-aqua" id="sheet-kicker">Tabela</div>
               <h2 class="mt-2 text-[length:var(--fs-lg)] font-bold" id="sheet-title">Selecione uma planilha</h2>
             </div>
-            <button class="btn btn-primary" id="save-sheet" data-edit-action hidden>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-3.5 w-3.5"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"/><path d="M17 21v-8H7v8"/><path d="M7 3v5h8"/></svg>
-              Salvar alteracoes
-            </button>
+            <div class="sheet-actions" id="sheet-actions" hidden>
+              <a class="btn" id="sheet-listing" href="#" target="_blank" rel="noopener" hidden title="Abrir anúncio">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-3.5 w-3.5"><path d="M15 3h6v6M10 14 21 3M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>
+                Anúncio
+              </a>
+              <button class="btn" id="export-csv" type="button" title="Baixar CSV (abre no Excel)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-3.5 w-3.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                CSV
+              </button>
+              <button class="btn" id="print-sheet" type="button" title="Imprimir ou salvar em PDF">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-3.5 w-3.5"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v8H6z"/></svg>
+                PDF
+              </button>
+              <button class="btn btn-primary" id="save-sheet" data-edit-action type="button" disabled title="Salvar (Ctrl+S)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-3.5 w-3.5"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"/><path d="M17 21v-8H7v8"/><path d="M7 3v5h8"/></svg>
+                <span id="save-label">Salvo</span>
+              </button>
+            </div>
           </div>
 
           <div id="sheet-empty" class="empty-state">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
             <strong>Nenhuma planilha selecionada</strong>
-            <p>Escolha um imovel na lista ao lado para ver receitas, despesas e o resultado do mes.</p>
+            <p>Escolha um imóvel na lista para ver faturamento, despesas e o resultado de cada mês.</p>
           </div>
 
           <div id="sheet-skeleton" class="px-5 py-5" hidden>
@@ -191,12 +262,17 @@
           </div>
 
           <div id="sheet-workspace" hidden>
+            <div class="notice remote-change" id="remote-change" hidden>
+              Esta planilha foi alterada em outro lugar enquanto você editava.
+              <button class="btn" id="reload-remote" type="button">Recarregar</button>
+            </div>
             <div class="sheet-summary" id="sheet-summary"></div>
+            <div class="sheet-chart" id="sheet-chart" hidden></div>
             <div class="px-5 pb-4">
               <div class="segmented-tabs" role="tablist">
                 <button class="segmented-tab active" data-sheet-tab="summary" role="tab">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M18 17V9M13 17V5M8 17v-3"/></svg>
-                  Tabela
+                  Resumo
                 </button>
                 <button class="segmented-tab" data-sheet-tab="revenue" role="tab">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 7 13.5 15.5 8.5 10.5 2 17"/><path d="M16 7h6v6"/></svg>
@@ -208,7 +284,7 @@
                 </button>
                 <button class="segmented-tab" data-sheet-tab="variable" role="tab">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
-                  Despesas variadas
+                  Despesas variáveis
                 </button>
               </div>
             </div>
@@ -228,6 +304,7 @@
   <script src="/assets/js/supabase.config.js"></script>
   <script src="/assets/js/cdev-auth.js?v=20260926b"></script>
   <script src="/assets/js/admin-shell.js?v=20260926b"></script>
-  <script src="/assets/js/dashboard.js?v=20260914"></script>
+  <script src="/assets/js/sheet-calc.js?v=20260926c"></script>
+  <script src="/assets/js/dashboard.js?v=20260926c"></script>
 </body>
 </html>
