@@ -1,0 +1,11 @@
+[Unit]
+Description=Executa o CDEV Monitor a cada minuto
+
+[Timer]
+OnBootSec=60s
+OnUnitActiveSec=60s
+AccuracySec=5s
+Unit=cdev-monitor.service
+
+[Install]
+WantedBy=timers.target

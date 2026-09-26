@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Carregando...</title>
+  <meta name="description" content="" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <style>
+    body { margin: 0; font-family: system-ui, sans-serif; background: #0b0f11; color: #e8f2f5; }
+    .boot { min-height: 100vh; display: grid; place-items: center; text-align: center; padding: 2rem; }
+    .boot small { display: block; margin-top: .6rem; color: #6f8d98; }
+    .spin { width: 28px; height: 28px; margin: 0 auto 1rem; border-radius: 50%; border: 3px solid rgba(255,255,255,.15); border-top-color: #2b8ba5; animation: s .8s linear infinite; }
+    @keyframes s { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <div class="boot"><div><div class="spin"></div>Carregando site…</div></div>
+
+  <!--
+    CDEV SITE ENGINE - ponto de entrada unico para TODOS os sites de clientes e demos.
+    Resolucao:
+      1. ?slug=barbearia-alpha                    (preview no dominio principal)
+      2. barbearia-alpha.sites.cdev.com.br        (demo: subdominio = slug)
+      3. barbeariaalpha.com.br                    (dominio do cliente cadastrado em Dominios, status ATIVO)
+      4. ?template=barber-modern                  (preview de template; exige sessao admin)
+      5. postMessage do editor do Control Center  (preview ao vivo, mesma origem)
+    Nginx: todos esses hosts apontam para esta pasta com try_files -> /site.html (ver ops/nginx).
+  -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/assets/js/supabase.config.js"></script>
+  <script src="/assets/js/site-engine.js"></script>
+  <script>
+    (function () {
+      // Dominio base das demos. Mantenha igual a configuracao "demo_base_domain" do Control Center.
+      var DEMO_BASE = window.CDEV_SITES_BASE || 'sites.cdev.com.br';
+      var params = new URLSearchParams(location.search);
+      var engine = window.CDEVSiteEngine;
+      var host = location.hostname.toLowerCase();
+
+      var fail = function (title, text) {
+        document.title = title;
+        document.body.innerHTML = '<div class="boot"><div><strong style="font-size:1.4rem">' + title + '</strong><small>' + (text || '') + '</small></div></div>';
+      };
+
+      // Preview ao vivo vindo do editor (somente mesma origem)
+      var live = params.get('live') === '1';
+      window.addEventListener('message', function (e) {
+        if (e.origin !== location.origin || !e.data || e.data.type !== 'cdev-site-preview') return;
+        engine.render(e.data.site, { preview: true });
+      });
+      if (live) {
+        document.body.innerHTML = '<div class="boot"><div><div class="spin"></div>Aguardando editor…</div></div>';
+        if (window.parent !== window) window.parent.postMessage({ type: 'cdev-site-preview-ready' }, location.origin);
+        return;
+      }
+
+      var config = window.CDEV_SUPABASE_CONFIG || window.SUPABASE_CONFIG;
+      if (!window.supabase || !config) return fail('Configuração pendente', 'assets/js/supabase.config.js não encontrado.');
+      var client = window.supabase.createClient(config.url, config.anonKey);
+
+      var slug = params.get('slug');
+      if (!slug && host.endsWith('.' + DEMO_BASE)) slug = host.slice(0, -(DEMO_BASE.length + 1)).split('.').pop();
+      var template = params.get('template');
+
+      var go = async function () {
+        try {
+          if (template) {
+            var t = await client.from('templates').select('name,segment,theme,content').eq('key', template).maybeSingle();
+            if (t.error || !t.data) return fail('Template indisponível', 'Faça login no painel CDEV para visualizar templates.');
+            return engine.render({ name: t.data.content && t.data.content.brand ? t.data.content.brand.name : t.data.name, theme: t.data.theme, content: t.data.content, status: 'TEMPLATE' }, { preview: true });
+          }
+          var res = await client.rpc('cc_public_site', { p_host: slug ? null : host, p_slug: slug || null });
+          if (res.error) throw res.error;
+          if (!res.data) return fail('Site não encontrado', 'Este endereço ainda não possui um site publicado.');
+          engine.render(res.data, { preview: !!res.data.preview });
+        } catch (err) {
+          console.error(err);
+          fail('Site temporariamente indisponível', 'Tente novamente em instantes.');
+        }
+      };
+      go();
+    })();
+  </script>
+</body>
+</html>

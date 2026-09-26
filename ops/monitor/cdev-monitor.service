@@ -1,0 +1,18 @@
+[Unit]
+Description=CDEV Monitor - checagem HTTP/SSL e vencimentos
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=cdev-monitor
+Group=cdev-monitor
+EnvironmentFile=/etc/cdev-monitor.env
+# Ajuste o caminho para onde o repositorio esta clonado na VPS
+ExecStart=/usr/bin/node /var/www/cdev/ops/monitor/cdev-monitor.mjs
+StateDirectory=cdev-monitor
+TimeoutStartSec=240
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true

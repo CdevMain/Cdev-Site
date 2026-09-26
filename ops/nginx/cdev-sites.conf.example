@@ -1,0 +1,35 @@
+# CDEV SITE ENGINE - Nginx
+# Todos os sites de clientes e demos usam a MESMA pasta do repositorio (site.html + assets).
+# Copie para /etc/nginx/sites-available/cdev-sites e ajuste "root".
+
+# 1) Demos: <slug>.sites.cdev.com.br
+#    DNS: registro curinga  *.sites  A  <IP da VPS>
+#    SSL curinga exige desafio DNS (ex.: certbot + plugin do seu provedor de DNS, gratuito).
+#    Sem SSL curinga, as demos funcionam em http (ou gere 1 certificado por demo com certbot --nginx -d slug.sites.cdev.com.br).
+server {
+    listen 80;
+    server_name *.sites.cdev.com.br;
+    root /var/www/cdev;
+
+    location /assets/ { try_files $uri =404; expires 7d; add_header Cache-Control "public"; }
+    location = /site.html { add_header Cache-Control "no-cache"; }
+    # Bloqueia o painel e arquivos internos nos dominios de clientes/demos
+    location ~ ^/(admin|control|dashboard|login)\.html$ { return 404; }
+    location ~ ^/(supabase|ops|tools|\.git)/ { return 404; }
+    location / { try_files /site.html =404; }
+}
+
+# 2) Dominio proprio de um cliente (gerado por ops/nginx/add-client-domain.sh)
+# server {
+#     listen 80;
+#     server_name barbeariaalpha.com.br www.barbeariaalpha.com.br;
+#     root /var/www/cdev;
+#     location /assets/ { try_files $uri =404; expires 7d; }
+#     location ~ ^/(admin|control|dashboard|login)\.html$ { return 404; }
+#     location ~ ^/(supabase|ops|tools|\.git)/ { return 404; }
+#     location / { try_files /site.html =404; }
+# }
+# Depois: sudo certbot --nginx -d barbeariaalpha.com.br -d www.barbeariaalpha.com.br
+
+# IMPORTANTE: no server block principal do cdev.com.br, bloqueie tambem as pastas internas:
+#     location ~ ^/(supabase|ops|tools|\.git)/ { return 404; }

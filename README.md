@@ -16,3 +16,15 @@ Run these scripts in order when setting up the spreadsheet module:
 2. Optional sample import: `supabase/06_seed_hj_flats_2026.sql`
 
 Admins can create spreadsheets in `admin.html`, choosing the owner login, year, cleaning fee and commission percentage. Owners with regular `user` role can open `dashboard.html` and view only their own spreadsheets.
+
+## CDEV Control Center
+
+Painel operacional (Site Factory + CRM + financeiro recorrente + monitoramento) em `control.html`,
+usando o mesmo login, as mesmas permissões e o mesmo Supabase do painel.
+
+1. Rode no Supabase SQL Editor: `supabase/07_control_center.sql` e `supabase/08_control_center_templates.sql`
+   (opcional: `supabase/09_control_center_cron.sql`).
+2. Na VPS, instale o worker de monitoramento: `ops/monitor/README.md`.
+3. Demos e domínios de clientes: `ops/nginx/`.
+
+Documentação completa: `docs/CONTROL_CENTER.md`.

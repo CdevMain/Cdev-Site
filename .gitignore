@@ -19,3 +19,7 @@ Thumbs.db
 # Build
 dist/
 build/
+
+# CDEV Monitor (segredos ficam em /etc/cdev-monitor.env na VPS)
+ops/monitor/*.env
+!ops/monitor/*.env.example
