@@ -16,28 +16,28 @@ sudo apt install -y nodejs && node -v        # precisa ser >= 18
 sudo useradd --system --no-create-home --shell /usr/sbin/nologin cdev-monitor
 
 # 3. Segredos (fora do repositório)
-sudo cp /var/www/cdev/ops/monitor/cdev-monitor.env.example /etc/cdev-monitor.env
+sudo cp /var/www/cdev-site/ops/monitor/cdev-monitor.env.example /etc/cdev-monitor.env
 sudo nano /etc/cdev-monitor.env               # SUPABASE_URL + SUPABASE_SERVICE_KEY
 sudo chown root:root /etc/cdev-monitor.env && sudo chmod 600 /etc/cdev-monitor.env
 
 # 4. Teste manual
-node /var/www/cdev/ops/monitor/cdev-monitor.mjs --check https://cdev.com.br
-sudo -u cdev-monitor env $(sudo cat /etc/cdev-monitor.env | xargs) node /var/www/cdev/ops/monitor/cdev-monitor.mjs
+node /var/www/cdev-site/ops/monitor/cdev-monitor.mjs --check https://cdev.com.br
+sudo -u cdev-monitor env $(sudo cat /etc/cdev-monitor.env | xargs) node /var/www/cdev-site/ops/monitor/cdev-monitor.mjs
 
 # 5. Agendar (a cada 1 minuto; cada projeto respeita o próprio intervalo)
-sudo cp /var/www/cdev/ops/monitor/cdev-monitor.service /var/www/cdev/ops/monitor/cdev-monitor.timer /etc/systemd/system/
+sudo cp /var/www/cdev-site/ops/monitor/cdev-monitor.service /var/www/cdev-site/ops/monitor/cdev-monitor.timer /etc/systemd/system/
 sudo systemctl daemon-reload
 sudo systemctl enable --now cdev-monitor.timer
 systemctl list-timers | grep cdev
 journalctl -u cdev-monitor -n 50 --no-pager
 ```
 
-> Ajuste `/var/www/cdev` no `.service` para o caminho real do clone na VPS.
+> Ajuste `/var/www/cdev-site` no `.service` para o caminho real do clone na VPS.
 
 ### Alternativa com cron
 
 ```
-* * * * * cdev-monitor . /etc/cdev-monitor.env; SUPABASE_URL=$SUPABASE_URL SUPABASE_SERVICE_KEY=$SUPABASE_SERVICE_KEY /usr/bin/node /var/www/cdev/ops/monitor/cdev-monitor.mjs >> /var/log/cdev-monitor.log 2>&1
+* * * * * cdev-monitor . /etc/cdev-monitor.env; SUPABASE_URL=$SUPABASE_URL SUPABASE_SERVICE_KEY=$SUPABASE_SERVICE_KEY /usr/bin/node /var/www/cdev-site/ops/monitor/cdev-monitor.mjs >> /var/log/cdev-monitor.log 2>&1
 ```
 
 ## Como funciona

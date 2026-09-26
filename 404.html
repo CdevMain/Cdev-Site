@@ -1,10 +1,11 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" class="cdev-admin">
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>404 - Página não encontrada</title>
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="assets/css/admin-fluid.css?v=20260926" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -12,15 +13,7 @@
       --text: #e8f2f5; --muted: #4a6570; --accent: #1e6275; --al: #2b8ba5;
       --fd: 'Syne', sans-serif; --fm: 'DM Mono', monospace;
     }
-    html {
-      scroll-behavior: smooth;
-      zoom: 1.25;
-    }
-
-    @supports not (zoom: 1) {
-      html { font-size: 125%; }
-    }
-    body {
+        body {
       background: var(--bg); color: var(--text); font-family: var(--fd);
       overflow-x: hidden; margin: 0; cursor: none;
     }

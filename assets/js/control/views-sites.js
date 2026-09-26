@@ -309,7 +309,7 @@
       <div class="grid-3">${rows.map((t) => { const th = Engine().resolveTheme(t.theme); return `
         <article class="panel" style="overflow:hidden">
           <div style="height:6.5rem;background:linear-gradient(135deg,${esc(th.colors.primary)},${esc(th.colors.bg)});display:flex;align-items:flex-end;padding:.8rem">
-            <span style="font-family:'${esc(th.fonts.heading)}',serif;font-size:1.3rem;font-weight:700;color:${esc(th.colors.text)}">${esc(t.content?.brand?.name || t.name)}</span></div>
+            <span style="font-family:'${esc(th.fonts.heading)}',serif;font-size:var(--fs-lg);font-weight:700;color:${esc(th.colors.text)}">${esc(t.content?.brand?.name || t.name)}</span></div>
           <div class="panel-body"><div class="row"><strong>${esc(t.name)}</strong>${t.active ? '' : '<span class="badge gray">inativo</span>'}<span class="spacer"></span><span class="mono tiny muted">${uses[t.id] || 0} sites</span></div>
             <div class="small muted" style="margin:.35rem 0 .8rem">${esc(t.segment)} · ${(t.sections || []).length} seções · ${esc(t.theme?.preset || '')}</div>
             <div class="row"><a class="btn btn-sm" href="site.html?template=${encodeURIComponent(t.key)}" target="_blank">${icon('eye')}Ver</a><button class="btn btn-sm btn-primary" data-use="${t.id}">${icon('rocket')}Criar site</button><button class="icon-btn" data-edit="${t.id}">${icon('edit')}</button><button class="icon-btn" data-dup="${t.id}" title="Duplicar">${icon('copy')}</button></div></div>

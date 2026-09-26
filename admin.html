@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" class="cdev-admin">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -7,6 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/css/admin-fluid.css?v=20260926" />
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = { theme: { extend: { colors: { ink: '#080e10', ink2: '#0c1518', ink3: '#111d21', mist: '#e8f2f5', muted: '#4a6570', accent: '#1e6275', aqua: '#2b8ba5', java: '#e07b24', line: 'rgba(30,98,117,.18)', lineStrong: 'rgba(30,98,117,.45)', faint: 'rgba(30,98,117,.07)' }, fontFamily: { display: ['Syne', 'sans-serif'], mono: ['DM Mono', 'monospace'] }, boxShadow: { soft: '0 20px 60px rgba(7,15,18,.55)' } } } };
@@ -14,32 +15,30 @@
   <style type="text/tailwindcss">
     @layer base {
       :root { --line: rgba(30,98,117,.18); --line-strong: rgba(30,98,117,.45); --faint: rgba(30,98,117,.07); --fd: 'Syne', sans-serif; --fm: 'DM Mono', monospace; }
-      html { scroll-behavior: smooth; zoom: 1.25; }
-      @supports not (zoom: 1) { html { font-size: 125%; } }
-      body { @apply bg-ink text-mist font-display overflow-x-hidden; }
+            body { @apply bg-ink text-mist font-display overflow-x-hidden; }
       body::before { content: ''; position: fixed; inset: 0; z-index: 1; pointer-events: none; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E"); opacity: .5; }
       body:not(.auth-ready) main { visibility: hidden; }
       button, input, select { font: inherit; }
     }
     @layer components {
-      .nav-logo { display: flex; align-items: center; gap: .75rem; font-family: var(--fm); font-size: .82rem; letter-spacing: .2em; text-transform: uppercase; color: #2b8ba5; text-decoration: none; }
-      .nav-link { font-size: .75rem; font-weight: 500; letter-spacing: .14em; text-transform: uppercase; color: #4a6570; transition: color .2s; }
+      .nav-logo { display: flex; align-items: center; gap: .75rem; font-family: var(--fm); font-size: var(--fs-sm); letter-spacing: .2em; text-transform: uppercase; color: #2b8ba5; text-decoration: none; }
+      .nav-link { font-size: var(--fs-sm); font-weight: 500; letter-spacing: .14em; text-transform: uppercase; color: #4a6570; transition: color .2s; }
       .nav-link:hover, .nav-link.active { color: #2b8ba5; }
-      .section-label { font-family: var(--fm); font-size: .7rem; color: #2b8ba5; letter-spacing: .22em; text-transform: uppercase; display: flex; align-items: center; gap: .75rem; }
+      .section-label { font-family: var(--fm); font-size: var(--fs-xs); color: #2b8ba5; letter-spacing: .22em; text-transform: uppercase; display: flex; align-items: center; gap: .75rem; }
       .section-label::before { content: ''; display: block; width: 28px; height: 1px; background: #2b8ba5; }
-      .btn { display: inline-flex; align-items: center; justify-content: center; gap: .55rem; min-height: 2.35rem; padding: .65rem .9rem; border-radius: 2px; font-size: .68rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; transition: all .25s; }
+      .btn { display: inline-flex; align-items: center; justify-content: center; gap: .55rem; min-height: 2.35rem; padding: .65rem .9rem; border-radius: 2px; font-size: var(--fs-xs); font-weight: 700; letter-spacing: .12em; text-transform: uppercase; transition: all .25s; }
       .btn-primary { background: linear-gradient(135deg, #1e6275 0%, #2b8ba5 100%); color: #e8f2f5; border: 1px solid rgba(43,139,165,.35); }
       .btn-ghost { border: 1px solid var(--line-strong); color: #4a6570; }
       .btn-ghost:hover { color: #2b8ba5; border-color: #2b8ba5; }
       .panel { border: 1px solid var(--line); background: rgba(12,21,24,.72); backdrop-filter: blur(18px); box-shadow: 0 20px 60px rgba(7,15,18,.32); border-radius: 8px; }
       .stat { border: 1px solid var(--line); background: rgba(17,29,33,.58); border-radius: 8px; padding: 1rem; }
-      .stat strong { display: block; font-family: var(--fm); color: #2b8ba5; font-size: 1.55rem; line-height: 1; }
-      .stat span { margin-top: .5rem; display: block; font-family: var(--fm); color: #4a6570; font-size: .62rem; letter-spacing: .18em; text-transform: uppercase; }
+      .stat strong { display: block; font-family: var(--fm); color: #2b8ba5; font-size: var(--fs-xl); line-height: 1; }
+      .stat span { margin-top: .5rem; display: block; font-family: var(--fm); color: #4a6570; font-size: var(--fs-micro); letter-spacing: .18em; text-transform: uppercase; }
       .admin-toggle { display: flex; align-items: center; justify-content: space-between; gap: 1rem; border-bottom: 1px solid var(--line); padding: 1rem 0; }
       .admin-toggle:last-child { border-bottom: 0; }
-      .toggle-title { font-family: var(--fm); color: #e8f2f5; font-size: .8rem; letter-spacing: .04em; }
-      .admin-toggle p { color: #4a6570; font-size: .8rem; line-height: 1.5; margin-top: .25rem; }
-      .toggle-time { display: block; margin-top: .4rem; font-family: var(--fm); color: rgba(74,101,112,.8); font-size: .6rem; text-transform: uppercase; letter-spacing: .14em; }
+      .toggle-title { font-family: var(--fm); color: #e8f2f5; font-size: var(--fs-sm); letter-spacing: .04em; }
+      .admin-toggle p { color: #4a6570; font-size: var(--fs-sm); line-height: 1.5; margin-top: .25rem; }
+      .toggle-time { display: block; margin-top: .4rem; font-family: var(--fm); color: rgba(74,101,112,.8); font-size: var(--fs-micro); text-transform: uppercase; letter-spacing: .14em; }
       .switch, .mini-switch { position: relative; display: inline-flex; align-items: center; flex-shrink: 0; }
       .switch input, .mini-switch input { position: absolute; opacity: 0; pointer-events: none; }
       .switch span { width: 3.3rem; height: 1.7rem; border: 1px solid var(--line-strong); border-radius: 999px; background: rgba(8,14,16,.86); position: relative; transition: .2s; }
@@ -50,16 +49,16 @@
       .mini-switch span::after { content: ''; position: absolute; left: .2rem; top: .2rem; width: .86rem; height: .86rem; border-radius: 50%; background: #4a6570; transition: .2s; }
       .mini-switch input:checked + span { border-color: #2b8ba5; background: rgba(30,98,117,.3); }
       .mini-switch input:checked + span::after { transform: translateX(1.1rem); background: #2b8ba5; }
-      .field, select { width: 100%; border: 1px solid var(--line); background: rgba(12,21,24,.78); color: #e8f2f5; border-radius: 2px; padding: .75rem .85rem; font-family: var(--fm); font-size: .7rem; outline: none; }
+      .field, select { width: 100%; border: 1px solid var(--line); background: rgba(12,21,24,.78); color: #e8f2f5; border-radius: 2px; padding: .75rem .85rem; font-family: var(--fm); font-size: var(--fs-xs); outline: none; }
       .field:focus, select:focus { border-color: #2b8ba5; box-shadow: 0 0 0 3px rgba(43,139,165,.12); }
-      .feedback { min-height: 1.2rem; font-family: var(--fm); font-size: .68rem; letter-spacing: .06em; color: #4a6570; }
+      .feedback { min-height: 1.2rem; font-family: var(--fm); font-size: var(--fs-xs); letter-spacing: .06em; color: #4a6570; }
       .feedback[data-tone="success"] { color: #2b8ba5; }
       .feedback[data-tone="error"] { color: #e07b24; }
-      .notice { border: 1px solid rgba(224,123,36,.34); background: rgba(224,123,36,.08); color: #e8f2f5; border-radius: 8px; padding: 1rem; font-size: .85rem; }
+      .notice { border: 1px solid rgba(224,123,36,.34); background: rgba(224,123,36,.08); color: #e8f2f5; border-radius: 8px; padding: 1rem; font-size: var(--fs-base); }
       .admin-table { width: 100%; border-collapse: collapse; }
-      .admin-table th { font-family: var(--fm); font-size: .62rem; color: #4a6570; letter-spacing: .18em; text-transform: uppercase; text-align: left; padding: .75rem; border-bottom: 1px solid var(--line); }
-      .admin-table td { padding: .75rem; border-bottom: 1px solid var(--line); vertical-align: middle; color: #e8f2f5; font-size: .78rem; }
-      .admin-table td span { display: block; max-width: 18rem; overflow: hidden; text-overflow: ellipsis; color: #4a6570; font-family: var(--fm); font-size: .58rem; white-space: nowrap; }
+      .admin-table th { font-family: var(--fm); font-size: var(--fs-micro); color: #4a6570; letter-spacing: .18em; text-transform: uppercase; text-align: left; padding: .75rem; border-bottom: 1px solid var(--line); }
+      .admin-table td { padding: .75rem; border-bottom: 1px solid var(--line); vertical-align: middle; color: #e8f2f5; font-size: var(--fs-sm); }
+      .admin-table td span { display: block; max-width: 18rem; overflow: hidden; text-overflow: ellipsis; color: #4a6570; font-family: var(--fm); font-size: var(--fs-micro); white-space: nowrap; }
       .row-actions { display: flex; align-items: center; gap: .45rem; }
       .icon-btn { display: grid; place-items: center; width: 2rem; height: 2rem; border: 1px solid var(--line); color: #4a6570; border-radius: 2px; transition: .2s; }
       .icon-btn:hover { color: #2b8ba5; border-color: #2b8ba5; }
@@ -70,29 +69,29 @@
       .property-card:hover { border-color: #2b8ba5; }
       .property-cover { position: relative; aspect-ratio: 4 / 3; background: rgba(8,14,16,.86); overflow: hidden; }
       .property-cover img { width: 100%; height: 100%; object-fit: cover; }
-      .property-cover .no-image { display: grid; place-items: center; height: 100%; color: #4a6570; font-family: var(--fm); font-size: .6rem; letter-spacing: .14em; text-transform: uppercase; }
-      .property-badge { position: absolute; top: .6rem; left: .6rem; display: inline-flex; align-items: center; gap: .35rem; padding: .3rem .55rem; border-radius: 999px; background: rgba(8,14,16,.78); backdrop-filter: blur(6px); font-family: var(--fm); font-size: .58rem; letter-spacing: .12em; text-transform: uppercase; color: #4a6570; }
+      .property-cover .no-image { display: grid; place-items: center; height: 100%; color: #4a6570; font-family: var(--fm); font-size: var(--fs-micro); letter-spacing: .14em; text-transform: uppercase; }
+      .property-badge { position: absolute; top: .6rem; left: .6rem; display: inline-flex; align-items: center; gap: .35rem; padding: .3rem .55rem; border-radius: 999px; background: rgba(8,14,16,.78); backdrop-filter: blur(6px); font-family: var(--fm); font-size: var(--fs-micro); letter-spacing: .12em; text-transform: uppercase; color: #4a6570; }
       .property-badge::before { content: ''; width: .4rem; height: .4rem; border-radius: 50%; background: #4a6570; }
       .property-badge.is-active { color: #2b8ba5; }
       .property-badge.is-active::before { background: #2b8ba5; box-shadow: 0 0 8px rgba(43,139,165,.7); }
       .property-body { padding: 1rem 1.1rem 1.1rem; display: flex; flex-direction: column; gap: .65rem; flex: 1; }
-      .property-body h3 { font-size: 1.02rem; font-weight: 700; line-height: 1.25; }
-      .property-body .property-address { color: #4a6570; font-family: var(--fm); font-size: .64rem; letter-spacing: .06em; }
+      .property-body h3 { font-size: var(--fs-lg); font-weight: 700; line-height: 1.25; }
+      .property-body .property-address { color: #4a6570; font-family: var(--fm); font-size: var(--fs-xs); letter-spacing: .06em; }
       .property-actions { margin-top: auto; display: flex; gap: .5rem; padding-top: .3rem; }
-      .property-actions .btn { flex: 1; padding: .55rem .6rem; font-size: .62rem; }
+      .property-actions .btn { flex: 1; padding: .55rem .6rem; font-size: var(--fs-micro); }
       .property-edit { border-top: 1px solid var(--line); margin-top: .2rem; padding-top: .65rem; display: none; gap: .5rem; flex-direction: column; }
       .property-edit.open { display: flex; }
-      .property-edit input { font-size: .64rem; padding: .5rem .6rem; }
-      .property-edit-toggle { align-self: flex-start; color: #4a6570; font-family: var(--fm); font-size: .6rem; letter-spacing: .12em; text-transform: uppercase; text-decoration: underline; text-underline-offset: .2rem; }
+      .property-edit input { font-size: var(--fs-xs); padding: .5rem .6rem; }
+      .property-edit-toggle { align-self: flex-start; color: #4a6570; font-family: var(--fm); font-size: var(--fs-micro); letter-spacing: .12em; text-transform: uppercase; text-decoration: underline; text-underline-offset: .2rem; }
       .property-edit-toggle:hover { color: #2b8ba5; }
       .auth-state { max-width: 36rem; margin: 8rem auto; border: 1px solid var(--line); background: rgba(12,21,24,.72); border-radius: 8px; padding: 2rem; }
-      .auth-state h1 { margin-top: 1rem; font-size: 2rem; font-weight: 800; }
+      .auth-state h1 { margin-top: 1rem; font-size: var(--fs-2xl); font-weight: 800; }
       .auth-state p { margin-top: 1rem; color: #4a6570; line-height: 1.6; }
     }
   </style>
 </head>
 <body>
-  <main class="relative z-10 px-6 py-8 lg:px-12" data-auth-status>
+  <main class="relative z-10 cd-shell" data-auth-status>
     <nav class="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-5">
       <a class="nav-logo" href="index.html#hero">CDEV</a>
       <div class="flex flex-wrap items-center gap-6">
@@ -103,14 +102,14 @@
       </div>
     </nav>
 
-    <section class="mx-auto max-w-6xl pt-16">
+    <section class="mx-auto max-w-6xl cd-page">
       <div class="section-label">Admin</div>
       <div class="mt-5 flex flex-wrap items-end justify-between gap-5">
         <div>
-          <h1 class="text-[clamp(2.5rem,6vw,5rem)] font-extrabold leading-[0.95]">Controle<br><span class="text-transparent [-webkit-text-stroke:1px_rgba(232,242,245,.55)]">global.</span></h1>
-          <p class="mt-4 max-w-2xl text-[0.95rem] leading-7 text-muted">Gerencie usuarios, permissoes e modulos em tempo real.</p>
+          <h1 class="cd-display font-extrabold leading-[0.95]">Controle<br><span class="text-transparent [-webkit-text-stroke:1px_rgba(232,242,245,.55)]">global.</span></h1>
+          <p class="mt-4 max-w-2xl text-[length:var(--fs-base)] leading-7 text-muted">Gerencie usuarios, permissoes e modulos em tempo real.</p>
         </div>
-        <div class="font-mono text-[0.68rem] uppercase tracking-[0.18em] text-muted">Sessao <span id="admin-email" class="text-aqua"></span></div>
+        <div class="font-mono text-[length:var(--fs-xs)] uppercase tracking-[var(--track-label)] text-muted">Sessao <span id="admin-email" class="text-aqua"></span></div>
       </div>
 
       <div class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -126,8 +125,8 @@
         <section class="panel p-5">
           <div class="flex items-center justify-between gap-4">
             <div>
-              <div class="font-mono text-[0.68rem] uppercase tracking-[0.2em] text-aqua">Toggles</div>
-              <h2 class="mt-2 text-xl font-bold">Modulos e acessos</h2>
+              <div class="font-mono text-[length:var(--fs-xs)] uppercase tracking-[var(--track-label)] text-aqua">Toggles</div>
+              <h2 class="mt-2 text-[length:var(--fs-lg)] font-bold">Modulos e acessos</h2>
             </div>
             <i class="text-aqua" data-lucide="sliders-horizontal"></i>
           </div>
@@ -137,8 +136,8 @@
         <section class="panel p-5">
           <div class="flex items-center justify-between gap-4">
             <div>
-              <div class="font-mono text-[0.68rem] uppercase tracking-[0.2em] text-aqua">Usuarios</div>
-              <h2 class="mt-2 text-xl font-bold">Gerenciamento</h2>
+              <div class="font-mono text-[length:var(--fs-xs)] uppercase tracking-[var(--track-label)] text-aqua">Usuarios</div>
+              <h2 class="mt-2 text-[length:var(--fs-lg)] font-bold">Gerenciamento</h2>
             </div>
             <i class="text-aqua" data-lucide="users-round"></i>
           </div>
@@ -150,7 +149,7 @@
               <option value="user">user</option>
               <option value="admin">admin</option>
             </select>
-            <label class="flex items-center gap-3 font-mono text-[0.65rem] uppercase tracking-[0.16em] text-muted">
+            <label class="flex items-center gap-3 font-mono text-[length:var(--fs-micro)] uppercase tracking-[var(--track-label)] text-muted">
               <input name="active" type="checkbox" checked> Ativo
             </label>
             <button class="btn btn-primary md:col-span-4" type="submit"><i data-lucide="user-plus"></i>Criar usuario</button>
@@ -176,8 +175,8 @@
       <section class="panel mt-6 p-5">
         <div class="flex items-center justify-between gap-4">
           <div>
-            <div class="font-mono text-[0.68rem] uppercase tracking-[0.2em] text-aqua">Apartamentos</div>
-            <h2 class="mt-2 text-xl font-bold">Seus anuncios</h2>
+            <div class="font-mono text-[length:var(--fs-xs)] uppercase tracking-[var(--track-label)] text-aqua">Apartamentos</div>
+            <h2 class="mt-2 text-[length:var(--fs-lg)] font-bold">Seus anuncios</h2>
           </div>
           <i class="text-aqua" data-lucide="layout-grid"></i>
         </div>
@@ -188,8 +187,8 @@
       <section class="panel mt-6 p-5">
         <div class="flex items-center justify-between gap-4">
           <div>
-            <div class="font-mono text-[0.68rem] uppercase tracking-[0.2em] text-aqua">Planilhas</div>
-            <h2 class="mt-2 text-xl font-bold">Imoveis e proprietarios</h2>
+            <div class="font-mono text-[length:var(--fs-xs)] uppercase tracking-[var(--track-label)] text-aqua">Planilhas</div>
+            <h2 class="mt-2 text-[length:var(--fs-lg)] font-bold">Imoveis e proprietarios</h2>
           </div>
           <i class="text-aqua" data-lucide="table-2"></i>
         </div>
@@ -203,19 +202,19 @@
           <input class="field lg:col-span-2" name="listing_url" type="url" placeholder="Link do anuncio (Airbnb)">
           <input class="field lg:col-span-4" name="address" placeholder="Endereco / bairro (ex: Guaiba, RS)">
           <label>
-            <span class="mb-2 block font-mono text-[0.62rem] uppercase tracking-[0.16em] text-muted">Percentual</span>
+            <span class="mb-2 block font-mono text-[length:var(--fs-micro)] uppercase tracking-[var(--track-label)] text-muted">Percentual</span>
             <input class="field" name="commission_percent" type="number" min="0" max="100" step="0.01" value="10" required>
           </label>
           <label>
-            <span class="mb-2 block font-mono text-[0.62rem] uppercase tracking-[0.16em] text-muted">Limpeza por cliente</span>
+            <span class="mb-2 block font-mono text-[length:var(--fs-micro)] uppercase tracking-[var(--track-label)] text-muted">Limpeza por cliente</span>
             <input class="field" name="cleaning_fee_per_client" type="number" min="0" step="0.01" value="380" required>
           </label>
           <label>
-            <span class="mb-2 block font-mono text-[0.62rem] uppercase tracking-[0.16em] text-muted">Condominio</span>
+            <span class="mb-2 block font-mono text-[length:var(--fs-micro)] uppercase tracking-[var(--track-label)] text-muted">Condominio</span>
             <input class="field" name="fixed_condo" type="number" min="0" step="0.01" value="1536.30" required>
           </label>
           <label>
-            <span class="mb-2 block font-mono text-[0.62rem] uppercase tracking-[0.16em] text-muted">Gas / Luz / Internet</span>
+            <span class="mb-2 block font-mono text-[length:var(--fs-micro)] uppercase tracking-[var(--track-label)] text-muted">Gas / Luz / Internet</span>
             <input class="field" name="fixed_bundle" type="text" value="70 / 265 / 123" required>
           </label>
           <button class="btn btn-primary lg:col-span-4" type="submit"><i data-lucide="plus"></i>Criar planilha</button>

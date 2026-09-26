@@ -9,7 +9,7 @@ User=cdev-monitor
 Group=cdev-monitor
 EnvironmentFile=/etc/cdev-monitor.env
 # Ajuste o caminho para onde o repositorio esta clonado na VPS
-ExecStart=/usr/bin/node /var/www/cdev/ops/monitor/cdev-monitor.mjs
+ExecStart=/usr/bin/node /var/www/cdev-site/ops/monitor/cdev-monitor.mjs
 StateDirectory=cdev-monitor
 TimeoutStartSec=240
 NoNewPrivileges=true

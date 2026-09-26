@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 # Publica um dominio de cliente no Site Engine da VPS (R$0: Nginx + Let's Encrypt).
-# Uso: sudo CERTBOT_EMAIL=voce@email.com ./add-client-domain.sh barbeariaalpha.com.br [/var/www/cdev]
+# Uso: sudo CERTBOT_EMAIL=voce@email.com ./add-client-domain.sh barbeariaalpha.com.br [/var/www/cdev-site]
 # Pre-requisitos: DNS do dominio (A e www) apontando para esta VPS; dominio cadastrado no
 # Control Center (Dominios, status ATIVO) e vinculado ao projeto PUBLICADO.
 set -euo pipefail
 DOMAIN="${1:?informe o dominio, ex.: cliente.com.br}"
-ROOT="${2:-/var/www/cdev}"
+ROOT="${2:-/var/www/cdev-site}"
 EMAIL="${CERTBOT_EMAIL:?defina CERTBOT_EMAIL=seu@email antes de rodar}"
 [[ "$DOMAIN" =~ ^[a-z0-9.-]+\.[a-z]{2,}$ ]] || { echo "dominio invalido"; exit 1; }
 CONF="/etc/nginx/sites-available/site-$DOMAIN"
