@@ -19,12 +19,15 @@ Admins can create spreadsheets in `admin.html`, choosing the owner login, year, 
 
 ## CDEV Control Center
 
-Painel operacional (Site Factory + CRM + financeiro recorrente + monitoramento) em `control.html`,
+Painel operacional (Site Factory + CRM + financeiro recorrente + monitoramento) em `/control`,
 usando o mesmo login, as mesmas permissões e o mesmo Supabase do painel.
 
 1. Rode no Supabase SQL Editor: `supabase/07_control_center.sql` e `supabase/08_control_center_templates.sql`
    (opcional: `supabase/09_control_center_cron.sql`).
 2. Na VPS, instale o worker de monitoramento: `ops/monitor/README.md`.
-3. Demos e domínios de clientes: `ops/nginx/`.
+3. URLs limpas (`/admin`, `/dashboard`, `/control`): `ops/nginx/clean-urls.conf`.
+4. Demos e domínios de clientes: `ops/nginx/`.
+
+Rodar local: `npx serve . -l 5500` e abrir `http://localhost:5500/login`.
 
 Documentação completa: `docs/CONTROL_CENTER.md`.

@@ -417,8 +417,7 @@
     async render() {
       const r = CC.router.parse();
       const view = CC.routes[r.name] || CC.routes.painel;
-      $$('.cc-nav').forEach((a) => a.classList.toggle('active', a.dataset.route === r.name));
-      document.body.classList.remove('menu-open');
+      if (window.CDEVShell) { window.CDEVShell.setActiveRoute(CC.routes[r.name] ? r.name : 'painel'); window.CDEVShell.closeMenu(); }
       // novo elemento a cada rota: listeners da tela anterior nao se acumulam
       const old = $('#view');
       const root = old.cloneNode(false);

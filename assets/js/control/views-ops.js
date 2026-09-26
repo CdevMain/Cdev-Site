@@ -491,7 +491,7 @@
     const values = Object.fromEntries(rows.map((x) => [x.key, x.value]));
     const w = values.lead_score_weights || {};
     const workerAt = lastCheck[0]?.last_check_at;
-    root.innerHTML = `${pageHead('Sistema', 'Configurações', 'Nenhum valor crítico fica fixo no código. Toggles globais de módulos continuam em <a href="admin.html">Admin</a>.')}
+    root.innerHTML = `${pageHead('Sistema', 'Configurações', 'Nenhum valor crítico fica fixo no código. Toggles globais de módulos continuam em <a href="/admin">Admin</a>.')}
       <div class="grid-2">
         <section class="panel"><div class="panel-head"><h2 class="block-title">Alertas, monitoramento e formato</h2></div><div class="panel-body" id="sf">${CC.formHtml(SETTINGS_FIELDS, values)}
           <div class="row" style="margin-top:1rem"><button class="btn btn-primary" data-save>${icon('check')}Salvar configurações</button></div></div></section>

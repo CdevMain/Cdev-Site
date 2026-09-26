@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>404 - Página não encontrada</title>
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="assets/css/admin-fluid.css?v=20260926" />
+  <link rel="stylesheet" href="/assets/css/admin-fluid.css?v=20260926b" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -134,7 +134,7 @@
     }
   </style>
 </head>
-<body data-error-code="404" data-redirect="index.html" data-redirect-seconds="10">
+<body data-error-code="404" data-redirect="/" data-redirect-seconds="10">
   <div id="cur"><div id="cring"></div><div id="cdot"></div></div>
 
   <div class="page-404">
@@ -144,9 +144,9 @@
       <h1 class="error-title" id="error-title">Página não encontrada</h1>
       <p class="error-subtitle" id="error-subtitle">Desculpe! A página que você está procurando não existe ou foi movida.</p>
       <div class="error-actions">
-        <a class="error-btn" href="index.html" data-i="crumb-home">Home</a>
-        <a class="error-btn" href="index.html#contact" data-i="nav-contact">Contato</a>
-        <a class="error-btn" href="community.html" data-i="nav-community">Comunidade</a>
+        <a class="error-btn" href="/" data-i="crumb-home">Home</a>
+        <a class="error-btn" href="/#contact" data-i="nav-contact">Contato</a>
+        <a class="error-btn" href="/community" data-i="nav-community">Comunidade</a>
       </div>
       <div class="timer">
         <span data-i="error-redirect">Redirecionando em</span> <span id="countdown">10</span>s...
@@ -154,7 +154,7 @@
     </div>
   </div>
 
-  <script src="assets/js/i18n.js"></script>
-  <script src="assets/js/site.js"></script>
+  <script src="/assets/js/i18n.js"></script>
+  <script src="/assets/js/site.js"></script>
 </body>
 </html>

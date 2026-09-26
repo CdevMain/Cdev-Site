@@ -228,7 +228,7 @@
     el.innerHTML = `<div class="editor-layout">
       <div>${tab === 'tema' ? themeForm() : contentForm()}
         <div class="row" style="position:sticky;bottom:0;padding:.8rem 0;background:linear-gradient(transparent,var(--ink) 40%)"><button class="btn btn-primary" data-save>${icon('check')}Salvar alterações</button><span class="mono tiny muted" id="dirty"></span></div></div>
-      <div class="panel editor-preview desktop"><div class="panel-head"><span class="kicker">Preview ao vivo</span><span class="spacer"></span><div class="segmented-tabs"><button class="segmented-tab active" data-pv="desktop">Desktop</button><button class="segmented-tab" data-pv="mobile">Mobile</button></div><a class="btn btn-sm" href="${CC.previewUrl(p.slug)}" target="_blank">${icon('external')}Abrir</a></div><div class="pv-wrap"><iframe id="pv" src="site.html?live=1" title="Preview"></iframe></div></div></div>`;
+      <div class="panel editor-preview desktop"><div class="panel-head"><span class="kicker">Preview ao vivo</span><span class="spacer"></span><div class="segmented-tabs"><button class="segmented-tab active" data-pv="desktop">Desktop</button><button class="segmented-tab" data-pv="mobile">Mobile</button></div><a class="btn btn-sm" href="${CC.previewUrl(p.slug)}" target="_blank">${icon('external')}Abrir</a></div><div class="pv-wrap"><iframe id="pv" src="/site?live=1" title="Preview"></iframe></div></div></div>`;
 
     const setPath = (obj, path, val) => { const ks = path.split('.'); let o = obj; ks.slice(0, -1).forEach((k) => { o[k] = o[k] || {}; o = o[k]; }); o[ks[ks.length - 1]] = val; };
     const collect = () => {
@@ -312,7 +312,7 @@
             <span style="font-family:'${esc(th.fonts.heading)}',serif;font-size:var(--fs-lg);font-weight:700;color:${esc(th.colors.text)}">${esc(t.content?.brand?.name || t.name)}</span></div>
           <div class="panel-body"><div class="row"><strong>${esc(t.name)}</strong>${t.active ? '' : '<span class="badge gray">inativo</span>'}<span class="spacer"></span><span class="mono tiny muted">${uses[t.id] || 0} sites</span></div>
             <div class="small muted" style="margin:.35rem 0 .8rem">${esc(t.segment)} · ${(t.sections || []).length} seções · ${esc(t.theme?.preset || '')}</div>
-            <div class="row"><a class="btn btn-sm" href="site.html?template=${encodeURIComponent(t.key)}" target="_blank">${icon('eye')}Ver</a><button class="btn btn-sm btn-primary" data-use="${t.id}">${icon('rocket')}Criar site</button><button class="icon-btn" data-edit="${t.id}">${icon('edit')}</button><button class="icon-btn" data-dup="${t.id}" title="Duplicar">${icon('copy')}</button></div></div>
+            <div class="row"><a class="btn btn-sm" href="/site?template=${encodeURIComponent(t.key)}" target="_blank">${icon('eye')}Ver</a><button class="btn btn-sm btn-primary" data-use="${t.id}">${icon('rocket')}Criar site</button><button class="icon-btn" data-edit="${t.id}">${icon('edit')}</button><button class="icon-btn" data-dup="${t.id}" title="Duplicar">${icon('copy')}</button></div></div>
         </article>`; }).join('') || '<div class="notice">Nenhum template. Rode <code>supabase/08_control_center_templates.sql</code>.</div>'}</div>`;
     const find = (id) => rows.find((t) => t.id === id);
     const fields = [

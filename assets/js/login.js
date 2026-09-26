@@ -9,8 +9,11 @@
 
   const nextPage = () => {
     const params = new URLSearchParams(location.search);
-    const next = params.get('next');
-    return next && !next.startsWith('http') ? next : 'dashboard.html';
+    const next = params.get('next') || '';
+    // so aceita caminhos internos (evita redirecionar para outro site)
+    if (/^\/(?![\/\\])[^\s\\]*$/.test(next)) return next;
+    if (/^[\w-]+(\.html)?([?#].*)?$/.test(next)) return `/${next.replace(/\.html/, '')}`;
+    return '/dashboard';
   };
 
   const init = () => {

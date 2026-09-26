@@ -15,7 +15,7 @@ server {
     server_name $DOMAIN www.$DOMAIN;
     root $ROOT;
     location /assets/ { try_files \$uri =404; expires 7d; }
-    location ~ ^/(admin|control|dashboard|login)\.html\$ { return 404; }
+    location ~ ^/(admin|control|dashboard|login)(\.html)?/?\$ { return 404; }
     location ~ ^/(supabase|ops|tools|\.git)/ { return 404; }
     location / { try_files /site.html =404; }
 }

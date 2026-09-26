@@ -18,5 +18,5 @@ Este site é um portfólio pessoal. As páginas abaixo têm versões em Markdown
 
 ## Optional
 
-- [Página HTML - Home](https://cdev.com.br/index.html)
-- [Página HTML - Comunidade](https://cdev.com.br/community.html)
+- [Página HTML - Home](https://cdev.com.br/)
+- [Página HTML - Comunidade](https://cdev.com.br/community)

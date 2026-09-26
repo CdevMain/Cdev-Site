@@ -146,7 +146,7 @@
             <a class="btn btn-ghost" href="${sheet.listing_url ? escapeAttr(sheet.listing_url) : '#'}" target="_blank" rel="noopener" ${sheet.listing_url ? '' : 'aria-disabled="true" onclick="return false;" title="Sem link cadastrado"'}>
               <i data-lucide="external-link"></i>Anuncio
             </a>
-            <a class="btn btn-primary" href="dashboard.html?sheet=${sheet.id}">
+            <a class="btn btn-primary" href="/dashboard?sheet=${sheet.id}">
               <i data-lucide="table-2"></i>Planilha
             </a>
           </div>

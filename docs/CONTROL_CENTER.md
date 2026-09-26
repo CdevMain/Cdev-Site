@@ -31,8 +31,8 @@ Nada foi duplicado: não há segundo login, segundo painel nem segundo banco.
 CDEV (repositório único, servido pelo Nginx da VPS)
 │
 ├── Painel existente
-│   ├── login.html · dashboard.html · admin.html      (inalterados, + link "Control Center")
-│   └── control.html  ← CDEV CONTROL CENTER
+│   ├── /login · /dashboard · /admin   (mesma barra lateral recolhível do Control Center)
+│   └── /control  ← CDEV CONTROL CENTER
 │       ├── Control Center (Central de Pendências, próximas ações, alertas, sites, atividade)
 │       ├── Clientes (+ página única do cliente com ações rápidas)
 │       ├── Leads / CRM · Mensagens
@@ -116,7 +116,16 @@ os próximos limiares deixam de ser emitidos. Monitoramento alerta apenas `ONLIN
 
 ---
 
-## 4. Instalação
+## 4. Navegação e URLs
+
+- **Barra lateral única** (`assets/js/admin-shell.js` + `assets/css/admin-shell.css`) em `/control`, `/dashboard` e `/admin`.
+  Mostra só o que a pessoa pode acessar: admin vê tudo; usuário comum vê apenas Dashboard.
+  Recolhível (botão no topo da barra ou **Ctrl+\\**), estado lembrado no navegador; no celular vira gaveta.
+- **URLs limpas**: `/login`, `/dashboard`, `/admin`, `/control`, `/site?slug=…`, `/community`.
+  Links antigos com `.html` recebem 301 para a versão limpa. Configuração em `ops/nginx/clean-urls.conf`.
+- Rodar local: `npx serve . -l 5500` (já entende URLs limpas). `python -m http.server` não entende.
+
+## 5. Instalação
 
 1. **Banco** (Supabase SQL Editor, nesta ordem):
    1. `supabase/07_control_center.sql`
@@ -126,11 +135,11 @@ os próximos limiares deixam de ser emitidos. Monitoramento alerta apenas `ONLIN
 3. **Worker**: seguir `ops/monitor/README.md` (Node ≥ 18, systemd timer, service key em `/etc/cdev-monitor.env`).
 4. **Demos**: DNS `*.sites` → IP da VPS e bloco Nginx de `ops/nginx/cdev-sites.conf.example`.
 5. **Domínio de cliente**: `sudo CERTBOT_EMAIL=... ops/nginx/add-client-domain.sh cliente.com.br`.
-6. Bloqueie `/supabase`, `/ops`, `/tools` e `/.git` no server block do cdev.com.br (exemplo no arquivo do Nginx).
+6. URLs limpas + bloqueio de `/supabase`, `/ops`, `/tools`, `/docs` e `/.git`: incluir `ops/nginx/clean-urls.conf` no server block do cdev.com.br (instruções no próprio arquivo).
 
 ---
 
-## 5. Status das fases
+## 6. Status das fases
 
 | Fase | Conteúdo | Status |
 |---|---|---|
@@ -158,14 +167,14 @@ skeleton de carregamento, toasts de sucesso/erro com mensagens em português, e 
 
 ---
 
-## 6. Segurança
+## 7. Segurança
 
 - Nenhuma senha/token de cliente é armazenada: apenas provedor, URL do painel, identificador e observações.
 - Service key só no servidor (`/etc/cdev-monitor.env`, 600). O navegador usa apenas a anon key com RLS.
 - `cc_public_site` nunca devolve cliente, valores ou notas.
 - HTML sempre escapado; links passam por `safeUrl` (bloqueia `javascript:`); preview usa `postMessage` com checagem de origem.
 
-## 7. Próximos passos sugeridos (opcionais)
+## 8. Próximos passos sugeridos (opcionais)
 
 - Upload de mídia para a VPS (StorageProvider local com um endpoint mínimo) ou Supabase Storage (plano gratuito).
 - Pré-renderização estática dos sites publicados para SEO (hoje o render é client-side).

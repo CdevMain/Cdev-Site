@@ -8,25 +8,18 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="assets/css/admin-fluid.css?v=20260926" />
-  <link rel="stylesheet" href="assets/css/control.css?v=20260926" />
+  <link rel="stylesheet" href="/assets/css/admin-fluid.css?v=20260926b" />
+  <script>try{if(localStorage.getItem('cdev:side-collapsed')==='1')document.documentElement.classList.add('side-collapsed')}catch(e){}</script>
+  <link rel="stylesheet" href="/assets/css/admin-shell.css?v=20260926b" />
+  <link rel="stylesheet" href="/assets/css/control.css?v=20260926b" />
 </head>
-<body>
-  <main class="cc-shell" data-auth-status>
-    <aside class="cc-side">
-      <a class="nav-logo" href="index.html#hero">CDEV</a>
-      <nav id="side-nav"></nav>
-      <div class="cc-side-foot">
-        <div class="cc-side-group">Painel</div>
-        <a class="cc-nav" href="dashboard.html"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M18 17V9M13 17V5M8 17v-3"/></svg><span>Dashboard</span></a>
-        <a class="cc-nav" href="admin.html"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/></svg><span>Admin</span></a>
-        <button class="cc-nav" data-sign-out><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg><span>Sair</span></button>
-      </div>
-    </aside>
+<body data-page="control">
+  <div class="cc-shell">
+    <aside class="cc-side" id="cdev-side"></aside>
 
-    <div class="cc-main">
+    <main class="cc-main" data-auth-status>
       <header class="cc-top">
-        <button class="icon-btn cc-menu-btn" id="menu-btn" aria-label="Menu"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+        <button class="icon-btn cc-menu-btn" id="menu-btn" type="button" aria-label="Abrir menu"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
         <div class="cc-search">
           <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
           <input id="global-search" class="field" type="search" autocomplete="off" placeholder="Buscar cliente, empresa, domínio, telefone, e-mail, projeto...  ( / )" aria-label="Pesquisa global">
@@ -38,20 +31,21 @@
         </div>
       </header>
       <div id="view"></div>
-    </div>
-  </main>
+    </main>
+  </div>
   <div id="toast-region" aria-live="polite"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="assets/js/supabase.config.js"></script>
-  <script src="assets/js/cdev-auth.js"></script>
-  <script src="assets/js/site-engine.js?v=20260925"></script>
-  <script src="assets/js/control/core.js?v=20260925"></script>
-  <script src="assets/js/control/providers.js?v=20260925"></script>
-  <script src="assets/js/control/entities.js?v=20260925"></script>
-  <script src="assets/js/control/views-ops.js?v=20260925"></script>
-  <script src="assets/js/control/views-sites.js?v=20260925"></script>
-  <script src="assets/js/control/views-crm.js?v=20260925"></script>
-  <script src="assets/js/control/app.js?v=20260925"></script>
+  <script src="/assets/js/supabase.config.js"></script>
+  <script src="/assets/js/cdev-auth.js?v=20260926b"></script>
+  <script src="/assets/js/admin-shell.js?v=20260926b"></script>
+  <script src="/assets/js/site-engine.js?v=20260926b"></script>
+  <script src="/assets/js/control/core.js?v=20260926b"></script>
+  <script src="/assets/js/control/providers.js?v=20260926b"></script>
+  <script src="/assets/js/control/entities.js?v=20260926b"></script>
+  <script src="/assets/js/control/views-ops.js?v=20260926b"></script>
+  <script src="/assets/js/control/views-sites.js?v=20260926b"></script>
+  <script src="/assets/js/control/views-crm.js?v=20260926b"></script>
+  <script src="/assets/js/control/app.js?v=20260926b"></script>
 </body>
 </html>

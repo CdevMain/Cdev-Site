@@ -3,11 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex,nofollow" />
   <title>CDEV - Admin</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="assets/css/admin-fluid.css?v=20260926" />
+  <link rel="stylesheet" href="/assets/css/admin-fluid.css?v=20260926b" />
+  <script>try{if(localStorage.getItem('cdev:side-collapsed')==='1')document.documentElement.classList.add('side-collapsed')}catch(e){}</script>
+  <link rel="stylesheet" href="/assets/css/admin-shell.css?v=20260926b" />
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = { theme: { extend: { colors: { ink: '#080e10', ink2: '#0c1518', ink3: '#111d21', mist: '#e8f2f5', muted: '#4a6570', accent: '#1e6275', aqua: '#2b8ba5', java: '#e07b24', line: 'rgba(30,98,117,.18)', lineStrong: 'rgba(30,98,117,.45)', faint: 'rgba(30,98,117,.07)' }, fontFamily: { display: ['Syne', 'sans-serif'], mono: ['DM Mono', 'monospace'] }, boxShadow: { soft: '0 20px 60px rgba(7,15,18,.55)' } } } };
@@ -22,8 +25,6 @@
     }
     @layer components {
       .nav-logo { display: flex; align-items: center; gap: .75rem; font-family: var(--fm); font-size: var(--fs-sm); letter-spacing: .2em; text-transform: uppercase; color: #2b8ba5; text-decoration: none; }
-      .nav-link { font-size: var(--fs-sm); font-weight: 500; letter-spacing: .14em; text-transform: uppercase; color: #4a6570; transition: color .2s; }
-      .nav-link:hover, .nav-link.active { color: #2b8ba5; }
       .section-label { font-family: var(--fm); font-size: var(--fs-xs); color: #2b8ba5; letter-spacing: .22em; text-transform: uppercase; display: flex; align-items: center; gap: .75rem; }
       .section-label::before { content: ''; display: block; width: 28px; height: 1px; background: #2b8ba5; }
       .btn { display: inline-flex; align-items: center; justify-content: center; gap: .55rem; min-height: 2.35rem; padding: .65rem .9rem; border-radius: 2px; font-size: var(--fs-xs); font-weight: 700; letter-spacing: .12em; text-transform: uppercase; transition: all .25s; }
@@ -90,17 +91,15 @@
     }
   </style>
 </head>
-<body>
-  <main class="relative z-10 cd-shell" data-auth-status>
-    <nav class="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-5">
-      <a class="nav-logo" href="index.html#hero">CDEV</a>
-      <div class="flex flex-wrap items-center gap-6">
-        <a class="nav-link" href="dashboard.html">Dashboard</a>
-        <a class="nav-link active" href="admin.html">Admin</a>
-        <a class="nav-link" href="control.html">Control Center</a>
-        <button class="btn btn-ghost" data-sign-out><i data-lucide="log-out"></i>Sair</button>
-      </div>
-    </nav>
+<body data-page="admin">
+  <div class="cc-shell">
+    <aside class="cc-side" id="cdev-side"></aside>
+    <main class="cc-main" data-auth-status>
+      <header class="cc-top">
+        <button class="cc-menu-btn" id="menu-btn" type="button" aria-label="Abrir menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+        <span class="spacer"></span>
+        <span class="cc-user" data-shell-user></span>
+      </header>
 
     <section class="mx-auto max-w-6xl cd-page">
       <div class="section-label">Admin</div>
@@ -236,13 +235,15 @@
         </div>
       </section>
     </section>
-  </main>
+    </main>
+  </div>
 
   <script src="https://unpkg.com/lucide@latest"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="assets/js/supabase.config.js"></script>
-  <script src="assets/js/cdev-auth.js"></script>
-  <script src="assets/js/admin.js"></script>
+  <script src="/assets/js/supabase.config.js"></script>
+  <script src="/assets/js/cdev-auth.js?v=20260926b"></script>
+  <script src="/assets/js/admin-shell.js?v=20260926b"></script>
+  <script src="/assets/js/admin.js"></script>
   <script>window.lucide && window.lucide.createIcons();</script>
 </body>
 </html>

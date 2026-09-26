@@ -3,11 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex,nofollow" />
   <title>CDEV - Login</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="assets/css/admin-fluid.css?v=20260926" />
+  <link rel="stylesheet" href="/assets/css/admin-fluid.css?v=20260926b" />
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = { theme: { extend: { colors: { ink: '#080e10', ink2: '#0c1518', ink3: '#111d21', mist: '#e8f2f5', muted: '#4a6570', accent: '#1e6275', aqua: '#2b8ba5', line: 'rgba(30,98,117,.18)', lineStrong: 'rgba(30,98,117,.45)', faint: 'rgba(30,98,117,.07)' }, fontFamily: { display: ['Syne', 'sans-serif'], mono: ['DM Mono', 'monospace'] } } } };
@@ -36,8 +37,8 @@
 <body>
   <main class="relative z-10 min-h-screen cd-shell">
     <nav class="mx-auto flex max-w-6xl items-center justify-between">
-      <a class="nav-logo" href="index.html#hero">CDEV</a>
-      <a class="font-mono text-[length:var(--fs-xs)] uppercase tracking-[var(--track-label)] text-aqua hover:text-mist" href="index.html">Home</a>
+      <a class="nav-logo" href="/">CDEV</a>
+      <a class="font-mono text-[length:var(--fs-xs)] uppercase tracking-[var(--track-label)] text-aqua hover:text-mist" href="/">Home</a>
     </nav>
 
     <section class="mx-auto grid min-h-[80vh] max-w-6xl items-center gap-10 lg:grid-cols-[1fr_0.82fr]">
@@ -64,8 +65,8 @@
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="assets/js/supabase.config.js"></script>
-  <script src="assets/js/cdev-auth.js"></script>
-  <script src="assets/js/login.js"></script>
+  <script src="/assets/js/supabase.config.js"></script>
+  <script src="/assets/js/cdev-auth.js?v=20260926b"></script>
+  <script src="/assets/js/login.js?v=20260926b"></script>
 </body>
 </html>

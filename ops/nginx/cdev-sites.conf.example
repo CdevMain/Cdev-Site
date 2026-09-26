@@ -14,7 +14,7 @@ server {
     location /assets/ { try_files $uri =404; expires 7d; add_header Cache-Control "public"; }
     location = /site.html { add_header Cache-Control "no-cache"; }
     # Bloqueia o painel e arquivos internos nos dominios de clientes/demos
-    location ~ ^/(admin|control|dashboard|login)\.html$ { return 404; }
+    location ~ ^/(admin|control|dashboard|login)(\.html)?/?$ { return 404; }
     location ~ ^/(supabase|ops|tools|\.git)/ { return 404; }
     location / { try_files /site.html =404; }
 }
@@ -25,11 +25,11 @@ server {
 #     server_name barbeariaalpha.com.br www.barbeariaalpha.com.br;
 #     root /var/www/cdev-site;
 #     location /assets/ { try_files $uri =404; expires 7d; }
-#     location ~ ^/(admin|control|dashboard|login)\.html$ { return 404; }
+#     location ~ ^/(admin|control|dashboard|login)(\.html)?/?$ { return 404; }
 #     location ~ ^/(supabase|ops|tools|\.git)/ { return 404; }
 #     location / { try_files /site.html =404; }
 # }
 # Depois: sudo certbot --nginx -d barbeariaalpha.com.br -d www.barbeariaalpha.com.br
 
-# IMPORTANTE: no server block principal do cdev.com.br, bloqueie tambem as pastas internas:
-#     location ~ ^/(supabase|ops|tools|\.git)/ { return 404; }
+# IMPORTANTE: no server block principal do cdev.com.br use ops/nginx/clean-urls.conf
+# (URLs limpas + bloqueio das pastas internas).

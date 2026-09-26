@@ -336,7 +336,7 @@
 
   // ---------------------------------------------------------------- Site Factory helpers
   CC.demoUrl = (slug) => `https://${slug}.${CC.setting('demo_base_domain', 'sites.cdev.com.br')}`;
-  CC.previewUrl = (slug) => `site.html?slug=${encodeURIComponent(slug)}`;
+  CC.previewUrl = (slug) => `/site?slug=${encodeURIComponent(slug)}`;
   CC.siteContentFrom = (tpl, { name, whatsapp, city, phone, email, instagram } = {}) => {
     const c = JSON.parse(JSON.stringify(tpl.content || {}));
     c.brand = c.brand || {}; c.contact = c.contact || {}; c.seo = c.seo || {};

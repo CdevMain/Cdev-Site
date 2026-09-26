@@ -3,41 +3,19 @@
   const CC = window.CC;
   const { $, $$, esc, icon, api, debounce } = CC;
 
-  const NAV = [
-    [null, [['painel', 'Control Center', 'home'], ['notificacoes', 'Alertas', 'bell']]],
-    ['Relacionamento', [['clientes', 'Clientes', 'users'], ['leads', 'Leads / CRM', 'target'], ['mensagens', 'Mensagens', 'msg']]],
-    ['Site Factory', [['projetos', 'Projetos / Sites', 'layers'], ['templates', 'Templates', 'layout']]],
-    ['Financeiro', [['pagamentos', 'Pagamentos', 'wallet'], ['dominios', 'Domínios', 'globe'], ['hospedagens', 'Hospedagens', 'server']]],
-    ['Operação', [['monitoramento', 'Monitoramento', 'activity'], ['incidentes', 'Incidentes', 'zap'], ['backups', 'Backups', 'archive']]],
-    ['Sistema', [['configuracoes', 'Configurações', 'settings']]]
-  ];
-
   CC.loadSettings = async () => {
     const rows = await api.list('cc_settings', { select: 'key,value' });
     CC.settings = Object.fromEntries(rows.map((r) => [r.key, r.value]));
   };
 
-  const renderShell = () => {
-    $('#side-nav').innerHTML = NAV.map(([group, items]) => `${group ? `<div class="cc-side-group">${esc(group)}</div>` : ''}${items.map(([route, text, ic]) =>
-      `<a class="cc-nav" data-route="${route}" href="#/${route}">${icon(ic)}<span>${esc(text)}</span><span class="count" data-count="${route}" hidden></span></a>`).join('')}`).join('');
-  };
-
-  // Contadores na barra lateral e sino (derivados da Central de Pendencias)
+  // Contadores: a barra lateral (admin-shell.js) busca a Central de Pendencias; aqui so sino + titulo da aba
   CC.refreshBadges = async () => {
-    try {
-      const s = await api.rpc('cc_pending_summary');
-      const set = (route, n, warn) => { const el = $(`[data-count="${route}"]`); if (!el) return; el.hidden = !n; el.textContent = n; el.classList.toggle('warn', !!warn); };
-      set('pagamentos', Number(s.payments_overdue) + Number(s.payments_today));
-      set('monitoramento', Number(s.sites_offline));
-      set('incidentes', Number(s.incidents_open));
-      set('dominios', Number(s.domains_expired) || Number(s.domains_30d), !s.domains_expired);
-      set('hospedagens', Number(s.hostings_expired) || Number(s.hostings_30d), !s.hostings_expired);
-      set('backups', Number(s.backups_pending), true);
-      set('leads', Number(s.leads_followup), true);
-      set('notificacoes', Number(s.notifications_unread), true);
-      const dot = $('#bell-dot'); dot.hidden = !Number(s.notifications_unread); dot.textContent = s.notifications_unread;
-      document.title = `${Number(s.payments_overdue) + Number(s.sites_offline) ? `(${Number(s.payments_overdue) + Number(s.sites_offline)}) ` : ''}CDEV - Control Center`;
-    } catch (e) { console.warn('badges', e); }
+    const s = window.CDEVShell ? await window.CDEVShell.refreshBadges() : null;
+    if (!s) return;
+    const dot = $('#bell-dot');
+    if (dot) { dot.hidden = !Number(s.notifications_unread); dot.textContent = s.notifications_unread; }
+    const urgent = Number(s.payments_overdue) + Number(s.sites_offline);
+    document.title = `${urgent ? `(${urgent}) ` : ''}CDEV - Control Center`;
   };
 
   // Pesquisa global
@@ -74,14 +52,12 @@
     if (!ctx) return;
     CC.ctx = ctx;
     $('#cc-user').textContent = ctx.profile.email || '';
-    renderShell();
     try { await CC.loadSettings(); } catch (e) {
       $('#view').innerHTML = `<div class="notice" style="margin-top:2rem"><strong>Banco do Control Center ainda não preparado.</strong><br>Rode <code>supabase/07_control_center.sql</code> e <code>supabase/08_control_center_templates.sql</code> no Supabase SQL Editor.<br><span class="small muted">${esc(CC.errMsg(e))}</span></div>`;
       return;
     }
     bindSearch();
     $$('[data-sign-out]').forEach((b) => b.addEventListener('click', window.CDEVAuth.signOut));
-    $('#menu-btn').onclick = () => document.body.classList.toggle('menu-open');
     window.addEventListener('hashchange', () => { window.onbeforeunload = null; CC.router.render(); });
     await CC.router.render();
     CC.refreshBadges();
@@ -100,7 +76,7 @@
       }, 1500))
       .subscribe();
     window.CDEVAuth.subscribeSettings((settings) => {
-      if (!window.CDEVAuth.isEnabled(settings, 'control_center_enabled') || !window.CDEVAuth.isEnabled(settings, 'admin_panel_enabled')) location.replace('404.html?code=503');
+      if (!window.CDEVAuth.isEnabled(settings, 'control_center_enabled') || !window.CDEVAuth.isEnabled(settings, 'admin_panel_enabled')) location.replace('/404?code=503');
     });
   };
 

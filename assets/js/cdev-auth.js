@@ -1,6 +1,7 @@
 (function () {
-  const LOGIN_PAGE = 'login.html';
-  const ERROR_PAGE = '404.html';
+  // URLs limpas (o Nginx serve /login -> login.html; ver ops/nginx/clean-urls.conf)
+  const LOGIN_PAGE = '/login';
+  const ERROR_PAGE = '/404';
   const DEFAULT_SETTINGS = [
     ['dashboard_enabled', true, 'Controla acesso e exibicao do dashboard.'],
     ['editing_enabled', true, 'Controla edicao inline e acoes de escrita.'],
@@ -41,7 +42,8 @@
   };
 
   const redirectLogin = () => {
-    const next = encodeURIComponent(`${location.pathname.split('/').pop() || 'index.html'}${location.search}${location.hash}`);
+    const path = location.pathname.replace(/\.html$/, '') || '/';
+    const next = encodeURIComponent(`${path}${location.search}${location.hash}`);
     window.location.replace(`${LOGIN_PAGE}?next=${next}`);
   };
 
@@ -136,6 +138,9 @@
 
       await touchLogin(session.user.id);
       document.body.classList.add('auth-ready');
+      // avisa a barra lateral (admin-shell.js) quem esta logado e o que pode ver
+      publicApi.lastAuth = { profile, settings };
+      document.dispatchEvent(new CustomEvent('cdev:auth', { detail: publicApi.lastAuth }));
       return { session, profile, settings, supabase: getClient() };
     } catch (error) {
       console.error(error);
@@ -160,7 +165,7 @@
     window.location.replace(LOGIN_PAGE);
   };
 
-  window.CDEVAuth = {
+  const publicApi = window.CDEVAuth = {
     DEFAULT_SETTINGS,
     getClient,
     getSession,
@@ -170,6 +175,7 @@
     normalizeSettings,
     requireAccess,
     subscribeSettings,
-    signOut
+    signOut,
+    lastAuth: null
   };
 })();
