@@ -108,6 +108,7 @@
 
   // ------------------------------------------------------------------ Rotulos
   const LABELS = {
+    CONCLUIDA: 'Concluída', PARCIAL: 'Parcial', EM_ANDAMENTO: 'Em andamento',
     DOMINIO: 'Domínio', HOSPEDAGEM: 'Hospedagem', MANUTENCAO: 'Manutenção', DESENVOLVIMENTO: 'Desenvolvimento', OUTROS: 'Outros',
     PENDENTE: 'Pendente', PAGO: 'Pago', ATRASADO: 'Atrasado', CANCELADO: 'Cancelado', VENCE_HOJE: 'Vence hoje', VENCENDO: 'Vencendo',
     NENHUMA: 'Única', MENSAL: 'Mensal', TRIMESTRAL: 'Trimestral', SEMESTRAL: 'Semestral', ANUAL: 'Anual',
@@ -117,7 +118,7 @@
     ABERTO: 'Aberto', RESOLVIDO: 'Resolvido', OK: 'OK', FALHOU: 'Falhou',
     LEAD: 'Lead', CONTATADO: 'Contatado', RESPONDEU: 'Respondeu', DEMO_ENVIADA: 'Demo enviada', NEGOCIACAO: 'Negociação', CLIENTE: 'Cliente', PERDIDO: 'Perdido',
     VPS: 'VPS', SERVIDOR_PROPRIO: 'Servidor próprio', SHARED: 'Shared Hosting', CLOUD: 'Cloud', VERCEL: 'Vercel', NETLIFY: 'Netlify', CLOUDFLARE_PAGES: 'Cloudflare Pages', OUTRO: 'Outro',
-    MANUAL: 'Manual', CSV: 'CSV', WEB: 'Web', GOOGLE: 'Google', AUTOMATICO: 'Automático', WHATSAPP: 'WhatsApp', EMAIL: 'E-mail'
+    MANUAL: 'Manual', CSV: 'CSV', WEB: 'Web', GOOGLE: 'Google Maps', AUTOMATICO: 'Automático', WHATSAPP: 'WhatsApp', EMAIL: 'E-mail'
   };
   const label = (v) => LABELS[v] || v || '—';
   const TONES = {
@@ -262,7 +263,7 @@
       case 'checkbox': return `<div class="form-field ${f.full ? 'full' : ''}"><label class="check" style="margin-top:1.3rem"><input type="checkbox" name="${esc(f.name)}" ${v ? 'checked' : ''}> ${esc(f.label)}</label>${f.hint ? `<div class="hint">${esc(f.hint)}</div>` : ''}</div>`;
       case 'days': input = `<input class="field" ${common} type="text" value="${esc(Array.isArray(v) ? v.join(', ') : v)}">`; break;
       case 'money': input = `<input class="field" ${common} type="number" min="0" step="0.01" value="${esc(v)}">`; break;
-      default: input = `<input class="field" ${common} type="${f.type || 'text'}" value="${esc(v)}" ${f.min !== undefined ? `min="${f.min}"` : ''} ${f.max !== undefined ? `max="${f.max}"` : ''}>`;
+      default: input = `<input class="field" ${common} type="${f.type || 'text'}" value="${esc(v)}" ${f.min !== undefined ? `min="${f.min}"` : ''} ${f.max !== undefined ? `max="${f.max}"` : ''} ${f.step !== undefined ? `step="${f.step}"` : ''}>`;
     }
     return `<div class="form-field ${f.full ? 'full' : ''}" data-field="${esc(f.name)}"><label for="${id}">${esc(f.label)}${f.required ? ' *' : ''}</label>${input}${f.hint ? `<div class="hint">${esc(f.hint)}</div>` : ''}<div class="err" hidden></div></div>`;
   };

@@ -26,7 +26,7 @@
     const sorts = [['score', 'Maior score'], ['newest', 'Mais recente'], ['oldest', 'Mais antigo'], ['name', 'Empresa'], ['next', 'Próximo follow-up'], ['activity', 'Última atividade']];
     const sorter = { score: SORTERS.num('score', -1), newest: SORTERS.date('created_at', -1), oldest: SORTERS.date('created_at'), name: SORTERS.name('company'), next: SORTERS.date('next_action_at'), activity: SORTERS.date('updated_at', -1) };
     const card = (l) => `<div class="pipe-card" draggable="true" data-lead="${l.id}"><strong>${esc(l.company)}</strong><small>${esc([l.segment, l.city].filter(Boolean).join(' · '))}</small>
-      <small>score ${l.score}${l.next_action_at ? ` · follow-up ${fmtDate(l.next_action_at, { short: true })}` : ''}${l.demo_project_id ? ' · demo' : ''}</small></div>`;
+      <small>${l.potential ? `${'★'.repeat(l.potential)} · ` : ''}score ${l.score}${l.next_action_at ? ` · follow-up ${fmtDate(l.next_action_at, { short: true })}` : ''}${l.demo_project_id ? ' · demo' : ''}</small></div>`;
 
     const draw = (keepFocus) => {
       const list = rows.filter(pred(st.filter)).filter((l) => matchQ(l, st.q, ['company', 'name', 'city', 'segment', 'phone', 'whatsapp', 'email', 'instagram'])).sort(sorter[st.sort]);
@@ -38,6 +38,7 @@
         $('#list', root).innerHTML = table([
           { label: 'Empresa', render: (l) => `<strong>${esc(l.company)}</strong><span class="sub">${esc([l.name, l.segment, l.city].filter(Boolean).join(' · '))}</span>` },
           { label: 'Contato', render: (l) => `<span class="mono tiny">${esc(l.whatsapp || l.phone || '')}</span><span class="sub">${esc(l.instagram || l.email || '')}</span>` },
+          { label: 'Potencial', render: (l) => potStars(l.potential) },
           { label: 'Score', cls: 'num', render: (l) => l.score },
           { label: 'Status', render: (l) => badge(l.status) },
           { label: 'Follow-up', render: (l) => (l.next_action_at ? `<span class="badge ${CC.dueTone(daysUntil(l.next_action_at))}">${fmtDate(l.next_action_at)}</span>` : '—') },
@@ -261,5 +262,162 @@
       onImport: async (rows) => { for (let i = 0; i < rows.length; i += 500) await api.insertMany('clients', rows.slice(i, i + 500)); return rows.length; }
     });
     if (done) { CC.toast(`${done} clientes importados.`); CC.router.render(); }
+  };
+
+  // ================================================================== PROSPECCAO (agente diario + CRM)
+  const potStars = (n) => (n ? `<span class="pot" title="Potencial ${n} de 5" aria-label="Potencial ${n} de 5">${'★'.repeat(n)}<i>${'★'.repeat(5 - n)}</i></span>` : '<span class="muted small">—</span>');
+  const bought = (s) => (s === 'CLIENTE' ? '<span class="badge green">Sim</span>' : s === 'PERDIDO' ? '<span class="badge gray">Não</span>' : s === 'LEAD' ? '<span class="muted small">—</span>' : '<span class="badge yellow">Em negociação</span>');
+  const lines = (v) => String(v || '').split(/\n|,/).map((x) => x.trim()).filter(Boolean);
+  const PROFILE_FIELDS = [
+    { name: 'key', label: 'Chave', required: true, validate: 'slug', lower: true, hint: 'Identificador, ex.: academias' },
+    { name: 'name', label: 'Nome', required: true },
+    { name: 'segment', label: 'Segmento (vai para o lead)', required: true },
+    { name: 'region', label: 'Região', required: true, full: true },
+    { name: 'daily_min', label: 'Meta mínima por dia', type: 'number', min: 0, required: true },
+    { name: 'daily_max', label: 'Meta máxima por dia', type: 'number', min: 0, required: true },
+    { name: 'priority', label: 'Ordem de execução', type: 'number', min: 0 },
+    { name: 'active', label: 'Ativo (o agente diário executa)', type: 'checkbox' },
+    { name: 'search_terms', label: 'Termos de busca no Google Maps (um por linha)', type: 'textarea', rows: 3, full: true },
+    { name: 'exclude_brands', label: 'Redes/franquias a descartar (uma por linha)', type: 'textarea', rows: 3, full: true },
+    { name: 'filters', label: 'Filtros automáticos (JSON)', type: 'json', rows: 5, full: true, hint: 'min_reviews, max_reviews, require_mobile, require_no_website, exclude_closed' },
+    { name: 'rules', label: 'Critérios de aprovação e descarte', type: 'textarea', rows: 7, full: true },
+    { name: 'tags', label: 'Tags aplicadas aos leads (uma por linha)', type: 'textarea', rows: 2, full: true }
+  ];
+  const editProfile = async (row) => {
+    const values = row ? { ...row, search_terms: (row.search_terms || []).join('\n'), exclude_brands: (row.exclude_brands || []).join('\n'), tags: (row.tags || []).join('\n') }
+      : { daily_min: 20, daily_max: 30, priority: 100, active: false, filters: { require_no_website: true, exclude_closed: true } };
+    return CC.formModal({
+      title: row ? `Perfil: ${row.name}` : 'Novo perfil de prospecção', wide: true,
+      fields: row ? PROFILE_FIELDS.map((f) => (f.name === 'key' ? { ...f, readonly: true } : f)) : PROFILE_FIELDS, values,
+      onSubmit: async (v) => {
+        if (Number(v.daily_max) < Number(v.daily_min)) throw new Error('A meta máxima precisa ser maior ou igual à mínima.');
+        const rec = { ...v, search_terms: lines(v.search_terms), exclude_brands: lines(v.exclude_brands), tags: lines(v.tags), priority: v.priority ?? 100, updated_at: new Date().toISOString() };
+        if (row) { delete rec.key; return CC.ctx.supabase.from('prospect_profiles').update(rec).eq('key', row.key).select().single().then(({ data, error }) => { if (error) throw error; return data; }); }
+        return api.insert('prospect_profiles', rec);
+      }
+    });
+  };
+
+  CC.routes.prospeccao = async (root, r) => {
+    const [profiles, leads, runs, cityLog, sumRows, projects] = await Promise.all([
+      api.list('prospect_profiles', { order: 'priority' }),
+      api.list('leads', { filters: [['not', 'profile_key', 'is', null]], order: 'prospected_at', asc: false, limit: 5000 }),
+      api.list('prospect_runs', { order: 'started_at', asc: false, limit: 30 }),
+      api.list('prospect_city_log', { order: 'run_date', asc: false, limit: 1000 }),
+      api.list('prospect_commercial_summary', { limit: 1 }),
+      api.list('projects', { select: 'id,name,slug,status' })
+    ]);
+    const sum = sumRows[0] || {};
+    const today = todayISO();
+    const st = { filter: r.query.f || 'prioridade', sort: 'potential', q: '', profile: r.query.p || '' };
+    const byProfile = (l) => !st.profile || l.profile_key === st.profile;
+    const filters = [['prioridade', 'Potencial 4-5'], ['hoje', 'Adicionados hoje'], ['nao', 'Não contatados'], ['negociando', 'Em negociação'], ['clientes', 'Clientes'], ['todos', 'Todos']];
+    const pred = (k) => (l) => (k === 'todos' ? true : k === 'prioridade' ? l.potential >= 4 && !['CLIENTE', 'PERDIDO'].includes(l.status)
+      : k === 'hoje' ? l.prospected_at === today : k === 'nao' ? l.status === 'LEAD' : k === 'clientes' ? l.status === 'CLIENTE' : !['LEAD', 'CLIENTE', 'PERDIDO'].includes(l.status));
+    const sorts = [['potential', 'Maior potencial'], ['reviews', 'Mais avaliações'], ['newest', 'Mais recente'], ['name', 'Empresa'], ['state', 'Estado']];
+    const sorter = {
+      potential: (a, b) => (b.potential || 0) - (a.potential || 0) || (b.google_reviews || 0) - (a.google_reviews || 0),
+      reviews: SORTERS.num('google_reviews', -1), newest: SORTERS.date('prospected_at', -1), name: SORTERS.name('company'),
+      state: (a, b) => String(a.state || '').localeCompare(String(b.state || '')) || String(a.city || '').localeCompare(String(b.city || ''))
+    };
+    const counts = Object.fromEntries(filters.map(([k]) => [k, leads.filter(byProfile).filter(pred(k)).length]));
+    const hi = (n) => leads.filter((l) => l.potential === n).length;
+
+    // Controle de cidades: agrega o log das execucoes
+    const cityAgg = Object.values(cityLog.reduce((m, c) => {
+      const k = `${c.profile_key}|${c.state}|${(c.city || '').toLowerCase()}`;
+      m[k] = m[k] || { profile_key: c.profile_key, city: c.city, state: c.state, times: 0, added: 0, last: c.run_date };
+      m[k].times += 1; m[k].added += c.added; if (c.run_date > m[k].last) m[k].last = c.run_date;
+      return m;
+    }, {})).sort((a, b) => (a.last < b.last ? 1 : -1));
+    const states = [...new Set(leads.map((l) => l.state).filter(Boolean))].sort();
+    const profName = (k) => profiles.find((p) => p.key === k)?.name || k;
+
+    const draw = (keepFocus) => {
+      const list = leads.filter(byProfile).filter(pred(st.filter)).filter((l) => matchQ(l, st.q, ['company', 'name', 'city', 'state', 'phone', 'whatsapp', 'instagram'])).sort(sorter[st.sort]);
+      $('#p-list', root).innerHTML = table([
+        { label: 'Empresa', render: (l) => `<strong>${esc(l.company)}</strong><span class="sub">${esc([l.city, l.state].filter(Boolean).join(' - '))}${st.profile ? '' : ` · ${esc(profName(l.profile_key))}`}</span>` },
+        { label: 'Contato', render: (l) => { const n = l.whatsapp || l.phone; return `${n ? `<a class="mono tiny" href="${esc(CC.waLink(n))}" target="_blank" rel="noopener" data-stop>${esc(n)}</a>` : '—'}${l.instagram ? `<span class="sub"><a href="https://instagram.com/${esc(String(l.instagram).replace(/^@/, ''))}" target="_blank" rel="noopener" data-stop>${esc(l.instagram)}</a></span>` : ''}`; } },
+        { label: 'Google', render: (l) => `<span class="mono tiny" style="white-space:nowrap">${l.google_rating != null ? String(l.google_rating).replace('.', ',') : '—'} ★ · ${l.google_reviews ?? '—'}</span>${l.maps_url ? `<span class="sub"><a href="${esc(CC.safeUrl(l.maps_url))}" target="_blank" rel="noopener" data-stop>abrir no Maps</a></span>` : ''}` },
+        { label: 'Potencial', render: (l) => potStars(l.potential) },
+        { label: 'Negociação', render: (l) => `${badge(l.status)}<span class="sub">Comprou? ${l.status === 'CLIENTE' ? 'Sim' : l.status === 'PERDIDO' ? 'Não' : l.status === 'LEAD' ? '—' : 'Em negociação'}</span>` },
+        { label: 'Venda', cls: 'num', render: (l) => (l.sale_value ? `<strong style="white-space:nowrap">${esc(CC.money(l.sale_value))}</strong>` : '<span class="muted small">—</span>') }
+      ], list, { rowAttr: (l) => `class="clickable" data-lead="${l.id}"`, empty: 'Nenhum lead nesse filtro. O agente diário adiciona os novos aqui.' });
+      if (!keepFocus) {
+        $('#p-tb', root).innerHTML = toolbar({ filters, sorts, state: st, counts, extra: `<select class="cc-select" data-prof><option value="">Todos os perfis</option>${profiles.map((p) => `<option value="${esc(p.key)}" ${st.profile === p.key ? 'selected' : ''}>${esc(p.name)}</option>`).join('')}</select>` });
+        bindToolbar($('#p-tb', root), st, draw);
+        $('[data-prof]', root).onchange = (e) => { st.profile = e.target.value; CC.router.setQuery({ p: st.profile || null }); draw(); };
+      }
+      st.visible = list;
+    };
+
+    const runBadge = (s) => ({ CONCLUIDA: 'green', PARCIAL: 'yellow', FALHOU: 'red', EM_ANDAMENTO: 'blue' }[s] || 'gray');
+    root.innerHTML = `${pageHead('CRM', 'Prospecção', 'Agente diário que encontra empresas no Google Maps, confere se têm site, dá nota de potencial e cadastra no CRM sem duplicar.',
+      `<button class="btn" data-export>${icon('download')}Exportar CSV</button><button class="btn btn-primary" data-new-profile>${icon('plus')}Novo perfil</button>`)}
+      <div class="grid-3" style="margin-bottom:1rem;grid-template-columns:repeat(auto-fit,minmax(min(100%,11rem),1fr))">
+        <div class="metric"><strong>${esc(CC.money(sum.total_vendas || 0))}</strong><span>Total de vendas</span></div>
+        <div class="metric"><strong>${sum.total_clientes || 0}</strong><span>Total de clientes</span></div>
+        <div class="metric"><strong>${leads.length}</strong><span>Leads prospectados</span></div>
+        <div class="metric"><strong>${leads.filter((l) => l.prospected_at === today).length}</strong><span>Adicionados hoje</span></div>
+        <div class="metric"><strong style="color:var(--orange)">${hi(5)} · ${hi(4)}</strong><span>Potencial 5 · 4</span></div>
+      </div>
+      <section class="panel" style="margin-bottom:1rem"><div class="panel-head"><h2 class="block-title">Perfis (nichos)</h2><span class="tiny muted">O agente executa os perfis ativos todo dia às 10:00.</span></div>
+        <div class="panel-body grid-3">${profiles.map((p) => {
+          const last = runs.find((x) => x.profile_key === p.key);
+          const f = p.filters || {};
+          return `<article class="card" style="padding:1rem;border:1px solid var(--line);border-radius:8px">
+            <strong style="display:block;font-size:var(--fs-md)">${esc(p.name)}</strong>
+            <label class="check tiny" style="margin-top:.35rem"><input type="checkbox" data-toggle-profile="${esc(p.key)}" ${p.active ? 'checked' : ''}> ${p.active ? 'ativo no agente diário' : 'pausado'}</label>
+            <div class="small muted" style="margin:.35rem 0">${esc(p.region)}</div>
+            <div class="tiny mono muted">meta ${p.daily_min}–${p.daily_max}/dia · ${leads.filter((l) => l.profile_key === p.key).length} leads${f.require_no_website ? ' · sem site' : ''}${f.require_mobile ? ' · só celular' : ''}${f.min_reviews || f.max_reviews ? ` · ${f.min_reviews || 0}–${f.max_reviews || '∞'} aval.` : ''}</div>
+            <div class="tiny muted" style="margin:.45rem 0 .7rem">${last ? `Última execução ${fmtDate(last.run_date, { short: true })}: <span class="badge ${runBadge(last.status)}">${label(last.status)}</span> +${last.added}` : 'Ainda não executado'}</div>
+            <div class="row"><button class="btn btn-sm" data-edit-profile="${esc(p.key)}">${icon('edit')}Editar critérios</button><a class="btn btn-sm" href="#/prospeccao?p=${encodeURIComponent(p.key)}&f=todos">Ver leads</a></div>
+          </article>`; }).join('') || '<div class="notice">Rode <code>supabase/12_prospeccao.sql</code> para criar os perfis.</div>'}</div></section>
+      <section class="panel panel-pad" style="margin-bottom:1rem"><div class="panel-head" style="padding:0 0 .6rem"><h2 class="block-title">Leads por prioridade comercial</h2></div><div id="p-tb"></div><div id="p-list"></div></section>
+      <div class="grid-2">
+        <section class="panel"><div class="panel-head"><h2 class="block-title">Controle de cidades</h2><span class="tiny muted">${states.length} estados · ${cityAgg.length} cidades</span></div>
+          <div class="panel-body">${table([
+            { label: 'Última data', render: (c) => `<span class="small">${fmtDate(c.last, { short: true })}</span>` },
+            { label: 'Cidade', render: (c) => `<strong>${esc(c.city)}${c.state ? ` - ${esc(c.state)}` : ''}</strong><span class="sub">${esc(profName(c.profile_key))}</span>` },
+            { label: 'Pesquisada', cls: 'num', render: (c) => `${c.times}×` },
+            { label: 'Leads', cls: 'num', render: (c) => c.added }
+          ], cityAgg.slice(0, 60), { empty: 'Nenhuma cidade pesquisada ainda.' })}</div></section>
+        <section class="panel"><div class="panel-head"><h2 class="block-title">Execuções do agente</h2></div>
+          <div class="panel-body">${table([
+            { label: 'Data', render: (x) => `<span class="small">${fmtDate(x.run_date, { short: true })}</span><span class="sub">${esc(profName(x.profile_key))}</span>` },
+            { label: 'Status', render: (x) => `<span class="badge ${runBadge(x.status)}">${label(x.status)}</span>` },
+            { label: 'Novos', cls: 'num', render: (x) => `<strong>${x.added}</strong>` },
+            { label: 'Duplic.', cls: 'num', render: (x) => x.duplicates },
+            { label: 'Descart.', cls: 'num', render: (x) => x.discarded },
+            { label: 'Observações', render: (x) => `<span class="small">${esc(x.errors || x.summary || '')}</span>` }
+          ], runs, { empty: 'O agente ainda não executou.' })}</div></section>
+      </div>`;
+    draw();
+
+    root.addEventListener('click', async (e) => {
+      if (e.target.closest('[data-stop]')) return;
+      const lead = e.target.closest('[data-lead]'); if (lead) return openLead(leads.find((l) => l.id === lead.dataset.lead), projects);
+      const ed = e.target.closest('[data-edit-profile]');
+      if (ed && await editProfile(profiles.find((p) => p.key === ed.dataset.editProfile))) { CC.toast('Perfil salvo.'); CC.router.render(); }
+      if (e.target.closest('[data-new-profile]') && await editProfile(null)) { CC.toast('Perfil criado.'); CC.router.render(); }
+      if (e.target.closest('[data-export]')) {
+        const bought2 = (l) => (l.status === 'CLIENTE' ? 'Sim' : l.status === 'PERDIDO' ? 'Não' : l.status === 'LEAD' ? '' : 'Em negociação');
+        csv.download(`prospeccao-${today}.csv`, csv.stringify(st.visible || [], [
+          { label: 'Nome da Empresa', key: 'company' }, { label: 'Cidade', key: 'city' }, { label: 'Estado', key: 'state' },
+          { label: 'Telefone/WhatsApp', value: (l) => l.whatsapp || l.phone || '' }, { label: 'Instagram', key: 'instagram' }, { label: 'Google Maps', key: 'maps_url' },
+          { label: 'Avaliações Google', key: 'google_reviews' }, { label: 'Nota Google', value: (l) => (l.google_rating ?? '').toString().replace('.', ',') },
+          { label: 'Potencial 1-5', key: 'potential' }, { label: 'Data de Prospecção', key: 'prospected_at' },
+          { label: 'Negociação', value: (l) => label(l.status) }, { label: 'Comprou?', value: bought2 },
+          { label: 'Valor da Venda', value: (l) => (l.sale_value ?? '').toString().replace('.', ',') }
+        ]));
+      }
+    });
+    root.addEventListener('change', async (e) => {
+      const t = e.target.closest('[data-toggle-profile]'); if (!t) return;
+      const { error } = await CC.ctx.supabase.from('prospect_profiles').update({ active: t.checked, updated_at: new Date().toISOString() }).eq('key', t.dataset.toggleProfile);
+      if (error) { t.checked = !t.checked; CC.toast(error.message, 'error'); return; }
+      t.parentElement.lastChild.textContent = t.checked ? ' ativo no agente diário' : ' pausado';
+      CC.toast(t.checked ? 'Perfil ativado: o agente vai executar.' : 'Perfil pausado.');
+    });
   };
 })();

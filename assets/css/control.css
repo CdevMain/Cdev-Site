@@ -247,3 +247,6 @@ code, .code { font-family: var(--fm); font-size: var(--fs-xs); background: rgba(
 .cc-modal-backdrop { animation: cd-fade var(--dur) ease both; }
 .cc-modal { animation: cd-rise var(--dur) var(--ease-out) both; }
 .pending:hover { transform: translateY(-2px); }
+/* Prospeccao: estrelas de potencial */
+.pot { color: var(--orange); letter-spacing: .06em; white-space: nowrap; font-size: var(--fs-sm); }
+.pot i { font-style: normal; color: rgba(255,255,255,.14); }

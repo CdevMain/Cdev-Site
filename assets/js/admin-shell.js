@@ -19,6 +19,7 @@
     chart: '<path d="M3 3v18h18"/><path d="M18 17V9M13 17V5M8 17v-3"/>',
     shield: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/>',
     users: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>',
+    radar: '<path d="M19.07 4.93A10 10 0 0 0 6.99 3.34"/><path d="M4 6h.01"/><path d="M2.29 9.62A10 10 0 1 0 21.31 8.35"/><path d="M16.24 7.76A6 6 0 1 0 8.23 16.67"/><path d="M12 18h.01"/><path d="M17.99 11.66A6 6 0 0 1 15.77 16.67"/><circle cx="12" cy="12" r="2"/><path d="m13.41 10.59 5.66-5.66"/>',
     target: '<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>',
     msg: '<path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/>',
     layers: '<path d="m12 2 10 5-10 5L2 7z"/><path d="m2 17 10 5 10-5M2 12l10 5 10-5"/>',
@@ -52,6 +53,7 @@
     ['Relacionamento', [
       ['clientes', 'Clientes', 'users', 'route:clientes', 'control'],
       ['leads', 'Leads / CRM', 'target', 'route:leads', 'control'],
+      ['prospeccao', 'Prospecção', 'radar', 'route:prospeccao', 'control'],
       ['mensagens', 'Mensagens', 'msg', 'route:mensagens', 'control']
     ]],
     ['Site Factory', [
