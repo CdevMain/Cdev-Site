@@ -4,14 +4,6 @@
   const { $, $$, esc, icon, api, badge, label, fmtDate, fmtDateTime, relTime, daysUntil, table, toolbar, bindToolbar, matchQ, SORTERS, pageHead, csv, todayISO, addDays, debounce } = CC;
   const STAGES = ['LEAD', 'CONTATADO', 'RESPONDEU', 'DEMO_ENVIADA', 'NEGOCIACAO', 'CLIENTE', 'PERDIDO'];
 
-  const leadVars = (l, project) => ({
-    nome: (l.name || l.company || '').split(' ')[0],
-    empresa: l.company || '',
-    segmento: l.segment || '',
-    cidade: l.city || '',
-    demo_url: project ? CC.demoUrl(project.slug) : ''
-  });
-
   // ================================================================== LEADS
   CC.routes.leads = async (root, r) => {
     const [rows, projects] = await Promise.all([
@@ -86,10 +78,7 @@
   // ------------------------------------------------------------------ Detalhe do lead
   async function openLead(lead, projects) {
     lead = (await api.get('leads', lead.id)) || lead; // dados completos e atuais
-    const [acts, templates] = await Promise.all([
-      api.list('lead_activities', { filters: [['eq', 'lead_id', lead.id]], order: 'created_at', asc: false, limit: 50 }),
-      api.list('message_templates', { filters: [['eq', 'active', true]], order: 'name' })
-    ]);
+    const acts = await api.list('lead_activities', { filters: [['eq', 'lead_id', lead.id]], order: 'created_at', asc: false, limit: 50 });
     const demo = projects.find((p) => p.id === lead.demo_project_id);
     const dash = '<span class="muted">—</span>';
     const kv = (label, value, { copy = false, raw = value } = {}) => `<dt>${label}</dt><dd>${value ? `${value}${copy ? ` <button class="copy-btn" type="button" data-copy-value="${esc(raw)}" title="Copiar">${icon('copy')}</button>` : ''}` : dash}</dd>`;
@@ -117,19 +106,22 @@
           <div class="lp-actions"><button class="btn btn-sm" data-edit>${icon('edit')}Editar cadastro</button>${lead.client_id ? `<a class="btn btn-sm btn-primary" href="#/clientes/${lead.client_id}">${icon('user')}Abrir cliente</a>` : `<button class="btn btn-sm btn-primary" data-convert>${icon('check')}Converter em cliente</button>`}</div>
         </header>
         <nav class="lp-contacts">
-          ${phoneMain ? `<a class="lp-contact" href="${esc(CC.waLink(phoneMain))}" target="_blank" rel="noopener">${icon('msg')}<span>WhatsApp<b>${esc(CC.fmtPhone(phoneMain))}</b></span></a>` : ''}
+          ${phoneMain ? `<button type="button" class="lp-contact" data-wa-phone="${esc(phoneMain)}">${icon('msg')}<span>WhatsApp<b>${esc(CC.fmtPhone(phoneMain))}</b></span></button>` : ''}
           ${lead.phone || lead.whatsapp ? `<a class="lp-contact" href="tel:+55${esc(CC.digits(lead.phone || lead.whatsapp).replace(/^55(?=\d{10,11}$)/, ''))}">${icon('phone')}<span>Ligar<b>${esc(CC.fmtPhone(lead.phone || lead.whatsapp))}</b></span></a>` : ''}
           ${lead.email ? `<a class="lp-contact" href="mailto:${esc(lead.email)}">${icon('mail')}<span>E-mail<b>${esc(lead.email)}</b></span></a>` : ''}
           ${insta ? `<a class="lp-contact" href="https://instagram.com/${esc(insta)}" target="_blank" rel="noopener">${icon('insta')}<span>Instagram<b>@${esc(insta)}</b></span></a>` : ''}
           ${lead.maps_url ? `<a class="lp-contact" href="${esc(CC.safeUrl(lead.maps_url))}" target="_blank" rel="noopener">${icon('pin')}<span>Google Maps<b>${lead.google_rating != null ? `${String(lead.google_rating).replace('.', ',')} ★ · ${lead.google_reviews ?? 0} aval.` : 'abrir perfil'}</b></span></a>` : ''}
         </nav>
         <div class="segmented-tabs lp-tabs" role="tablist">
-          <button class="segmented-tab active" data-lp-tab="resumo" role="tab">${icon('rocket')}Resumo</button>
+          <button class="segmented-tab active" data-lp-tab="mensagem" role="tab">${icon('msg')}Mensagem</button>
+          <button class="segmented-tab" data-lp-tab="resumo" role="tab">${icon('rocket')}Resumo</button>
           <button class="segmented-tab" data-lp-tab="cadastro" role="tab">${icon('idcard')}Cadastro <span class="lp-count ${missing.length ? 'warn' : 'ok'}">${done}/${REQUIRED.length}</span></button>
           <button class="segmented-tab" data-lp-tab="historico" role="tab">${icon('history')}Histórico <span class="lp-count">${acts.length}</span></button>
         </div>
 
-        <section data-lp-panel="resumo">
+        <section data-lp-panel="mensagem"><div data-lp-studio><p class="small muted">Carregando mensagens…</p></div></section>
+
+        <section data-lp-panel="resumo" hidden>
           <div class="grid-2">
             <div class="info-card"><h3>${icon('rocket')}Demo</h3>
               ${demo ? `<p class="small"><strong>${esc(demo.name)}</strong> ${badge(demo.status)}<br><a href="${esc(CC.demoUrl(demo.slug))}" target="_blank" rel="noopener">${esc(CC.demoUrl(demo.slug))}</a></p>
@@ -137,11 +129,10 @@
               : `<p class="small muted">Crie uma demonstração com o nome e WhatsApp do lead já preenchidos.</p><button class="btn btn-sm btn-primary" data-demo>${icon('rocket')}Criar demo</button>`}
               ${lead.notes ? `<h3 style="margin-top:1.1rem">${icon('edit')}Observações</h3><p class="small pre">${esc(lead.notes)}</p>` : ''}
             </div>
-            <div class="info-card"><h3>${icon('msg')}Mensagem</h3>
-              <select class="cc-select" data-tpl>${templates.map((t) => `<option value="${t.id}">${esc(t.name)} (${label(t.channel)})</option>`).join('')}</select>
-              <textarea class="field" data-msg rows="6" style="margin-top:.5rem"></textarea>
-              <div class="row" style="margin-top:.5rem"><button class="btn btn-sm btn-primary" data-send>${icon('msg')}Abrir WhatsApp</button><button class="btn btn-sm" data-copy>${icon('copy')}Copiar</button></div>
-              <p class="tiny muted" style="margin-top:.4rem">Envio manual (sem API paga). O contato fica registrado no histórico.</p>
+            <div class="info-card"><h3>${icon('msg')}Contato</h3>
+              <p class="small muted">Mensagens de prospecção são geradas, editadas e enviadas pela aba <b>Mensagem</b>. Abrir o WhatsApp não conta como enviado: você confirma depois de enviar.</p>
+              <div class="row" style="margin-top:.5rem"><button class="btn btn-sm btn-primary" data-goto-tab="mensagem">${icon('msg')}Ir para Mensagem</button></div>
+              ${lead.last_contact_at ? `<p class="tiny muted" style="margin-top:.6rem">Último contato: ${fmtDateTime(lead.last_contact_at)}</p>` : ''}
             </div>
           </div>
         </section>
@@ -197,29 +188,18 @@
     CC.modal({
       title: 'Perfil do lead', wide: true, body, actions: [{ label: 'Excluir lead', danger: true, handler: async () => { if (await CC.actions.remove('leads', lead, 'este lead')) return true; return false; } }, { label: 'Fechar', value: null }],
       onOpen: (el, close) => {
-        const tplSel = $('[data-tpl]', el); const msg = $('[data-msg]', el);
-        const renderMsg = () => { const t = templates.find((x) => x.id === tplSel.value); msg.value = t ? CC.providers.get('message').render(t.body, leadVars(lead, demo)) : ''; };
-        renderMsg(); tplSel.onchange = renderMsg;
-        $('[data-copy]', el).onclick = async () => { try { await navigator.clipboard.writeText(msg.value); CC.toast('Mensagem copiada.'); } catch (e) { CC.toast('Não foi possível copiar.', 'error'); } };
-        $('[data-send]', el).onclick = async () => {
-          try {
-            const t = templates.find((x) => x.id === tplSel.value);
-            const provider = t?.channel === 'EMAIL' ? CC.providers.get('message', 'email_manual') : CC.providers.get('message');
-            await provider.send({ to: t?.channel === 'EMAIL' ? lead.email : (lead.whatsapp || lead.phone), text: msg.value, subject: t?.subject });
-            const patch = { last_contact_at: new Date().toISOString() };
-            if (lead.status === 'LEAD') patch.status = 'CONTATADO';
-            if (demo && msg.value.includes(CC.demoUrl(demo.slug)) && ['LEAD', 'CONTATADO', 'RESPONDEU'].includes(lead.status)) patch.status = 'DEMO_ENVIADA';
-            if (!lead.next_action_at || daysUntil(lead.next_action_at) <= 0) patch.next_action_at = addDays(todayISO(), 3);
-            await api.update('leads', lead.id, patch);
-            await api.insert('lead_activities', { lead_id: lead.id, type: 'MENSAGEM', content: `Mensagem "${t?.name || 'livre'}" aberta no ${t?.channel === 'EMAIL' ? 'e-mail' : 'WhatsApp'}${patch.status ? ` · status ${label(patch.status)}` : ''}` });
-            CC.toast('Contato registrado. Follow-up em 3 dias.');
-          } catch (err) { CC.toast(CC.errMsg(err), 'error'); }
-        };
+        const studio = $('[data-lp-studio]', el);
+        CC.messageStudio.mount(studio, {
+          lead, demoUrl: demo ? CC.demoUrl(demo.slug) : '',
+          onLeadChanged: (l, opts = {}) => { if (opts.edit) { close(null); CC.actions.editLead(lead); } }
+        }).catch((err) => { studio.innerHTML = `<p class="small" style="color:var(--red)">${esc(CC.errMsg(err))}</p>`; });
         $$('[data-edit]', el).forEach((b) => { b.onclick = () => { close(null); CC.actions.editLead(lead); }; });
-        $$('[data-lp-tab]', el).forEach((t) => { t.onclick = () => {
-          $$('[data-lp-tab]', el).forEach((x) => x.classList.toggle('active', x === t));
-          $$('[data-lp-panel]', el).forEach((p) => { p.hidden = p.dataset.lpPanel !== t.dataset.lpTab; });
-        }; });
+        const showTab = (name) => {
+          $$('[data-lp-tab]', el).forEach((x) => x.classList.toggle('active', x.dataset.lpTab === name));
+          $$('[data-lp-panel]', el).forEach((p) => { p.hidden = p.dataset.lpPanel !== name; });
+        };
+        $$('[data-lp-tab]', el).forEach((t) => { t.onclick = () => showTab(t.dataset.lpTab); });
+        $$('[data-goto-tab]', el).forEach((t) => { t.onclick = () => showTab(t.dataset.gotoTab); });
         el.addEventListener('click', async (e) => {
           const c = e.target.closest('[data-copy-value]'); if (!c) return;
           try { await navigator.clipboard.writeText(c.dataset.copyValue); CC.toast('Copiado.'); } catch (err) { CC.toast('Não foi possível copiar.', 'error'); }
@@ -281,23 +261,8 @@
     } catch (err) { CC.toast(CC.errMsg(err), 'error'); }
   }
 
-  // ================================================================== MENSAGENS
-  CC.routes.mensagens = async (root) => {
-    const rows = await api.list('message_templates', { order: 'name' });
-    root.innerHTML = `${pageHead('CRM', 'Modelos de mensagem', 'Variáveis: <code>{{nome}}</code> <code>{{empresa}}</code> <code>{{segmento}}</code> <code>{{cidade}}</code> <code>{{demo_url}}</code>',
-      `<a class="btn" href="#/leads">${icon('target')}Leads</a><button class="btn btn-primary" data-new>${icon('plus')}Novo modelo</button>`)}
-      <section class="panel panel-pad">${table([
-        { label: 'Nome', render: (t) => `<strong>${esc(t.name)}</strong><span class="sub">${esc(t.body.slice(0, 90))}…</span>` },
-        { label: 'Canal', render: (t) => label(t.channel) }, { label: 'Ativo', render: (t) => (t.active ? badge('ATIVO') : badge('INATIVO')) },
-        { label: '', render: (t) => `<div class="actions"><button class="icon-btn" data-edit="${t.id}">${icon('edit')}</button><button class="icon-btn danger" data-del="${t.id}">${icon('trash')}</button></div>` }
-      ], rows, { empty: 'Nenhum modelo.' })}</section>`;
-    $('[data-new]', root).onclick = () => CC.actions.editMessageTemplate();
-    root.addEventListener('click', (e) => {
-      const b = e.target.closest('button'); if (!b) return;
-      if (b.dataset.edit) CC.actions.editMessageTemplate(rows.find((t) => t.id === b.dataset.edit));
-      if (b.dataset.del) CC.actions.remove('message_templates', rows.find((t) => t.id === b.dataset.del), 'este modelo');
-    });
-  };
+  // MENSAGENS / Templates: ver message-studio.js (CC.routes.mensagens)
+
 
   // ================================================================== IMPORTACAO CSV (com validacao antes de gravar)
   const importPreview = async ({ title, items, columns, onImport }) => {
@@ -525,7 +490,7 @@
       const insta = l.instagram ? String(l.instagram).replace(/^@|https?:\/\/(www\.)?instagram\.com\//g, '').replace(/\/.*$/, '') : '';
       return `<div class="qc">
         ${n ? `<button class="qc-btn" data-copy-phone="${esc(CC.fmtPhone(n))}" title="Copiar ${esc(CC.fmtPhone(n))}">${icon('copy')}Copiar</button>` : ''}
-        ${n && isMobile(n) ? `<a class="qc-btn wa" href="${esc(CC.waLink(n))}" target="_blank" rel="noopener">WhatsApp</a>` : n ? `<a class="qc-btn" href="tel:+55${esc(phoneKey(n))}">Ligar</a>` : ''}
+        ${n && isMobile(n) ? `<button type="button" class="qc-btn wa" data-wa-phone="${esc(n)}">WhatsApp</button>` : n ? `<a class="qc-btn" href="tel:+55${esc(phoneKey(n))}">Ligar</a>` : ''}
         ${sk !== 'NONE' ? `<a class="qc-btn ${sk === 'OWN' ? 'site' : ''}" href="${esc(CC.safeUrl(/^https?:/i.test(l.website) ? l.website : `https://${l.website}`))}" target="_blank" rel="noopener">${sk === 'OWN' ? 'Site' : 'Link'}</a>` : ''}
         ${insta ? `<a class="qc-btn" href="https://instagram.com/${esc(insta)}" target="_blank" rel="noopener">Instagram</a>` : ''}
         ${l.maps_url ? `<a class="qc-btn" href="${esc(CC.safeUrl(l.maps_url))}" target="_blank" rel="noopener">Maps</a>` : ''}

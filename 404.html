@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>404 - Página não encontrada</title>
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="/assets/css/admin-fluid.css?v=20260926b" />
+  <link rel="stylesheet" href="/assets/css/admin-fluid.css?v=20261001" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -132,7 +132,14 @@
       border-color: var(--al);
       background: rgba(30,98,117,.08);
     }
-  </style>
+      /* Barra de rolagem CDEV */
+    html, * { scrollbar-width: thin; scrollbar-color: #1e6275 #0a1215; }
+    ::-webkit-scrollbar { width: 10px; height: 10px; }
+    ::-webkit-scrollbar-track { background: #0a1215; }
+    ::-webkit-scrollbar-thumb { background: linear-gradient(180deg, #1e6275, #2b8ba5); border-radius: 999px; border: 2px solid #0a1215; }
+    ::-webkit-scrollbar-thumb:hover { background: #2b8ba5; }
+    ::-webkit-scrollbar-corner { background: #0a1215; }
+</style>
 </head>
 <body data-error-code="404" data-redirect="/" data-redirect-seconds="10">
   <div id="cur"><div id="cring"></div><div id="cdot"></div></div>

@@ -64,9 +64,9 @@
     channel: 'WHATSAPP',
     render,
     async send({ to, text }) {
-      const url = CC.waLink(to, text);
-      if (!url) throw new Error('Número de WhatsApp ausente ou inválido.');
-      window.open(url, '_blank', 'noopener');
+      if (!CC.normalizePhone(to)) throw new Error('Número de WhatsApp ausente ou inválido.');
+      const r = CC.openWhatsAppContact(to, text); // aba nomeada CDEV_WHATSAPP (reutilizada)
+      if (!r.ok) throw new Error(r.reason === 'popup' ? 'Pop-up bloqueado: libere pop-ups para o CDEV.' : 'Número inválido.');
       return { opened: true, manual: true };
     }
   }, { default: true });

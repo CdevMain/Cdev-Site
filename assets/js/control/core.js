@@ -457,6 +457,52 @@
   const waNumber = (v) => { let d = digits(v); if (!d) return ''; if (d.length <= 11) d = '55' + d; return d; };
   const waLink = (number, text = '') => { const n = waNumber(number); return n ? `https://wa.me/${n}${text ? `?text=${encodeURIComponent(text)}` : ''}` : ''; };
 
+  // ------------------------------------------------------------------ WhatsApp: funcao central (uma aba so)
+  // Normaliza para 55 + DDD + numero. "(54) 99999-9999" -> "5554999999999". Retorna '' se invalido.
+  const normalizePhone = (v) => {
+    let d = digits(v);
+    if (!d) return '';
+    d = d.replace(/^0+/, '');                          // 0XX54... ou 054...
+    if ((d.length === 12 || d.length === 13) && d.startsWith('55')) return d;
+    if (d.length === 10 || d.length === 11) return `55${d}`;
+    return '';
+  };
+  const WHATSAPP_TARGET = 'CDEV_WHATSAPP';
+  const whatsappMode = () => {
+    const m = setting('whatsapp_mode', 'auto');
+    if (m === 'web' || m === 'app') return m;
+    return /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) ? 'app' : 'web';
+  };
+  const whatsappUrl = (phone, message = '') => {
+    const n = normalizePhone(phone); if (!n) return '';
+    const text = message ? encodeURIComponent(message) : '';
+    return whatsappMode() === 'web'
+      ? `https://web.whatsapp.com/send?phone=${n}${text ? `&text=${text}` : ''}`
+      : `https://wa.me/${n}${text ? `?text=${text}` : ''}`;
+  };
+  // Abre (ou reutiliza) a aba nomeada CDEV_WHATSAPP. Nunca usa _blank.
+  // Obs.: o navegador so deixa reutilizar a aba criada pelo proprio CDEV; uma aba do WhatsApp aberta
+  // manualmente antes nao pode ser controlada por seguranca.
+  const openWhatsAppContact = (phone, message = '') => {
+    const url = whatsappUrl(phone, message);
+    if (!url) { toast('Número de WhatsApp ausente ou inválido para este contato.', 'error'); return { ok: false, reason: 'phone' }; }
+    let win = null;
+    try { win = window.open(url, WHATSAPP_TARGET); } catch (e) { win = null; }
+    if (!win) {
+      toast('Não foi possível abrir o WhatsApp automaticamente. Verifique se o navegador está bloqueando pop-ups para o CDEV.', 'error');
+      return { ok: false, reason: 'popup', url };
+    }
+    try { win.focus(); } catch (e) { /* alguns navegadores nao deixam focar */ }
+    return { ok: true, url };
+  };
+  // Qualquer elemento com data-wa-phone abre o WhatsApp pela funcao central (texto opcional em data-wa-text)
+  document.addEventListener('click', (e) => {
+    const el = e.target.closest('[data-wa-phone]');
+    if (!el) return;
+    e.preventDefault(); e.stopPropagation();
+    openWhatsAppContact(el.dataset.waPhone, el.dataset.waText || '');
+  }, true);
+
   // Busy button helper
   const busy = async (btn, fn) => { if (btn) { btn.classList.add('is-saving'); btn.disabled = true; } try { return await fn(); } finally { if (btn) { btn.classList.remove('is-saving'); btn.disabled = false; } } };
 
@@ -588,6 +634,7 @@
     $, $$, esc, safeUrl, digits, slugify, debounce, icon, setting, money, todayISO, parseISODate, fmtDate, fmtDateTime, fmtTime,
     daysUntil, addDays, duration, relTime, dueLabel, dueTone, label, badge, TONES, SEV, toast, modal, confirmDialog, VALIDATORS,
     formHtml, readForm, formModal, table, csv, toolbar, bindToolbar, matchQ, SORTERS, pageHead, waLink, waNumber, busy, optionHtml,
-    fmtDoc, fmtCep, fmtPhone, lookupCep, lookupCnpj, media, validCpf, validCnpj, bindLookups
+    fmtDoc, fmtCep, fmtPhone, lookupCep, lookupCnpj, media, validCpf, validCnpj, bindLookups,
+    normalizePhone, whatsappUrl, openWhatsAppContact, WHATSAPP_TARGET
   });
 })();

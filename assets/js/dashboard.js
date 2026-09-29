@@ -74,6 +74,7 @@
     bag: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18M16 10a4 4 0 0 1-8 0"/></svg>',
     card: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"/><path d="M2 10h20"/></svg>',
     pin: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>',
+    pdf: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-3.5 w-3.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 15h6M9 11h2M9 19h6"/></svg>',
     user: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 0 0-16 0"/></svg>'
   };
 
@@ -490,6 +491,7 @@
     if (!m || !dialog || !sheet) return;
     const row = state.months[m.index];
     const edit = canEdit();
+    const prevScroll = $('.md-body', dialog)?.scrollTop || 0;
     dialog.innerHTML = `<form method="dialog" novalidate>
         <div class="md-head">
           <div><div class="md-sub">${esc(sheet.property_name)} · ${sheet.year}</div><h3 id="md-title">${MONTHS_FULL[row.month_num - 1]}</h3></div>
@@ -512,10 +514,12 @@
         <div class="md-foot">
           <span class="kbd">${edit ? 'Ctrl+S salva · Esc fecha' : 'Esc fecha'}</span>
           <span class="spacer"></span>
+          <button class="btn" type="button" data-md-pdf title="Gerar PDF com as informações deste mês">${ICON.pdf}PDF do mês</button>
           <button class="btn" type="button" data-md-close>${edit ? 'Cancelar' : 'Fechar'}</button>
           ${edit ? `<button class="btn btn-primary" type="button" data-md-save ${modalChanged() ? '' : 'disabled'}>Salvar ${MONTHS[row.month_num - 1]}</button>` : ''}
         </div>
       </form>`;
+    const body = $('.md-body', dialog); if (body && prevScroll) body.scrollTop = prevScroll;
   };
 
   const refreshModalCalc = () => {
@@ -537,7 +541,8 @@
     state.modal = { index, draft: { ...row } };
     renderModal();
     const dialog = $('#month-dialog');
-    if (!dialog.open) dialog.showModal();
+    if (!dialog.open) { dialog.showModal(); document.documentElement.classList.add('has-modal'); }
+    $('.md-body', dialog)?.scrollTo(0, 0);
     const first = $('[data-md]:not(:disabled)', dialog) || $('[data-md-close]', dialog);
     if (first && window.matchMedia('(pointer:fine)').matches) first.focus();
   };
@@ -546,6 +551,7 @@
     if (!force && modalChanged() && !window.confirm('Descartar as alterações deste mês?')) return false;
     state.modal = null;
     const dialog = $('#month-dialog'); if (dialog.open) dialog.close();
+    document.documentElement.classList.remove('has-modal');
     return true;
   };
 
@@ -599,6 +605,72 @@
     openMonth(next);
   };
 
+  // PDF do mes: relatorio limpo (fundo branco) impresso por um iframe oculto -> "Salvar como PDF"
+  const printMonth = (row) => {
+    const sheet = activeSpreadsheet(); if (!sheet || !row) return;
+    const c = calcMonth(row, sheet); const p = paymentStatus(row, sheet);
+    const month = `${MONTHS_FULL[row.month_num - 1]} de ${sheet.year}`;
+    const m = (v) => money.format(v || 0);
+    const guests = String(row.client_description || '').replace(/^\*$/, '').trim();
+    const method = PAY_METHODS.find(([k]) => k === row.host_fee_payment_method)?.[1] || '';
+    const tr = (label, value, cls = '') => `<tr class="${cls}"><td>${label}</td><td>${value}</td></tr>`;
+    const html = `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>${esc(sheet.property_name)} - ${esc(month)}</title>
+      <style>
+        @page { size: A4; margin: 16mm 14mm; }
+        * { box-sizing: border-box; } body { font: 12px/1.5 system-ui, -apple-system, 'Segoe UI', sans-serif; color: #14232a; margin: 0; }
+        header { display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 3px solid #1e6275; padding-bottom: 10px; margin-bottom: 16px; }
+        h1 { font-size: 22px; margin: 0; } .muted { color: #5b7078; } .brand { font-weight: 800; letter-spacing: .2em; color: #1e6275; font-size: 11px; }
+        .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 16px; }
+        .kpi { border: 1px solid #d5e1e5; border-radius: 8px; padding: 10px; } .kpi span { display: block; font-size: 10px; text-transform: uppercase; letter-spacing: .08em; color: #5b7078; }
+        .kpi b { font-size: 16px; } .pos { color: #13789a; } .neg { color: #c05a14; }
+        h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .08em; color: #1e6275; margin: 18px 0 6px; }
+        table { width: 100%; border-collapse: collapse; } td { padding: 6px 8px; border-bottom: 1px solid #e5edf0; } td:last-child { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+        tr.sub td { font-weight: 700; border-top: 1px solid #b9ccd3; } tr.total td { font-weight: 800; font-size: 14px; background: #eef5f7; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; } .box { border: 1px solid #d5e1e5; border-radius: 8px; padding: 10px 12px; }
+        .status { display: inline-block; padding: 2px 8px; border-radius: 99px; font-weight: 700; font-size: 11px; background: #eef5f7; }
+        .st-PAGO { background: #e3f5ec; color: #1d7a4e; } .st-ATRASADO { background: #fdebdc; color: #b3540f; }
+        footer { margin-top: 24px; padding-top: 8px; border-top: 1px solid #d5e1e5; color: #5b7078; font-size: 10px; display: flex; justify-content: space-between; }
+        .pre { white-space: pre-wrap; }
+      </style></head><body>
+      <header><div><div class="brand">CDEV · RELATÓRIO MENSAL</div><h1>${esc(sheet.property_name)}</h1><div class="muted">${esc([sheet.title, sheet.address].filter(Boolean).join(' · '))}</div></div>
+        <div style="text-align:right"><div class="muted">Período</div><b style="font-size:16px">${esc(month)}</b></div></header>
+      <div class="kpis">
+        <div class="kpi"><span>Lucro líquido</span><b class="${c.netProfit < 0 ? 'neg' : 'pos'}">${m(c.netProfit)}</b></div>
+        <div class="kpi"><span>Faturamento bruto</span><b>${m(c.gross)}</b></div>
+        <div class="kpi"><span>Ocupação</span><b>${pct(c.occupancy)}</b><div class="muted">${c.nights} noites · ${c.bookings} reservas</div></div>
+        <div class="kpi"><span>Diária média</span><b>${m(c.adr)}</b></div>
+      </div>
+      <div class="grid">
+        <div><h2>Resultado</h2><table>
+          ${tr('Valor pago pelos hóspedes', m(row.paid_clients))}${tr('Extras', m(row.paid_extra))}${tr('Faturamento bruto', m(c.gross), 'sub')}
+          ${tr('− Limpeza / lavanderia', m(c.cleaning))}${tr(`− Coanfitrião (${pct(toNumber(sheet.commission_rate))})`, m(c.hostFee))}${tr('Receita líquida', m(c.revenueTotal), 'sub')}
+          ${tr('− Despesas fixas', m(c.fixedTotal))}${tr('− Despesa variável', m(c.variableTotal))}${tr('Lucro líquido', m(c.netProfit), 'total')}
+        </table></div>
+        <div><h2>Despesas</h2><table>
+          ${tr('Gás', m(row.fixed_gas))}${tr('Luz', m(row.fixed_electricity))}${tr('Internet', m(row.fixed_internet))}${tr('Condomínio', m(row.fixed_condo))}${tr('Total fixas', m(c.fixedTotal), 'sub')}
+          ${c.variableTotal ? tr(`${esc(row.variable_location || 'Variável')}${row.variable_date ? ` · ${fmtDate(row.variable_date)}` : ''}`, m(c.variableTotal)) : tr('Despesa variável', m(0))}
+        </table>${row.variable_description ? `<p class="pre muted">${esc(row.variable_description)}</p>` : ''}</div>
+      </div>
+      <div class="grid" style="margin-top:6px">
+        <div><h2>Hóspedes</h2><div class="box pre">${guests ? esc(guests) : '<span class="muted">Sem hóspedes registrados.</span>'}</div></div>
+        <div><h2>Comissão do coanfitrião</h2><div class="box">
+          <div><b style="font-size:15px">${m(p.amount)}</b> · vencimento ${fmtDate(p.dueISO)}</div>
+          <div style="margin-top:6px"><span class="status st-${p.key}">${esc(PAY_LABEL[p.key])}</span>${p.key === 'PAGO' ? ` em ${fmtDate(row.host_fee_paid_at)} · ${m(p.paidAmount)}${method ? ` · ${esc(method)}` : ''}` : ''}</div>
+          ${row.host_fee_note ? `<div class="muted" style="margin-top:4px">${esc(row.host_fee_note)}</div>` : ''}
+        </div></div>
+      </div>
+      <footer><span>Gerado em ${new Date().toLocaleString('pt-BR')}</span><span>cdev.com.br</span></footer>
+      </body></html>`;
+    document.getElementById('cdev-print-frame')?.remove();
+    const frame = Object.assign(document.createElement('iframe'), { id: 'cdev-print-frame', title: 'PDF do mês' });
+    frame.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden';
+    document.body.appendChild(frame);
+    const doc = frame.contentDocument; doc.open(); doc.write(html); doc.close();
+    const prevTitle = document.title; document.title = `${sheet.property_name} - ${month}`; // nome sugerido do arquivo
+    if (window.__cdevSkipPrint) { document.title = prevTitle; return; } // usado apenas pelos testes automatizados
+    setTimeout(() => { try { frame.contentWindow.focus(); frame.contentWindow.print(); } finally { setTimeout(() => { document.title = prevTitle; }, 1500); } }, 250);
+  };
+
   const bindModal = () => {
     const dialog = $('#month-dialog');
     dialog.addEventListener('input', (e) => {
@@ -628,6 +700,7 @@
       if (e.target.closest('[data-md-close]')) { closeMonth(); return; }
       if (e.target.closest('[data-md-save]')) { await saveModal(); return; }
       if (e.target.closest('[data-md-prev]')) { moveModal(-1); return; }
+      if (e.target.closest('[data-md-pdf]')) { printMonth(state.modal.draft); return; }
       if (e.target.closest('[data-md-next]')) { moveModal(1); return; }
       if (e.target.closest('[data-md-paynow]')) {
         const d = state.modal.draft; const p = paymentStatus(d, activeSpreadsheet());

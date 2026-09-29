@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/assets/css/admin-fluid.css?v=20260929" />
+  <link rel="stylesheet" href="/assets/css/admin-fluid.css?v=20261001" />
   <script>try{if(localStorage.getItem('cdev:side-collapsed')==='1')document.documentElement.classList.add('side-collapsed')}catch(e){}</script>
   <link rel="stylesheet" href="/assets/css/admin-shell.css?v=20260926b" />
   <script src="https://cdn.tailwindcss.com"></script>
@@ -241,9 +241,13 @@
       .waterfall .total span { white-space: nowrap; }
 
       /* modal do mes */
-      .month-dialog { width: min(1040px, calc(100vw - 1.5rem)); max-height: calc(100dvh - 1.5rem); padding: 0; border: 1px solid var(--line-strong); border-radius: 12px; background: #0c1518; color: #e8f2f5; box-shadow: 0 30px 90px rgba(0,0,0,.65); overflow: hidden; }
+      .month-dialog { width: 100vw; height: 100dvh; max-width: none; max-height: none; margin: 0; padding: 0; border: 0; border-radius: 0; background: #0a1215; color: #e8f2f5; overflow: hidden; }
+      html.has-modal, html.has-modal body { overflow: hidden !important; }
       .month-dialog::backdrop { background: rgba(4,8,9,.72); backdrop-filter: blur(3px); }
-      .month-dialog form { display: flex; flex-direction: column; max-height: calc(100dvh - 1.5rem); }
+      .month-dialog form { display: flex; flex-direction: column; height: 100%; }
+      .md-head, .md-foot { flex-shrink: 0; }
+      .md-head > *, .md-foot > * { position: relative; }
+      .month-dialog .md-head, .month-dialog .md-foot { padding-inline: max(1.15rem, calc((100vw - 1320px) / 2)); }
       .md-head { display: flex; align-items: center; gap: .75rem; padding: 1rem 1.15rem; border-bottom: 1px solid var(--line); }
       .md-head h3 { font-size: var(--fs-lg); font-weight: 800; }
       .md-head .md-sub { color: #6f8d98; font-family: var(--fm); font-size: var(--fs-micro); letter-spacing: .1em; text-transform: uppercase; }
@@ -252,11 +256,11 @@
       .icon-btn:hover:not(:disabled) { color: #e8f2f5; border-color: #2b8ba5; }
       .icon-btn:disabled { opacity: .35; cursor: not-allowed; }
       .icon-btn svg { width: 1rem; height: 1rem; }
-      .md-body { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 0; overflow: auto; }
+      .md-body { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 1.5rem; align-items: start; padding: 1.25rem max(1.15rem, calc((100vw - 1320px) / 2)) 2rem; }
       @media (max-width: 820px) { .md-body { grid-template-columns: 1fr; } }
-      .md-form { padding: 1.1rem 1.15rem 1.3rem; display: grid; gap: 1.1rem; }
-      .md-side { padding: 1.1rem 1.15rem; border-left: 1px solid var(--line); background: rgba(8,14,16,.45); display: grid; gap: 1rem; align-content: start; }
-      @media (max-width: 820px) { .md-side { border-left: 0; border-top: 1px solid var(--line); } }
+      .md-form { display: grid; gap: 1.1rem; min-width: 0; }
+      .md-side { padding: 1.1rem; border: 1px solid var(--line); border-radius: 12px; background: rgba(12,21,24,.85); display: grid; gap: 1rem; align-content: start; }
+      @media (max-width: 820px) { .md-side { position: static; } .md-body { gap: 1rem; padding-top: 1rem; } }
       .md-section { border: 1px solid var(--line); border-radius: 10px; padding: .9rem; }
       .md-section h4 { display: flex; align-items: center; gap: .45rem; font-size: var(--fs-sm); font-weight: 700; margin-bottom: .75rem; }
       .md-section h4 svg { width: 1rem; height: 1rem; color: #2b8ba5; }
@@ -461,6 +465,6 @@
   <script src="/assets/js/cdev-auth.js?v=20260926b"></script>
   <script src="/assets/js/admin-shell.js?v=20260928"></script>
   <script src="/assets/js/sheet-calc.js?v=20260929"></script>
-  <script src="/assets/js/dashboard.js?v=20260929"></script>
+  <script src="/assets/js/dashboard.js?v=20261001"></script>
 </body>
 </html>

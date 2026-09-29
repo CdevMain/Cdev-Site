@@ -415,7 +415,14 @@
         padding-right: clamp(1.5rem, 3vw, 2.5rem);
       }
     }
-  </style>
+      /* Barra de rolagem CDEV */
+    html, * { scrollbar-width: thin; scrollbar-color: #1e6275 #0a1215; }
+    ::-webkit-scrollbar { width: 10px; height: 10px; }
+    ::-webkit-scrollbar-track { background: #0a1215; }
+    ::-webkit-scrollbar-thumb { background: linear-gradient(180deg, #1e6275, #2b8ba5); border-radius: 999px; border: 2px solid #0a1215; }
+    ::-webkit-scrollbar-thumb:hover { background: #2b8ba5; }
+    ::-webkit-scrollbar-corner { background: #0a1215; }
+</style>
 </head>
 <body>
   <div id="cur"><div id="cring"></div><div id="cdot"></div></div>

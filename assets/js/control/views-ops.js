@@ -204,7 +204,7 @@
         ${linkBtn(siteUrl, `${icon('external')}Abrir site`)}
         ${mainDomain ? btn(`data-open-domain="${mainDomain.id}"`, `${icon('globe')}Abrir domínio`) : `<span class="btn btn-sm" aria-disabled="true">${icon('globe')}Abrir domínio</span>`}
         ${mainHosting ? btn(`data-open-hosting="${mainHosting.id}"`, `${icon('server')}Abrir hospedagem`) : `<span class="btn btn-sm" aria-disabled="true">${icon('server')}Abrir hospedagem</span>`}
-        ${wa ? `<a class="btn btn-sm" href="${esc(wa)}" target="_blank" rel="noopener">${icon('msg')}WhatsApp</a>` : ''}
+        ${wa ? `<button type="button" class="btn btn-sm" data-wa-phone="${esc(client.whatsapp || client.phone)}">${icon('msg')}WhatsApp</button>` : ''}
         ${mainProject ? `<a class="btn btn-sm" href="#/projetos/${mainProject.id}">${icon('edit')}Editar projeto</a>` : ''}
         <a class="btn btn-sm" href="#/incidentes?client=${id}">${icon('alert')}Ver incidentes</a>
         <a class="btn btn-sm" href="#/backups?client=${id}">${icon('archive')}Ver backups</a>
