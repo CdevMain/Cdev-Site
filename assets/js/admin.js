@@ -252,6 +252,9 @@
               <div><dt>Noites</dt><dd>${t ? t.nights : '—'}</dd></div>
               <div><dt>Comissão</dt><dd>${(Number(s.commission_rate) * 100).toLocaleString('pt-BR', { maximumFractionDigits: 2 })}%</dd></div>
             </dl>
+            ${(() => { const p = state.pay && state.pay.get(s.id); if (!p) return '';
+              return p.overdueCount ? `<a class="pay-line is-late" href="/dashboard?sheet=${s.id}&view=payments">${icon('triangle-alert')}<span>${p.overdueCount} ${p.overdueCount === 1 ? 'comissão atrasada' : 'comissões atrasadas'} · ${money.format(p.overdue)}</span></a>`
+                : `<a class="pay-line" href="/dashboard?sheet=${s.id}&view=payments">${icon('check')}<span>Comissões em dia · recebido ${money.format(p.received)}</span></a>`; })()}
             <div class="property-owner">${icon('users-round')}<span>${esc(owner ? owner.email : 'dono não encontrado')}</span></div>
             <div class="property-actions">
               <a class="btn btn-primary" href="/dashboard?sheet=${s.id}">${icon('table-2')}Planilha</a>
@@ -274,6 +277,7 @@
         <label class="dlg-field"><span>Ano</span><input class="field" name="year" type="number" min="2000" max="2100" value="${s.year}" required></label>
         <label class="dlg-field"><span>Comissão do coanfitrião (%)</span><input class="field" name="commission" type="number" min="0" max="100" step="0.01" value="${(Number(s.commission_rate) * 100).toFixed(2)}"></label>
         <label class="dlg-field"><span>Limpeza por reserva (R$)</span><input class="field" name="cleaning" type="number" min="0" step="0.01" value="${Number(s.cleaning_fee_per_client)}"></label>
+        <label class="dlg-field"><span>Vencimento da comissão (dia do mês seguinte)</span><input class="field" name="due_day" type="number" min="1" max="28" step="1" value="${Number(s.commission_due_day || 10)}"></label>
         <label class="dlg-field full"><span>Foto de capa (URL)</span><input class="field" name="cover_image_url" type="url" value="${esc(s.cover_image_url || '')}" placeholder="https://..."></label>
         <label class="dlg-field full"><span>Link do anúncio</span><input class="field" name="listing_url" type="url" value="${esc(s.listing_url || '')}" placeholder="https://airbnb.com/rooms/..."></label>
         <label class="dlg-field full"><span>Endereço / bairro</span><input class="field" name="address" value="${esc(s.address || '')}"></label>
@@ -288,6 +292,7 @@
             property_name: v('property_name'), title: v('title'), owner_user_id: v('owner_user_id'),
             year: Number(v('year')), commission_rate: Number(v('commission')) / 100, cleaning_fee_per_client: Number(v('cleaning')),
             cover_image_url: v('cover_image_url') || null, listing_url: v('listing_url') || null, address: v('address') || null,
+            ...(('commission_due_day' in s) ? { commission_due_day: Math.min(28, Math.max(1, Number(v('due_day')) || 10)) } : {}),
             active: $('[name=active]', b).checked, updated_at: new Date().toISOString()
           };
           if (!patch.property_name || !patch.title) throw new Error('Informe nome e título.');
@@ -348,16 +353,17 @@
   };
   const loadSpreadsheets = async () => {
     const { data, error } = await state.ctx.supabase.from('property_spreadsheets')
-      .select('id,title,property_name,owner_user_id,year,commission_rate,cleaning_fee_per_client,cover_image_url,listing_url,address,active,updated_at');
+      .select('*');
     if (error) throw error;
     state.spreadsheets = data || [];
+    state.pay = new Map();
     const ids = state.spreadsheets.map((s) => s.id);
     state.stats = new Map();
     if (ids.length) {
       const { data: months } = await state.ctx.supabase.from('property_spreadsheet_months').select('*').in('spreadsheet_id', ids);
       const bySheet = new Map();
       (months || []).forEach((m) => { if (!bySheet.has(m.spreadsheet_id)) bySheet.set(m.spreadsheet_id, []); bySheet.get(m.spreadsheet_id).push(m); });
-      state.spreadsheets.forEach((s) => state.stats.set(s.id, calc.totals(s, bySheet.get(s.id) || [])));
+      state.spreadsheets.forEach((s) => { state.stats.set(s.id, calc.totals(s, bySheet.get(s.id) || [])); if (calc.paymentTotals) state.pay.set(s.id, calc.paymentTotals(s, bySheet.get(s.id) || [])); });
     }
     $('#new-sheet').open = !state.spreadsheets.length;
     renderProperties(); renderUsers(); renderStats();

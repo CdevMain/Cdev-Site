@@ -26,15 +26,34 @@
   // ---------------------------------------------------------------- Definicoes de campos
   const F = {
     clients: [
-      { name: 'name', label: 'Nome', required: true },
-      { name: 'company', label: 'Empresa' },
-      { name: 'document', label: 'CPF/CNPJ', validate: 'document', hint: 'Somente para cobrança/contrato.' },
+      { type: 'section', name: '_c1', label: 'Empresa e dados fiscais', hint: 'Com o CNPJ, clique em Buscar para preencher pela Receita (grátis).' },
+      { name: 'name', label: 'Nome (como aparece no painel)', required: true },
       { name: 'status', label: 'Status', type: 'select', options: ['ATIVO', 'INATIVO'], required: true, default: 'ATIVO' },
-      { name: 'phone', label: 'Telefone', type: 'tel', validate: 'phone' },
-      { name: 'whatsapp', label: 'WhatsApp', type: 'tel', validate: 'phone' },
+      { name: 'person_type', label: 'Tipo', type: 'select', options: [['PJ', 'Pessoa jurídica (CNPJ)'], ['PF', 'Pessoa física (CPF)']], emptyLabel: '—' },
+      { name: 'document', label: 'CPF / CNPJ', validate: 'document', button: { label: 'Buscar CNPJ', action: 'cnpj', icon: 'search' } },
+      { name: 'company', label: 'Nome fantasia' },
+      { name: 'legal_name', label: 'Razão social / nome completo' },
+      { name: 'main_activity', label: 'Atividade principal (CNAE)' },
+      { name: 'tax_regime', label: 'Regime tributário', type: 'select', options: [['MEI', 'MEI'], ['SIMPLES', 'Simples Nacional'], ['PRESUMIDO', 'Lucro Presumido'], ['REAL', 'Lucro Real'], ['ISENTO', 'Isento'], ['OUTRO', 'Outro']] },
+      { name: 'state_registration', label: 'Inscrição estadual' },
+      { name: 'municipal_registration', label: 'Inscrição municipal' },
+      { type: 'section', name: '_c2', label: 'Responsável e contato' },
+      { name: 'contact_name', label: 'Nome do responsável' },
+      { name: 'contact_role', label: 'Cargo' },
+      { name: 'contact_document', label: 'CPF do responsável', validate: 'cpf' },
+      { name: 'whatsapp', label: 'Celular / WhatsApp', type: 'tel', validate: 'phone' },
+      { name: 'phone', label: 'Telefone fixo', type: 'tel', validate: 'phone' },
       { name: 'email', label: 'E-mail', type: 'email' },
+      { name: 'billing_email', label: 'E-mail financeiro', type: 'email' },
+      { name: 'instagram', label: 'Instagram' },
+      { type: 'section', name: '_c3', label: 'Endereço' },
+      { name: 'cep', label: 'CEP', validate: 'cep', button: { label: 'Buscar CEP', action: 'cep', icon: 'search' } },
+      { name: 'address', label: 'Logradouro' },
+      { name: 'address_number', label: 'Número' },
+      { name: 'address_complement', label: 'Complemento' },
+      { name: 'neighborhood', label: 'Bairro' },
       { name: 'city', label: 'Cidade' },
-      { name: 'address', label: 'Endereço', full: true },
+      { name: 'state', label: 'UF', validate: 'uf' },
       { name: 'notes', label: 'Observações', type: 'textarea', full: true }
     ],
     hostings: [
@@ -91,26 +110,44 @@
       { name: 'notes', label: 'Observações', type: 'textarea', full: true }
     ],
     leads: [
-      { name: 'company', label: 'Empresa', required: true },
-      { name: 'name', label: 'Contato' },
-      { name: 'segment', label: 'Segmento', placeholder: 'Barbearia, Restaurante...' },
-      { name: 'city', label: 'Cidade' },
-      { name: 'state', label: 'UF', placeholder: 'SP', validate: (v) => /^[A-Za-z]{2}$/.test(v) || 'Use a sigla (2 letras)' },
-      { name: 'whatsapp', label: 'WhatsApp', type: 'tel', validate: 'phone' },
-      { name: 'phone', label: 'Telefone', type: 'tel', validate: 'phone' },
+      { type: 'section', name: '_s1', label: 'Empresa e dados fiscais', hint: 'Digite o CNPJ e clique em Buscar: razão social, atividade e endereço vêm da Receita (grátis).' },
+      { name: 'person_type', label: 'Tipo', type: 'select', options: [['PJ', 'Pessoa jurídica (CNPJ)'], ['PF', 'Pessoa física (CPF)']], emptyLabel: '—' },
+      { name: 'document', label: 'CPF / CNPJ', validate: 'document', placeholder: '00.000.000/0000-00', button: { label: 'Buscar CNPJ', action: 'cnpj', icon: 'search' } },
+      { name: 'company', label: 'Nome fantasia (como é conhecido)', required: true },
+      { name: 'legal_name', label: 'Razão social / nome completo' },
+      { name: 'segment', label: 'Segmento', placeholder: 'Barbearia, Academia...' },
+      { name: 'main_activity', label: 'Atividade principal (CNAE)' },
+      { name: 'tax_regime', label: 'Regime tributário', type: 'select', options: [['MEI', 'MEI'], ['SIMPLES', 'Simples Nacional'], ['PRESUMIDO', 'Lucro Presumido'], ['REAL', 'Lucro Real'], ['ISENTO', 'Isento'], ['OUTRO', 'Outro']] },
+      { name: 'state_registration', label: 'Inscrição estadual' },
+      { name: 'municipal_registration', label: 'Inscrição municipal' },
+      { type: 'section', name: '_s2', label: 'Responsável e contato' },
+      { name: 'name', label: 'Nome do responsável' },
+      { name: 'contact_role', label: 'Cargo', placeholder: 'Proprietário, gerente...' },
+      { name: 'contact_document', label: 'CPF do responsável', validate: 'cpf', placeholder: '000.000.000-00' },
+      { name: 'whatsapp', label: 'Celular / WhatsApp', type: 'tel', validate: 'phone', placeholder: '(51) 99999-0000' },
+      { name: 'phone', label: 'Telefone fixo', type: 'tel', validate: 'phone' },
       { name: 'email', label: 'E-mail', type: 'email' },
+      { name: 'billing_email', label: 'E-mail financeiro (notas e cobranças)', type: 'email' },
       { name: 'instagram', label: 'Instagram', placeholder: '@empresa' },
       { name: 'website', label: 'Site atual' },
-      { name: 'address', label: 'Endereço' },
-      { name: 'cep', label: 'CEP', type: 'digits', placeholder: '00000-000' },
+      { type: 'section', name: '_s3', label: 'Endereço' },
+      { name: 'cep', label: 'CEP', validate: 'cep', placeholder: '00000-000', button: { label: 'Buscar CEP', action: 'cep', icon: 'search' } },
+      { name: 'address', label: 'Logradouro' },
+      { name: 'address_number', label: 'Número' },
+      { name: 'address_complement', label: 'Complemento' },
+      { name: 'neighborhood', label: 'Bairro' },
+      { name: 'city', label: 'Cidade' },
+      { name: 'state', label: 'UF', placeholder: 'RS', validate: 'uf' },
+      { type: 'section', name: '_s4', label: 'Google Maps e prospecção' },
       { name: 'maps_url', label: 'Google Maps (link do perfil)', type: 'url', full: true },
       { name: 'google_rating', label: 'Nota no Google', type: 'number', min: 0, max: 5, step: 0.1 },
       { name: 'google_reviews', label: 'Avaliações no Google', type: 'number', min: 0 },
       { name: 'potential', label: 'Potencial de compra', type: 'select', options: [['5', '5 · muito alto'], ['4', '4 · alto'], ['3', '3 · médio'], ['2', '2 · baixo'], ['1', '1 · muito baixo']] },
-      { name: 'sale_value', label: 'Valor da venda', type: 'money', hint: 'Preencha quando o lead virar cliente (entra no TOTAL DE VENDAS).' },
+      { type: 'section', name: '_s5', label: 'Negociação' },
       { name: 'status', label: 'Status', type: 'select', required: true, default: 'LEAD', options: ['LEAD', 'CONTATADO', 'RESPONDEU', 'DEMO_ENVIADA', 'NEGOCIACAO', 'CLIENTE', 'PERDIDO'] },
       { name: 'source', label: 'Origem', type: 'select', required: true, default: 'MANUAL', options: ['MANUAL', 'CSV', 'WEB', 'GOOGLE', 'OUTRO'] },
       { name: 'next_action_at', label: 'Próximo follow-up', type: 'date' },
+      { name: 'sale_value', label: 'Valor da venda', type: 'money', hint: 'Preencha quando virar cliente (entra no TOTAL DE VENDAS).' },
       { name: 'lost_reason', label: 'Motivo da perda', full: true },
       { name: 'notes', label: 'Observações', type: 'textarea', full: true }
     ],
@@ -143,8 +180,16 @@
   CC.actions = {
     async editClient(row = {}) {
       const saved = await formModal({
-        title: row.id ? 'Editar cliente' : 'Novo cliente', fields: F.clients, values: row,
-        onSubmit: async (v) => (row.id ? api.update('clients', row.id, v) : api.insert('clients', v))
+        title: row.id ? 'Editar cliente' : 'Novo cliente', fields: F.clients, wide: true,
+        values: { ...row, document: row.document ? CC.fmtDoc(row.document) : '', contact_document: row.contact_document ? CC.fmtDoc(row.contact_document) : '', cep: row.cep ? CC.fmtCep(row.cep) : '' },
+        onOpen: (body) => CC.bindLookups(body),
+        onSubmit: async (v) => {
+          ['document', 'contact_document', 'cep'].forEach((k) => { v[k] = v[k] ? CC.digits(v[k]) : null; });
+          if (v.state) v.state = v.state.toUpperCase();
+          if (v.document && !v.person_type) v.person_type = v.document.length === 14 ? 'PJ' : 'PF';
+          if (!v.company && v.legal_name) v.company = v.legal_name;
+          return row.id ? api.update('clients', row.id, v) : api.insert('clients', v);
+        }
       });
       if (saved) { toast(row.id ? 'Cliente atualizado.' : 'Cliente criado.'); if (!row.id) CC.router.go(`#/clientes/${saved.id}`); else refresh(); }
       return saved;
@@ -267,8 +312,12 @@
         CC.SCORE_FLAGS.map(([k, t]) => `<label class="check"><input type="checkbox" name="flag_${k}" ${(row.score_flags || {})[k] ? 'checked' : ''}> ${esc(t)} <span class="muted">+${Number(CC.setting('lead_score_weights', {})[k] || 0)}</span></label>`).join('')
       }</div></div>`;
       const saved = await formModal({
-        title: row.id ? 'Editar lead' : 'Novo lead', fields: F.leads, values: row, extra: flagsHtml,
+        title: row.id ? 'Editar lead' : 'Novo lead', fields: F.leads, values: { ...row, document: row.document ? CC.fmtDoc(row.document) : '', contact_document: row.contact_document ? CC.fmtDoc(row.contact_document) : '', cep: row.cep ? CC.fmtCep(row.cep) : '' }, extra: flagsHtml, wide: true,
+        onOpen: (body) => CC.bindLookups(body),
         onSubmit: async (v, body) => {
+          ['document', 'contact_document', 'cep'].forEach((k) => { v[k] = v[k] ? CC.digits(v[k]) : null; });
+          if (v.state) v.state = v.state.toUpperCase();
+          if (v.document && !v.person_type) v.person_type = v.document.length === 14 ? 'PJ' : 'PF';
           const flags = Object.fromEntries(CC.SCORE_FLAGS.map(([k]) => [k, !!body.querySelector(`[name=flag_${k}]`)?.checked]));
           if (!row.id) Object.assign(flags, Object.fromEntries(Object.entries(CC.autoFlags(v)).filter(([, x]) => x)));
           v.score_flags = flags; v.score = CC.leadScore(flags);

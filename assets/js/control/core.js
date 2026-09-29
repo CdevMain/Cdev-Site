@@ -24,6 +24,12 @@
     alert: '<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4M12 17h.01"/>',
     users: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>',
     user: '<path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
+    camera: '<path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3z"/><circle cx="12" cy="13" r="3"/>',
+    building: '<rect width="16" height="20" x="4" y="2" rx="2"/><path d="M9 22v-4h6v4M8 6h.01M16 6h.01M12 6h.01M12 10h.01M12 14h.01M16 10h.01M16 14h.01M8 10h.01M8 14h.01"/>',
+    idcard: '<rect width="20" height="14" x="2" y="5" rx="2"/><circle cx="8" cy="12" r="2"/><path d="M14 10h4M14 14h4M5.5 17a3 3 0 0 1 5 0"/>',
+    pin: '<path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>',
+    insta: '<rect width="20" height="20" x="2" y="2" rx="5"/><circle cx="12" cy="12" r="4"/><path d="M17.5 6.5h.01"/>',
+    star: '<path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z"/>',
     target: '<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>',
     layout: '<rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18M9 21V9"/>',
     layers: '<path d="m12 2 10 5-10 5L2 7z"/><path d="m2 17 10 5 10-5M2 12l10 5 10-5"/>',
@@ -233,6 +239,9 @@
     url: (v) => !v || /^https?:\/\/[^\s]+$/i.test(v) || 'Use uma URL completa (https://...)',
     phone: (v) => !v || (digits(v).length >= 10 && digits(v).length <= 13) || 'Telefone inválido (DDD + número)',
     document: (v) => { const d = digits(v); return !d || validCpf(d) || validCnpj(d) || 'CPF/CNPJ inválido'; },
+    cpf: (v) => { const d = digits(v); return !d || validCpf(d) || 'CPF inválido'; },
+    cep: (v) => { const d = digits(v); return !d || d.length === 8 || 'CEP deve ter 8 dígitos'; },
+    uf: (v) => !v || /^[A-Za-z]{2}$/.test(v) || 'Use a sigla (2 letras)',
     domain: (v) => !v || /^[a-z0-9.-]+\.[a-z]{2,}$/.test(v) || 'Domínio inválido (ex.: cliente.com.br)',
     slug: (v) => !v || /^[a-z0-9]([a-z0-9-]*[a-z0-9])?$/.test(v) || 'Use apenas letras minúsculas, números e hífen',
     money: (v) => v === '' || v === null || (Number(v) >= 0) || 'Valor inválido',
@@ -251,6 +260,7 @@
     const id = `f_${f.name}_${Math.random().toString(36).slice(2, 7)}`;
     const common = `id="${id}" name="${esc(f.name)}" ${f.required ? 'required' : ''} ${f.readonly ? 'readonly' : ''} placeholder="${esc(f.placeholder || '')}"`;
     let input;
+    if (f.type === 'section') return `<div class="form-section full"><h4>${esc(f.label)}</h4>${f.hint ? `<p>${esc(f.hint)}</p>` : ''}</div>`;
     switch (f.type) {
       case 'hidden': return `<input type="hidden" name="${esc(f.name)}" value="${esc(v)}">`;
       case 'textarea': input = `<textarea class="field" ${common} rows="${f.rows || 4}">${esc(v)}</textarea>`; break;
@@ -265,6 +275,7 @@
       case 'money': input = `<input class="field" ${common} type="number" min="0" step="0.01" value="${esc(v)}">`; break;
       default: input = `<input class="field" ${common} type="${f.type || 'text'}" value="${esc(v)}" ${f.min !== undefined ? `min="${f.min}"` : ''} ${f.max !== undefined ? `max="${f.max}"` : ''} ${f.step !== undefined ? `step="${f.step}"` : ''}>`;
     }
+    if (f.button) input = `<div class="field-with-btn">${input}<button type="button" class="btn btn-sm" data-field-action="${esc(f.button.action)}">${f.button.icon ? icon(f.button.icon) : ''}${esc(f.button.label)}</button></div>`;
     return `<div class="form-field ${f.full ? 'full' : ''}" data-field="${esc(f.name)}"><label for="${id}">${esc(f.label)}${f.required ? ' *' : ''}</label>${input}${f.hint ? `<div class="hint">${esc(f.hint)}</div>` : ''}<div class="err" hidden></div></div>`;
   };
   const formHtml = (fields, values = {}) => `<form class="form-grid" novalidate>${fields.map((f) => fieldHtml(f, values)).join('')}</form>`;
@@ -310,7 +321,7 @@
   };
 
   // Abre modal com formulario e salva
-  const formModal = ({ title, fields, values = {}, onSubmit, wide = false, submitLabel = 'Salvar', extra = '' }) =>
+  const formModal = ({ title, fields, values = {}, onSubmit, wide = false, submitLabel = 'Salvar', extra = '', onOpen: onOpenForm }) =>
     modal({
       title, wide,
       body: formHtml(fields, values) + extra,
@@ -322,7 +333,12 @@
           return await onSubmit(v, body);
         }
       }],
-      onOpen: (body) => { const form = $('form', body); form && form.addEventListener('submit', (e) => e.preventDefault()); }
+      onOpen: (body) => {
+        const form = $('form', body); form && form.addEventListener('submit', (e) => e.preventDefault());
+        // erro some assim que o campo e corrigido
+        body.addEventListener('input', (e) => { const f = e.target.closest('.form-field'); if (f) { const er = $('.err', f); if (er) er.hidden = true; e.target.classList.remove('invalid'); } });
+        if (onOpenForm) onOpenForm(body);
+      }
     });
 
   // ------------------------------------------------------------------ Tabela generica
@@ -444,9 +460,134 @@
   // Busy button helper
   const busy = async (btn, fn) => { if (btn) { btn.classList.add('is-saving'); btn.disabled = true; } try { return await fn(); } finally { if (btn) { btn.classList.remove('is-saving'); btn.disabled = false; } } };
 
+  // ------------------------------------------------------------------ Documentos, CEP/CNPJ (APIs publicas gratuitas) e fotos
+  const fmtDoc = (v) => {
+    const d = digits(v);
+    if (d.length === 11) return d.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+    if (d.length === 14) return d.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
+    return v || '';
+  };
+  const fmtCep = (v) => { const d = digits(v); return d.length === 8 ? d.replace(/(\d{5})(\d{3})/, '$1-$2') : (v || ''); };
+  const fmtPhone = (v) => {
+    let d = digits(v); if (d.length >= 12 && d.startsWith('55')) d = d.slice(2);
+    if (d.length === 11) return d.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+    if (d.length === 10) return d.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3');
+    return v || '';
+  };
+  const fetchJson = async (url) => {
+    const ctrl = new AbortController(); const t = setTimeout(() => ctrl.abort(), 9000);
+    try { const r = await fetch(url, { signal: ctrl.signal }); if (!r.ok) throw new Error(r.status === 404 ? 'não encontrado' : `erro ${r.status}`); return await r.json(); }
+    finally { clearTimeout(t); }
+  };
+  // ViaCEP: gratuito, sem chave
+  const lookupCep = async (cep) => {
+    const d = digits(cep); if (d.length !== 8) throw new Error('CEP deve ter 8 dígitos');
+    const j = await fetchJson(`https://viacep.com.br/ws/${d}/json/`);
+    if (j.erro) throw new Error('CEP não encontrado');
+    return { cep: d, address: j.logradouro || '', neighborhood: j.bairro || '', city: j.localidade || '', state: j.uf || '', address_complement: j.complemento || '' };
+  };
+  // BrasilAPI (dados publicos da Receita Federal): gratuito, sem chave
+  const lookupCnpj = async (cnpj) => {
+    const d = digits(cnpj); if (!validCnpj(d)) throw new Error('CNPJ inválido');
+    const j = await fetchJson(`https://brasilapi.com.br/api/cnpj/v1/${d}`);
+    const phone = digits(j.ddd_telefone_1 || '');
+    return {
+      document: d, person_type: 'PJ', legal_name: j.razao_social || '', company: j.nome_fantasia || j.razao_social || '',
+      main_activity: j.cnae_fiscal_descricao || '', tax_regime: j.opcao_pelo_mei ? 'MEI' : j.opcao_pelo_simples ? 'SIMPLES' : '',
+      cep: digits(j.cep || ''), address: [j.descricao_tipo_de_logradouro, j.logradouro].filter(Boolean).join(' '), address_number: j.numero || '',
+      address_complement: j.complemento || '', neighborhood: j.bairro || '', city: j.municipio ? j.municipio.charAt(0) + j.municipio.slice(1).toLowerCase().replace(/(^|\s)\S/g, (x) => x.toUpperCase()) : '',
+      state: j.uf || '', phone: phone.length >= 10 ? phone : '', email: (j.email || '').toLowerCase(),
+      situation: j.descricao_situacao_cadastral || '', opened_at: j.data_inicio_atividade || ''
+    };
+  };
+  // Fotos: bucket privado crm-media; reduz para no maximo 640px antes de enviar
+  const MEDIA_BUCKET = 'crm-media';
+  const resizeImage = (file, max = 640) => new Promise((resolve, reject) => {
+    if (!/^image\/(jpeg|png|webp)$/.test(file.type)) { reject(new Error('Use uma imagem JPG, PNG ou WebP.')); return; }
+    if (file.size > 15 * 1024 * 1024) { reject(new Error('Imagem muito grande (máx. 15 MB).')); return; }
+    const img = new Image(); const url = URL.createObjectURL(file);
+    img.onload = () => {
+      const scale = Math.min(1, max / Math.max(img.width, img.height));
+      const c = document.createElement('canvas'); c.width = Math.round(img.width * scale); c.height = Math.round(img.height * scale);
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(url);
+      c.toBlob((b) => (b ? resolve(b) : reject(new Error('Não foi possível processar a imagem.'))), 'image/jpeg', 0.86);
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Arquivo de imagem inválido.')); };
+    img.src = url;
+  });
+  const signedCache = new Map();
+  const media = {
+    async upload(file, folder) {
+      const blob = await resizeImage(file);
+      const path = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.jpg`;
+      const { error } = await CC.ctx.supabase.storage.from(MEDIA_BUCKET).upload(path, blob, { contentType: 'image/jpeg', upsert: false });
+      if (error) throw new Error(/bucket not found/i.test(error.message || '') ? 'Armazenamento de fotos não configurado (rode supabase/13_comissao_e_dados_fiscais.sql).' : error.message);
+      return path;
+    },
+    async url(path) {
+      if (!path) return '';
+      const hit = signedCache.get(path); if (hit && hit.exp > Date.now()) return hit.url;
+      const { data, error } = await CC.ctx.supabase.storage.from(MEDIA_BUCKET).createSignedUrl(path, 3600);
+      if (error || !data) return '';
+      signedCache.set(path, { url: data.signedUrl, exp: Date.now() + 50 * 60 * 1000 });
+      return data.signedUrl;
+    },
+    async remove(path) { if (path) await CC.ctx.supabase.storage.from(MEDIA_BUCKET).remove([path]); signedCache.delete(path); },
+    // varias fotos de uma vez (lista de leads)
+    async urls(paths) {
+      const need = [...new Set(paths.filter(Boolean))].filter((p) => !(signedCache.get(p)?.exp > Date.now()));
+      if (need.length) {
+        const { data } = await CC.ctx.supabase.storage.from(MEDIA_BUCKET).createSignedUrls(need, 3600);
+        (data || []).forEach((d) => { if (d.signedUrl && d.path) signedCache.set(d.path, { url: d.signedUrl, exp: Date.now() + 50 * 60 * 1000 }); });
+      }
+      return Object.fromEntries(paths.filter(Boolean).map((p) => [p, signedCache.get(p)?.url || '']));
+    }
+  };
+
+  // Botoes "Buscar CNPJ" / "Buscar CEP" dentro de formularios (preenche so campos vazios, exceto os do proprio documento)
+  const bindLookups = (body) => {
+    const set = (name, value, force = false) => {
+      const el = body.querySelector(`[name="${name}"]`); if (!el || value === undefined || value === null || value === '') return false;
+      if (!force && String(el.value || '').trim()) return false;
+      el.value = value; el.dispatchEvent(new Event('input', { bubbles: true })); el.classList.add('autofilled'); setTimeout(() => el.classList.remove('autofilled'), 1600);
+      return true;
+    };
+    body.addEventListener('click', async (e) => {
+      const btn = e.target.closest('[data-field-action]'); if (!btn) return;
+      const action = btn.dataset.fieldAction;
+      try {
+        await busy(btn, async () => {
+          if (action === 'cnpj') {
+            const d = await lookupCnpj(body.querySelector('[name="document"]').value);
+            set('document', fmtDoc(d.document), true); set('person_type', 'PJ', true);
+            if (d.phone) d.phone = fmtPhone(d.phone);
+            let n = 0; ['legal_name', 'company', 'main_activity', 'tax_regime', 'address', 'address_number', 'address_complement', 'neighborhood', 'city', 'state', 'phone', 'email'].forEach((k) => { if (set(k, d[k])) n += 1; });
+            if (set('cep', fmtCep(d.cep))) n += 1;
+            toast(`${d.legal_name || 'CNPJ encontrado'}${d.situation ? ` · ${d.situation}` : ''} · ${n} campos preenchidos.`);
+          }
+          if (action === 'cep') {
+            const d = await lookupCep(body.querySelector('[name="cep"]').value);
+            set('cep', fmtCep(d.cep), true);
+            ['address', 'neighborhood', 'city', 'state', 'address_complement'].forEach((k) => set(k, d[k], k !== 'address_complement'));
+            toast('Endereço preenchido pelo CEP.');
+          }
+        });
+      } catch (err) { toast(`Busca: ${err.message === 'The user aborted a request.' ? 'tempo esgotado' : err.message}`, 'error'); }
+    });
+    // mascara ao sair do campo
+    body.addEventListener('focusout', (e) => {
+      const el = e.target; if (!el.name) return;
+      if (['document', 'contact_document'].includes(el.name)) el.value = fmtDoc(el.value);
+      if (el.name === 'cep') el.value = fmtCep(el.value);
+      if (['whatsapp', 'phone'].includes(el.name) && el.value) el.value = fmtPhone(el.value);
+      if (el.name === 'state') el.value = el.value.toUpperCase();
+    });
+  };
+
   Object.assign(CC, {
     $, $$, esc, safeUrl, digits, slugify, debounce, icon, setting, money, todayISO, parseISODate, fmtDate, fmtDateTime, fmtTime,
     daysUntil, addDays, duration, relTime, dueLabel, dueTone, label, badge, TONES, SEV, toast, modal, confirmDialog, VALIDATORS,
-    formHtml, readForm, formModal, table, csv, toolbar, bindToolbar, matchQ, SORTERS, pageHead, waLink, waNumber, busy, optionHtml
+    formHtml, readForm, formModal, table, csv, toolbar, bindToolbar, matchQ, SORTERS, pageHead, waLink, waNumber, busy, optionHtml,
+    fmtDoc, fmtCep, fmtPhone, lookupCep, lookupCnpj, media, validCpf, validCnpj, bindLookups
   });
 })();

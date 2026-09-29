@@ -42,6 +42,12 @@ returns boolean language sql immutable set search_path = public as $$
   select coalesce(public.cc_phone_key(p) ~ '^[1-9][1-9]9[0-9]{8}$', false);
 $$;
 
+-- Link de rede social/agregador (nao e site institucional proprio)
+create or replace function public.cc_is_social_link(p text)
+returns boolean language sql immutable set search_path = public as $$
+  select coalesce(p, '') ~* '(instagram\.com|facebook\.com|fb\.com|fb\.me|linktr\.ee|linktree|beacons\.ai|bio\.link|taplink|linkbio|wa\.me|whatsapp|tiktok\.com|youtube\.com|ifood\.com|google\.com/maps|goo\.gl|business\.site|g\.page)';
+$$;
+
 -- Nome normalizado para achar a mesma empresa com nome em outra ordem:
 -- "Academia Strong Fit" e "Strong Fit Academia" -> "fit strong"
 create or replace function public.cc_name_key(p text)
@@ -163,7 +169,9 @@ begin
   if coalesce((prof.filters->>'require_mobile')::boolean, false) and not public.cc_is_mobile(k) then
     return jsonb_build_object('status', 'rejected', 'reason', 'nao e celular (DDD + 9 digitos)');
   end if;
-  if coalesce((prof.filters->>'require_no_website')::boolean, false) and nullif(trim(p->>'website'), '') is not null then
+  -- Linktree, Instagram, WhatsApp, Facebook etc. NAO contam como site proprio
+  if coalesce((prof.filters->>'require_no_website')::boolean, false) and nullif(trim(p->>'website'), '') is not null
+     and not public.cc_is_social_link(p->>'website') then
     return jsonb_build_object('status', 'rejected', 'reason', 'possui site proprio');
   end if;
   if v_reviews is not null and prof.filters ? 'min_reviews' and v_reviews < (prof.filters->>'min_reviews')::integer then
@@ -219,7 +227,7 @@ begin
     coalesce(array(select jsonb_array_elements_text(coalesce(p->'tags', '[]'::jsonb))), '{}') || prof.tags,
     prof.key, public.cc_today(), 'GOOGLE', 'LEAD',
     coalesce(v_pot, 0) * 20,
-    jsonb_build_object('sem_site', nullif(trim(p->>'website'), '') is null, 'instagram', v_insta_clean is not null,
+    jsonb_build_object('sem_site', nullif(trim(p->>'website'), '') is null or public.cc_is_social_link(p->>'website'), 'instagram', v_insta_clean is not null,
                        'whatsapp', public.cc_is_mobile(k), 'presenca_publica', coalesce(v_reviews, 0) >= 20),
     null
   ) returning id into new_id;

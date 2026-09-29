@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/assets/css/admin-fluid.css?v=20260926b" />
+  <link rel="stylesheet" href="/assets/css/admin-fluid.css?v=20260929" />
   <script>try{if(localStorage.getItem('cdev:side-collapsed')==='1')document.documentElement.classList.add('side-collapsed')}catch(e){}</script>
   <link rel="stylesheet" href="/assets/css/admin-shell.css?v=20260926b" />
   <script src="https://cdn.tailwindcss.com"></script>
@@ -130,6 +130,10 @@
       .property-kpis dt { font-family: var(--fm); font-size: var(--fs-micro); color: #4a6570; text-transform: uppercase; letter-spacing: .1em; }
       .property-kpis dd { margin: .2rem 0 0; font-family: var(--fm); font-size: var(--fs-xs); color: #e8f2f5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
       .property-kpis dd.pos { color: #2aa0c6; } .property-kpis dd.neg { color: #d4691e; }
+      .pay-line { display: flex; align-items: center; gap: .45rem; font-family: var(--fm); font-size: var(--fs-micro); color: #7fd1a8; text-decoration: none; border: 1px solid rgba(46,160,110,.3); background: rgba(46,160,110,.08); border-radius: 6px; padding: .45rem .6rem; }
+      .pay-line svg { width: .9rem; height: .9rem; flex-shrink: 0; }
+      .pay-line.is-late { color: #f0a15c; border-color: rgba(224,123,36,.45); background: rgba(224,123,36,.1); }
+      .pay-line:hover { filter: brightness(1.15); }
       .property-owner { display: flex; align-items: center; gap: .4rem; color: #6f8d98; font-family: var(--fm); font-size: var(--fs-micro); min-width: 0; }
       .property-owner svg { width: .9rem; height: .9rem; flex-shrink: 0; }
       .property-owner span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -276,7 +280,7 @@
   <script src="/assets/js/supabase.config.js"></script>
   <script src="/assets/js/cdev-auth.js?v=20260926b"></script>
   <script src="/assets/js/admin-shell.js?v=20260928"></script>
-  <script src="/assets/js/sheet-calc.js?v=20260926c"></script>
-  <script src="/assets/js/admin.js?v=20260926c"></script>
+  <script src="/assets/js/sheet-calc.js?v=20260929"></script>
+  <script src="/assets/js/admin.js?v=20260929"></script>
 </body>
 </html>

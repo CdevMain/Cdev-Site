@@ -85,10 +85,7 @@ html.cdev-admin {
 /* Itens de grid podem encolher: tabelas largas rolam dentro do painel em vez de estourar a pagina */
 .cdev-admin :is(.grid, .grid-2, .grid-3) > * { min-width: 0; }
 
-/* Planilhas: coluna lateral fluida em vez de 22rem fixos */
-@media (min-width: 1024px) {
-  .cdev-admin #spreadsheet-panel { grid-template-columns: minmax(15rem, 22rem) minmax(0, 1fr); }
-}
+/* Planilhas: o layout (lista + conteudo) fica em dashboard.html (.sheet-layout) */
 
 /* ---------- Entrada suave das partes da pagina ---------- */
 @keyframes cd-rise {

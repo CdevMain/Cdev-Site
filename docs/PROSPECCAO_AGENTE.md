@@ -75,12 +75,13 @@ FERRAMENTAS
      "profile_key": "<key>", "company": "...", "name": "<responsável, se visível>",
      "city": "...", "state": "UF", "address": "...", "cep": "...",
      "whatsapp": "<celular>", "phone": "<fixo, se houver>", "instagram": "@...",
-     "website": "<site oficial, se permitido pelo perfil>", "maps_url": "<link do perfil>",
+     "website": "<link encontrado: site oficial, Linktree ou rede social; vazio se não houver>", "maps_url": "<link do perfil>",
      "google_rating": 4.8, "google_reviews": 120, "potential": 4,
      "notes": "<1-2 linhas: por que aprovou, serviços, observações>"
    }'::jsonb);
    Resposta: created (conta), duplicate (conta como duplicado) ou rejected (conta como descartado).
    Use aspas simples duplicadas ('') dentro de textos. Campos não confirmados: omita.
+   Linktree/Instagram/WhatsApp no campo website NÃO bloqueiam perfis "sem site": o CRM os mostra como "Só redes sociais".
    Se uma chamada falhar ou a execução for interrompida, consulte o telefone (passo 5a)
    antes de tentar de novo.
 
