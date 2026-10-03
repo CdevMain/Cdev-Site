@@ -474,7 +474,7 @@
   const whatsappMode = () => {
     const m = setting('whatsapp_mode', 'auto');
     if (m === 'web' || m === 'app' || m === 'desktop') return m;
-    return isMobileUA() ? 'app' : 'desktop';
+    return isMobileUA() ? 'app' : 'web'; // padrao no computador: WhatsApp Web
   };
   const whatsappUrl = (phone, message = '', mode = whatsappMode()) => {
     const n = normalizePhone(phone); if (!n) return '';

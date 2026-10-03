@@ -481,7 +481,7 @@
     { name: 'demo_base_domain', label: 'Domínio das demos', validate: 'domain', lower: true },
     { name: 'timezone', label: 'Fuso horário', type: 'select', options: ['America/Sao_Paulo', 'America/Manaus', 'America/Cuiaba', 'America/Belem', 'America/Fortaleza', 'America/Recife', 'America/Noronha', 'America/Rio_Branco', 'UTC'] },
     { name: 'currency', label: 'Moeda', type: 'select', options: [['BRL', 'Real (BRL)'], ['USD', 'Dólar (USD)'], ['EUR', 'Euro (EUR)']] },
-    { name: 'whatsapp_mode', label: 'Como abrir o WhatsApp', type: 'select', options: [['auto', 'Automático (app no computador, wa.me no celular)'], ['desktop', 'App do WhatsApp: troca o chat na janela aberta'], ['web', 'WhatsApp Web: reaproveita uma aba (recarrega)'], ['app', 'wa.me (celular)']], hint: 'O app do WhatsApp para Windows/Mac abre o novo contato na janela que já está aberta, sem abrir aba nem URL nova.' },
+    { name: 'whatsapp_mode', label: 'Como abrir o WhatsApp', type: 'select', options: [['auto', 'Automático (WhatsApp Web no computador, wa.me no celular)'], ['web', 'WhatsApp Web: sempre na mesma aba'], ['desktop', 'App do WhatsApp instalado (whatsapp://)'], ['app', 'wa.me (celular)']], hint: 'WhatsApp Web abre sempre na mesma aba (CDEV_WHATSAPP); ao trocar de contato a aba recarrega no novo chat.' },
     { name: 'locale', label: 'Formato de data/valor', type: 'select', options: [['pt-BR', 'pt-BR (25/09/2026)'], ['en-US', 'en-US (09/25/2026)'], ['en-GB', 'en-GB (25/09/2026)']] }
   ];
   CC.routes.configuracoes = async (root) => {
