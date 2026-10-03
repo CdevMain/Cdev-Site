@@ -23,7 +23,7 @@
       ${tags.length ? `<div class="pc-tags">${tags.slice(0, 4).map((t) => CC.tags.chip('TAG', t, { small: true })).join('')}${tags.length > 4 ? `<span class="tiny muted">+${tags.length - 4}</span>` : ''}</div>` : ''}
       ${due != null || l.demo_project_id ? `<small class="pc-due">${due != null ? `<span class="${due < 0 ? 'late' : due === 0 ? 'today' : ''}">follow-up ${fmtDate(l.next_action_at, { short: true })}</span>` : ''}${l.demo_project_id ? ' · demo' : ''}</small>` : ''}
       <div class="pc-fast" data-fa-bar>
-        ${mob ? `<button type="button" class="fa wa" data-wa-phone="${esc(mob)}" title="WhatsApp ${esc(CC.fmtPhone(mob))}">${icon('msg')}</button>` : ''}
+        ${mob ? `<button type="button" class="fa wa" data-wa-phone="${esc(mob)}" data-wa-lead="${l.id}" title="WhatsApp ${esc(CC.fmtPhone(mob))}">${icon('msg')}</button>` : ''}
         ${tel ? `<a class="fa" href="tel:+55${esc(pkey(tel))}" data-fa="call" title="Ligar ${esc(CC.fmtPhone(tel))}">${icon('phone')}</a><button type="button" class="fa" data-fa="copy" title="Copiar ${esc(CC.fmtPhone(tel))}">${icon('copy')}</button>` : ''}
         ${l.status !== 'CLIENTE' && l.status !== 'PERDIDO' ? `<button type="button" class="fa sent" data-fa="sent" title="Marcar mensagem como enviada (move para ${esc(label('CONTATADO'))})">${icon('check')}<span>Enviada</span></button>` : ''}
         <button type="button" class="fa" data-fa="tag" title="Tags">${icon('plus')}<span>Tag</span></button>
@@ -95,7 +95,7 @@
           { label: 'Score', cls: 'num', render: (l) => l.score },
           { label: 'Status', render: (l) => badge(l.status) },
           { label: 'Follow-up', render: (l) => (l.next_action_at ? `<span class="badge ${CC.dueTone(daysUntil(l.next_action_at))}">${fmtDate(l.next_action_at)}</span>` : '—') },
-          { label: 'Ações', render: (l) => `<div class="pc-fast inline">${mobileOf(l) ? `<button type="button" class="fa wa" data-wa-phone="${esc(mobileOf(l))}" title="WhatsApp">${icon('msg')}</button>` : ''}${!['CLIENTE', 'PERDIDO'].includes(l.status) ? `<button type="button" class="fa sent" data-fa="sent" data-fa-lead="${l.id}" title="Marcar mensagem como enviada">${icon('check')}<span>Enviada</span></button>` : ''}<button type="button" class="fa" data-fa="tag" data-fa-lead="${l.id}" title="Tags">${icon('plus')}<span>Tag</span></button></div>` }
+          { label: 'Ações', render: (l) => `<div class="pc-fast inline">${mobileOf(l) ? `<button type="button" class="fa wa" data-wa-phone="${esc(mobileOf(l))}" data-wa-lead="${l.id}" title="WhatsApp">${icon('msg')}</button>` : ''}${!['CLIENTE', 'PERDIDO'].includes(l.status) ? `<button type="button" class="fa sent" data-fa="sent" data-fa-lead="${l.id}" title="Marcar mensagem como enviada">${icon('check')}<span>Enviada</span></button>` : ''}<button type="button" class="fa" data-fa="tag" data-fa-lead="${l.id}" title="Tags">${icon('plus')}<span>Tag</span></button></div>` }
         ], list, { rowAttr: (l) => `class="clickable" data-lead="${l.id}"`, empty: 'Nenhum lead.' });
       }
       if (!keepFocus) {
@@ -116,6 +116,9 @@
 
     const redraw = () => draw(true);
     const onLeadChanged = (l) => { const i = rows.findIndex((x) => x.id === l.id); if (i >= 0) Object.assign(rows[i], l); redraw(); };
+    // envio/resposta confirmados pela extensao do WhatsApp (ou outra parte do CRM): o card muda de coluna sozinho
+    const onExt = (e) => { if (!root.isConnected) return window.removeEventListener('cdev:lead-changed', onExt); const l = e.detail; if (!l?.id) return; const row = rows.find((x) => x.id === l.id); if (row && row !== l) { Object.assign(row, l); redraw(); } else if (row) redraw(); };
+    window.addEventListener('cdev:lead-changed', onExt);
     root.addEventListener('change', (e) => { const s = e.target.closest('[data-lf]'); if (!s) return; st[s.dataset.lf] = s.value; CC.router.setQuery({ [s.dataset.lf === 'niche' ? 'n' : 't']: s.value }); draw(); });
     root.addEventListener('click', async (e) => {
       const fa = e.target.closest('[data-fa]');
@@ -193,7 +196,7 @@
           <div class="lp-actions"><button class="btn btn-sm" data-edit>${icon('edit')}Editar cadastro</button>${lead.client_id ? `<a class="btn btn-sm btn-primary" href="#/clientes/${lead.client_id}">${icon('user')}Abrir cliente</a>` : `<button class="btn btn-sm btn-primary" data-convert>${icon('check')}Converter em cliente</button>`}</div>
         </header>
         <nav class="lp-contacts">
-          ${phoneMain ? `<button type="button" class="lp-contact" data-wa-phone="${esc(phoneMain)}">${icon('msg')}<span>WhatsApp<b>${esc(CC.fmtPhone(phoneMain))}</b></span></button>` : ''}
+          ${phoneMain ? `<button type="button" class="lp-contact" data-wa-phone="${esc(phoneMain)}" data-wa-lead="${lead.id}">${icon('msg')}<span>WhatsApp<b>${esc(CC.fmtPhone(phoneMain))}</b></span></button>` : ''}
           ${lead.phone || lead.whatsapp ? `<a class="lp-contact" href="tel:+55${esc(CC.digits(lead.phone || lead.whatsapp).replace(/^55(?=\d{10,11}$)/, ''))}">${icon('phone')}<span>Ligar<b>${esc(CC.fmtPhone(lead.phone || lead.whatsapp))}</b></span></a>` : ''}
           ${lead.email ? `<a class="lp-contact" href="mailto:${esc(lead.email)}">${icon('mail')}<span>E-mail<b>${esc(lead.email)}</b></span></a>` : ''}
           ${insta ? `<a class="lp-contact" href="https://instagram.com/${esc(insta)}" target="_blank" rel="noopener">${icon('insta')}<span>Instagram<b>@${esc(insta)}</b></span></a>` : ''}
@@ -589,7 +592,7 @@
       const insta = l.instagram ? String(l.instagram).replace(/^@|https?:\/\/(www\.)?instagram\.com\//g, '').replace(/\/.*$/, '') : '';
       return `<div class="qc">
         ${n ? `<button class="qc-btn" data-copy-phone="${esc(CC.fmtPhone(n))}" title="Copiar ${esc(CC.fmtPhone(n))}">${icon('copy')}Copiar</button>` : ''}
-        ${n && isMobile(n) ? `<button type="button" class="qc-btn wa" data-wa-phone="${esc(n)}">WhatsApp</button>` : n ? `<a class="qc-btn" href="tel:+55${esc(phoneKey(n))}">Ligar</a>` : ''}
+        ${n && isMobile(n) ? `<button type="button" class="qc-btn wa" data-wa-phone="${esc(n)}" data-wa-lead="${l.id}">WhatsApp</button>` : n ? `<a class="qc-btn" href="tel:+55${esc(phoneKey(n))}">Ligar</a>` : ''}
         ${sk !== 'NONE' ? `<a class="qc-btn ${sk === 'OWN' ? 'site' : ''}" href="${esc(CC.safeUrl(/^https?:/i.test(l.website) ? l.website : `https://${l.website}`))}" target="_blank" rel="noopener">${sk === 'OWN' ? 'Site' : 'Link'}</a>` : ''}
         ${insta ? `<a class="qc-btn" href="https://instagram.com/${esc(insta)}" target="_blank" rel="noopener">Instagram</a>` : ''}
         ${l.maps_url ? `<a class="qc-btn" href="${esc(CC.safeUrl(l.maps_url))}" target="_blank" rel="noopener">Maps</a>` : ''}
@@ -669,6 +672,8 @@
     drawList();
 
     const refreshBar = () => { $('#p-filters', root).innerHTML = filterBar(); };
+    const onExt = (e) => { if (!root.isConnected) return window.removeEventListener('cdev:lead-changed', onExt); const l = e.detail; const row = l?.id && allLeads.find((x) => x.id === l.id); if (row) { if (row !== l) Object.assign(row, l); drawList(); } };
+    window.addEventListener('cdev:lead-changed', onExt);
     const setF = (k, v, redrawBar = false) => {
       f[k] = v;
       if (k === 'uf') f.city = '';

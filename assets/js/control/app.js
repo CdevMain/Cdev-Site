@@ -62,6 +62,8 @@
     await CC.router.render();
     CC.refreshBadges();
     setInterval(CC.refreshBadges, 60000);
+    if (CC.waBridge?.ready) CC.waBridge.syncLeads();
+    try { if (window.Notification && Notification.permission === 'default') document.addEventListener('click', () => Notification.requestPermission().catch(() => {}), { once: true }); } catch (e) { /* sem notificacoes */ }
 
     // Realtime: novas notificacoes e mudancas de estado dos sites
     ctx.supabase.channel('cc-notifications')

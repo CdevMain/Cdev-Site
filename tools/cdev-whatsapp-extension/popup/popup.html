@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <title>CDEV WhatsApp</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <header>
+      <img src="../icons/icon48.png" width="28" height="28" alt="" />
+      <div><strong>CDEV WhatsApp</strong><small id="ver"></small></div>
+    </header>
+    <button type="button" class="primary" data-go="wa">Abrir WhatsApp Web</button>
+    <div class="grid">
+      <button type="button" data-go="panel">Painel</button>
+      <button type="button" data-go="palette">Comandos</button>
+      <button type="button" data-go="followup">Follow-up</button>
+      <button type="button" data-go="options">Configurar</button>
+    </div>
+    <section>
+      <h2>Hoje <span id="count"></span></h2>
+      <ul id="today"></ul>
+    </section>
+    <p class="foot" id="stats"></p>
+    <script src="../src/core/ns.js"></script>
+    <script src="../src/core/icons.js"></script>
+    <script src="../src/core/store.js"></script>
+    <script src="../src/core/crm.js"></script>
+    <script src="popup.js"></script>
+  </body>
+</html>

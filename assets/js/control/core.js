@@ -493,8 +493,14 @@
   // desktop: o app do WhatsApp so troca de conversa (janela ja aberta). web: reaproveita a aba CDEV_WHATSAPP.
   // Obs.: no modo web o navegador precisa recarregar a aba para trocar de contato (o WhatsApp Web nao aceita
   // comandos de outro site). Para trocar de conversa sem recarregar, use o app do WhatsApp (modo desktop).
-  const openWhatsAppContact = (phone, message = '') => {
+  // ctx (opcional) = { lead, leadId, messageId }: com a extensao CDEV WhatsApp instalada, a conversa abre
+  // na aba do WhatsApp Web que ja esta aberta, sem recarregar, e o envio e confirmado sozinho no CRM.
+  const openWhatsAppContact = (phone, message = '', ctx = {}) => {
     const mode = whatsappMode();
+    if (mode !== 'app' && CC.waBridge?.ready && normalizePhone(phone)) {
+      const r = CC.waBridge.openChat(phone, message, ctx);
+      if (r.ok) { toast('Abrindo a conversa no WhatsApp Web…'); return r; }
+    }
     const url = whatsappUrl(phone, message, mode);
     if (!url) { toast('Número de WhatsApp ausente ou inválido para este contato.', 'error'); return { ok: false, reason: 'phone' }; }
     if (mode === 'desktop') {
@@ -516,7 +522,7 @@
     const el = e.target.closest('[data-wa-phone]');
     if (!el) return;
     e.preventDefault(); e.stopPropagation();
-    openWhatsAppContact(el.dataset.waPhone, el.dataset.waText || '');
+    openWhatsAppContact(el.dataset.waPhone, el.dataset.waText || '', { leadId: el.dataset.waLead || '' });
   }, true);
 
   // Busy button helper

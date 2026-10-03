@@ -1,0 +1,95 @@
+{
+  "manifest_version": 3,
+  "name": "CDEV WhatsApp",
+  "short_name": "CDEV WhatsApp",
+  "version": "3.0.0",
+  "description": "CDEV WhatsApp: WhatsApp Web integrado ao CRM CDEV — abre conversas sem recarregar, sincroniza status, detecta respostas, agenda envios. Inclui botões, status, tags, notas, lembretes e follow-up.",
+  "permissions": [
+    "storage",
+    "unlimitedStorage",
+    "tabs",
+    "alarms",
+    "notifications",
+    "offscreen",
+    "scripting"
+  ],
+  "host_permissions": [
+    "https://web.whatsapp.com/*",
+    "https://cdev.com.br/*",
+    "https://www.cdev.com.br/*",
+    "http://localhost/*",
+    "http://127.0.0.1/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "CDEV WhatsApp",
+    "default_popup": "popup/popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "options_ui": {
+    "page": "options/options.html",
+    "open_in_tab": true
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://web.whatsapp.com/*"
+      ],
+      "js": [
+        "src/core/ns.js",
+        "src/core/icons.js",
+        "src/core/store.js",
+        "src/core/crm.js",
+        "src/core/writer.js",
+        "src/wa/dom.js",
+        "src/wa/lists.js",
+        "src/wa/diagnostic.js",
+        "src/wa/chatmenu.js",
+        "src/features/sound.js",
+        "src/ui/kit.js",
+        "src/features/current.js",
+        "src/features/dialogs.js",
+        "src/features/actions.js",
+        "src/features/follow.js",
+        "src/features/quotes.js",
+        "src/ui/listtoggle.js",
+        "src/ui/rail.js",
+        "src/cdev/link.js",
+        "src/ui/chatlist.js",
+        "src/ui/conversation.js",
+        "src/ui/panel.js",
+        "src/ui/palette.js",
+        "src/main.js"
+      ],
+      "css": [
+        "src/content.css"
+      ],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://cdev.com.br/control*",
+        "https://www.cdev.com.br/control*",
+        "http://localhost/*",
+        "http://127.0.0.1/*"
+      ],
+      "js": [
+        "src/bridge/crm-bridge.js"
+      ],
+      "run_at": "document_start"
+    }
+  ],
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}

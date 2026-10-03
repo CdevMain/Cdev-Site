@@ -102,13 +102,23 @@
   };
 
   // Mensagem enviada a partir do card: confirma a ultima mensagem aberta/copiada e move o lead
-  CC.markLeadMessageSent = async (lead, { demoUrl = '' } = {}) => {
+  // Marca a mensagem como enviada e move o lead. opts: { messageId, source: 'card'|'whatsapp', text, demoUrl }
+  CC.markLeadMessageSent = async (lead, { demoUrl = '', messageId = '', source = 'card', text = '' } = {}) => {
     const now = new Date().toISOString();
     let msg = null;
     try {
-      const open = await api.list('lead_messages', { filters: [['eq', 'lead_id', lead.id], ['neq', 'status', 'ENVIADA']], order: 'created_at', asc: false, limit: 1 });
-      msg = open[0] || null;
-      if (msg) await api.update('lead_messages', msg.id, { status: 'ENVIADA', sent_at: now, updated_at: now });
+      if (messageId) msg = await api.get('lead_messages', messageId);
+      if (!msg) {
+        const open = await api.list('lead_messages', { filters: [['eq', 'lead_id', lead.id], ['neq', 'status', 'ENVIADA']], order: 'created_at', asc: false, limit: 1 });
+        const cand = open[0] || null;
+        // vindo do WhatsApp sem id: so aproveita a mensagem que foi aberta/copiada nas ultimas 24h
+        const fresh = cand && (source !== 'whatsapp' || (['WHATSAPP_ABERTO', 'COPIADA'].includes(cand.status) && Date.now() - new Date(cand.updated_at || cand.created_at).getTime() < 86400000));
+        msg = fresh ? cand : null;
+      }
+      if (msg && msg.status !== 'ENVIADA') await api.update('lead_messages', msg.id, { status: 'ENVIADA', sent_at: now, updated_at: now });
+      else if (!msg && source === 'whatsapp' && text) {
+        msg = await api.insert('lead_messages', { lead_id: lead.id, final_text: String(text).slice(0, 4000), template_name: 'Escrita no WhatsApp', status: 'ENVIADA', sent_at: now, phone: CC.normalizePhone(lead.whatsapp || lead.phone) || null });
+      }
     } catch (err) { /* sem tabela de mensagens: segue so com o lead */ }
     const patch = { last_contact_at: now };
     if (demoUrl && msg?.final_text?.includes(demoUrl) && ['LEAD', 'CONTATADO', 'RESPONDEU'].includes(lead.status)) patch.status = 'DEMO_ENVIADA';
@@ -116,8 +126,10 @@
     if (!lead.next_action_at || lead.next_action_at <= todayISO()) patch.next_action_at = addDays(todayISO(), 3);
     await api.update('leads', lead.id, patch);
     if (patch.status) await api.insert('lead_activities', { lead_id: lead.id, type: 'STATUS', content: `${label(lead.status)} → ${label(patch.status)}` });
-    await api.insert('lead_activities', { lead_id: lead.id, type: 'MENSAGEM', content: msg ? 'Mensagem marcada como enviada (ação rápida do card).' : 'Contato marcado como enviado (ação rápida do card).' });
+    const where = source === 'whatsapp' ? 'confirmada pela extensão do WhatsApp' : 'ação rápida do card';
+    await api.insert('lead_activities', { lead_id: lead.id, type: 'MENSAGEM', content: msg ? `Mensagem enviada (${where}).` : `Contato marcado como enviado (${where}).` });
     Object.assign(lead, patch);
+    window.dispatchEvent(new CustomEvent('cdev:lead-changed', { detail: lead }));
     return patch;
   };
 

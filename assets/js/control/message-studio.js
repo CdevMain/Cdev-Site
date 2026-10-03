@@ -6,8 +6,20 @@
   const CC = window.CC;
   const { $, $$, esc, icon, api, badge, label, fmtDateTime, todayISO, addDays } = CC;
   const M = () => CC.messaging;
+  const pad2 = (n) => String(n).padStart(2, '0');
+  const toLocal = (d) => `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}T${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+  /** '60' = +60 min; 't9' = amanha 9h; 'm9' = proxima segunda 9h */
+  const quick = (spec) => {
+    const d = new Date(); const s = String(spec);
+    if (/^[tm]/.test(s)) {
+      d.setDate(d.getDate() + (s[0] === 't' ? 1 : ((8 - d.getDay()) % 7 || 7)));
+      d.setHours(Number(s.slice(1)) || 9, 0, 0, 0);
+      return d;
+    }
+    return new Date(Date.now() + Number(s) * 60000);
+  };
 
-  const STATUS = { GERADA: ['Gerada', 'gray'], EDITADA: ['Editada', 'blue'], COPIADA: ['Copiada', 'blue'], WHATSAPP_ABERTO: ['WhatsApp aberto', 'yellow'], ENVIADA: ['Enviada', 'green'] };
+  const STATUS = { GERADA: ['Gerada', 'gray'], EDITADA: ['Editada', 'blue'], COPIADA: ['Copiada', 'blue'], WHATSAPP_ABERTO: ['WhatsApp aberto', 'yellow'], ENVIADA: ['Enviada', 'green'], AGENDADA: ['Agendada', 'yellow'], FALHOU: ['Falhou', 'red'], CANCELADA: ['Cancelada', 'gray'] };
   const RANK = { GERADA: 1, EDITADA: 2, COPIADA: 3, WHATSAPP_ABERTO: 4, ENVIADA: 5 };
   const statusChip = (s) => `<span class="badge ${STATUS[s]?.[1] || 'gray'}">${esc(STATUS[s]?.[0] || s)}</span>`;
   const opt = (v, t, cur) => `<option value="${esc(v)}" ${String(cur) === String(v) ? 'selected' : ''}>${esc(t)}</option>`;
@@ -56,8 +68,11 @@
       if (!m) return '<p class="small muted">Nenhuma mensagem salva para este lead ainda.</p>';
       return `<div class="row" style="gap:.4rem;flex-wrap:wrap">${statusChip(m.status)}<span class="tiny muted">${fmtDateTime(m.updated_at || m.created_at)}</span></div>
         <div class="tiny muted" style="margin:.35rem 0">Estratégia: <b>${esc(M().STRATEGIES[m.strategy]?.name || m.strategy || '—')}</b> · Template: <b>${esc(m.template_name || '—')}</b></div>
+        ${m.status === 'AGENDADA' ? `<div class="ms-sched-line">${icon('clock')}Envio automático em <b>${fmtDateTime(m.scheduled_at)}</b>${m.schedule_source === 'whatsapp' ? ' · agendada no WhatsApp' : ''}</div>` : ''}
+        ${m.status === 'FALHOU' ? `<div class="ms-sched-line bad">${icon('alert')}Não enviada: ${esc(m.schedule_error || 'erro')}</div>` : ''}
         <div class="ms-last-text">${esc(m.final_text)}</div>
         <div class="row" style="margin-top:.55rem;gap:.35rem;flex-wrap:wrap">
+          ${m.status === 'AGENDADA' ? `<button class="btn btn-sm" data-ms-unsched="${m.id}">${icon('x')}Cancelar agendamento</button>` : ''}
           ${m.status !== 'ENVIADA' && ['WHATSAPP_ABERTO', 'COPIADA'].includes(m.status) ? `<button class="btn btn-sm btn-primary" data-ms-sent="${m.id}">${icon('check')}Marcar como enviada</button>` : ''}
           <button class="btn btn-sm" data-ms-reuse="${m.id}">${icon('copy')}Reutilizar texto</button>
         </div>`;
@@ -90,7 +105,15 @@
                 <button class="btn btn-sm" data-ms-copy>${icon('copy')}Copiar</button>
                 <button class="btn btn-sm" data-ms-save>${icon('check')}Salvar</button>
                 <span class="spacer"></span>
+                <button class="btn ms-sched-btn" data-ms-schedule ${phone ? '' : 'disabled'} title="Agendar o envio automático pelo WhatsApp Web (extensão CDEV WhatsApp)">${icon('clock')}Agendar</button>
                 <button class="btn btn-primary ms-wa" data-ms-wa ${phone ? '' : 'disabled title="Lead sem telefone"'}>${icon('msg')}Abrir WhatsApp</button>
+              </div>
+              <div class="ms-schedbox" data-ms-schedbox hidden>
+                <label class="tiny muted">Enviar em</label>
+                <input type="datetime-local" class="field" data-ms-when>
+                <div class="ms-quick">${[['+1 h', 60], ['+3 h', 180], ['Amanhã 9h', 't9'], ['Amanhã 14h', 't14'], ['Seg 9h', 'm9']].map(([t, v]) => `<button type="button" class="btn btn-sm" data-ms-quick="${v}">${t}</button>`).join('')}</div>
+                <button class="btn btn-sm btn-primary" data-ms-sched-ok>${icon('check')}Confirmar agendamento</button>
+                <p class="tiny muted" style="flex-basis:100%;margin:0">A extensão abre a conversa e envia sozinha no horário (Chrome aberto). Se o PC estiver desligado, ela não envia atrasado: avisa aqui como “Falhou”.</p>
               </div>
               <p class="tiny muted" data-ms-sentline style="margin-top:.45rem">${phone ? `Abre a conversa com ${esc(CC.fmtPhone(phone))} com a mensagem preenchida ${CC.whatsappMode && CC.whatsappMode() === 'desktop' ? 'no app do WhatsApp (na janela já aberta)' : 'sempre na mesma aba do WhatsApp'}. Você decide quando enviar.` : 'Este lead não tem telefone cadastrado.'}</p>
             </div>
@@ -194,11 +217,47 @@
         if (b.matches('[data-ms-wa]')) {
           if (!guard()) return;
           if (!CC.normalizePhone(phone)) { CC.toast('Telefone do lead inválido para WhatsApp.', 'error'); return; }
-          const r = CC.openWhatsAppContact(phone, text.value.trim());
-          if (!r.ok) return;
+          // grava antes de abrir para a extensao saber qual mensagem confirmar quando for enviada
           await record('WHATSAPP_ABERTO', { whatsapp_opened_at: new Date().toISOString() });
+          const r = CC.openWhatsAppContact(phone, text.value.trim(), { lead, messageId: st.sessionId });
+          if (!r.ok) return;
           await api.insert('lead_activities', { lead_id: lead.id, type: 'MENSAGEM', content: `WhatsApp aberto com mensagem (${M().STRATEGIES[st.meta?.strategy]?.name || 'texto manual'}). Aguardando confirmação de envio.` });
-          $('[data-ms-sentline]', el).innerHTML = `${r.mode === 'desktop' ? 'Conversa aberta no app do WhatsApp' : 'WhatsApp aberto na aba CDEV'}. Depois de enviar, confirme: <button class="btn btn-sm btn-primary" data-ms-sent="${st.sessionId}">${icon('check')}Marcar como enviada</button>`;
+          $('[data-ms-sentline]', el).innerHTML = r.mode === 'extension' ? `Conversa aberta no WhatsApp Web com a mensagem preenchida. Ao enviar por lá, o CRM marca como enviada sozinho. Se preferir: <button class="btn btn-sm" data-ms-sent="${st.sessionId}">${icon('check')}Marcar como enviada</button>` : `${r.mode === 'desktop' ? 'Conversa aberta no app do WhatsApp' : 'WhatsApp aberto na aba CDEV'}. Depois de enviar, confirme: <button class="btn btn-sm btn-primary" data-ms-sent="${st.sessionId}">${icon('check')}Marcar como enviada</button>`;
+          return;
+        }
+        if (b.matches('[data-ms-schedule]')) {
+          const box = $('[data-ms-schedbox]', el); box.hidden = !box.hidden;
+          const w = $('[data-ms-when]', el); if (!w.value) w.value = toLocal(quick('t9'));
+          return;
+        }
+        if (b.dataset.msQuick) { $('[data-ms-when]', el).value = toLocal(quick(b.dataset.msQuick)); return; }
+        if (b.matches('[data-ms-sched-ok]')) {
+          if (!guard()) return;
+          if (!CC.normalizePhone(phone)) { CC.toast('Telefone do lead inválido para WhatsApp.', 'error'); return; }
+          const at = new Date($('[data-ms-when]', el).value);
+          if (!Number.isFinite(at.getTime()) || at.getTime() < Date.now() + 60000) { CC.toast('Escolha um horário pelo menos 1 minuto no futuro.', 'error'); return; }
+          if (!CC.waBridge?.ready) { CC.toast('Extensão CDEV WhatsApp não detectada nesta aba — é ela que envia a mensagem agendada.', 'error'); return; }
+          const final = text.value.trim();
+          const row = await api.insert('lead_messages', {
+            lead_id: lead.id, final_text: final, generated_text: st.generated || null, template_id: st.meta?.templateId || null, template_name: st.meta?.templateName || (st.generated ? null : 'Texto manual'),
+            strategy: st.meta?.strategy || null, tone: st.meta?.tone || null, size: st.meta?.size || null, personalization: st.meta?.level || null,
+            phone: CC.normalizePhone(phone) || null, status: 'AGENDADA', scheduled_at: at.toISOString(), schedule_source: 'crm'
+          });
+          CC.waBridge.schedule(row, lead);
+          await api.insert('lead_activities', { lead_id: lead.id, type: 'MENSAGEM', content: `Mensagem agendada para ${fmtDateTime(row.scheduled_at)}.` });
+          st.history = [row, ...st.history]; st.sessionId = null; st.sessionStatus = null;
+          $('[data-ms-schedbox]', el).hidden = true;
+          $('[data-ms-last]', el).innerHTML = lastBox(); $('[data-ms-hist]', el).innerHTML = historyList();
+          $('[data-ms-sentline]', el).textContent = `Agendada para ${fmtDateTime(row.scheduled_at)}. Ao enviar, o lead vai para “Mensagem enviada” sozinho.`;
+          CC.waBridge.refreshSchedCount?.();
+          CC.toast(`Mensagem agendada para ${fmtDateTime(row.scheduled_at)}.`);
+          return;
+        }
+        if (b.dataset.msUnsched) {
+          const row = await CC.waBridge.cancelMessage(b.dataset.msUnsched);
+          st.history = st.history.map((m) => (m.id === row.id ? row : m));
+          $('[data-ms-last]', el).innerHTML = lastBox(); $('[data-ms-hist]', el).innerHTML = historyList();
+          CC.toast('Agendamento cancelado.');
           return;
         }
         if (b.dataset.msSent) {
@@ -214,6 +273,7 @@
           if (patch.status) await api.insert('lead_activities', { lead_id: lead.id, type: 'STATUS', content: `${label(lead.status)} → ${label(patch.status)}` });
           await api.insert('lead_activities', { lead_id: lead.id, type: 'MENSAGEM', content: 'Mensagem marcada como enviada pelo WhatsApp.' });
           Object.assign(lead, patch);
+          window.dispatchEvent(new CustomEvent('cdev:lead-changed', { detail: lead }));
           $('[data-ms-last]', el).innerHTML = lastBox(); $('[data-ms-hist]', el).innerHTML = historyList();
           $('[data-ms-sentline]', el).textContent = 'Mensagem marcada como enviada. Follow-up agendado para 3 dias.';
           CC.toast(`Enviada${patch.status ? ` · status: ${label(patch.status)}` : ''}.`);
@@ -230,6 +290,20 @@
       } catch (err) { CC.toast(CC.errMsg(err), 'error'); }
     });
     refreshEditorState();
+    // Envio confirmado pela extensao do WhatsApp: atualiza historico e status sem recarregar
+    const onExt = async (e) => {
+      if (!el.isConnected) { window.removeEventListener('cdev:lead-changed', onExt); return; }
+      if (e.detail?.id !== lead.id || e.detail === lead) return;
+      Object.assign(lead, e.detail);
+      try {
+        st.history = await api.list('lead_messages', { filters: [['eq', 'lead_id', lead.id]], order: 'created_at', asc: false, limit: 30 });
+        if (st.sessionId && st.history.find((m) => m.id === st.sessionId)?.status === 'ENVIADA') { st.sessionStatus = 'ENVIADA'; $('[data-ms-sentline]', el).textContent = 'Envio confirmado pelo WhatsApp. Follow-up agendado para 3 dias.'; }
+        $('[data-ms-last]', el).innerHTML = lastBox(); $('[data-ms-hist]', el).innerHTML = historyList();
+      } catch (err) { /* sem conexao: fica como estava */ }
+    };
+    window.addEventListener('cdev:lead-changed', onExt);
+    const onSched = (e) => { if (e.detail?.leadId === lead.id) onExt({ detail: { ...lead } }); };
+    window.addEventListener('cdev:schedules-changed', onSched);
   }
 
   // ================================================================== TEMPLATES (Mensagens -> Templates)

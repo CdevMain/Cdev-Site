@@ -512,3 +512,24 @@ button.ms-var:hover { border-color: var(--aqua); color: var(--mist); }
 .ms-diag { margin: .2rem 0 .6rem; }
 .ms-diag summary { cursor: pointer; }
 .ms-diag ul { margin: .3rem 0 0 1rem; padding: 0; display: grid; gap: .15rem; }
+
+/* Extensao CDEV WhatsApp: indicador de conexao no topo */
+.wa-ind { display: inline-flex; align-items: center; gap: .35rem; padding: .22rem .55rem; border: 1px solid var(--line); border-radius: 999px; font-family: var(--fm); font-size: 10.5px; color: var(--muted2); margin-right: .5rem; white-space: nowrap; }
+.wa-ind i { width: .45rem; height: .45rem; border-radius: 50%; background: var(--muted); }
+.wa-ind.on { color: #5fd38a; border-color: rgba(63,182,139,.4); }
+.wa-ind.on i { background: #3fb68b; box-shadow: 0 0 8px rgba(63,182,139,.6); }
+@media (max-width: 640px) { .wa-ind { display: none; } }
+
+/* ---------- Mensagens agendadas (CRM + extensao) ---------- */
+.wa-ind b { margin-left: .35rem; font-weight: 700; font-size: .72rem; color: #e07b24; }
+.wa-ind b.bad { color: var(--danger, #ef4444); }
+.ms-schedbox { display: flex; flex-wrap: wrap; align-items: center; gap: .45rem; margin-top: .6rem; padding: .65rem .75rem; border: 1px dashed rgba(224, 123, 36, .55); border-radius: 10px; background: rgba(224, 123, 36, .06); }
+.ms-schedbox[hidden] { display: none; }
+.ms-schedbox input[type=datetime-local] { width: auto; min-width: 210px; }
+.ms-quick { display: flex; flex-wrap: wrap; gap: .3rem; }
+.ms-sched-line { display: flex; align-items: center; gap: .35rem; font-size: .8rem; margin: .35rem 0; color: #e07b24; }
+.ms-sched-line.bad { color: var(--danger, #ef4444); }
+.ms-sched-line svg { width: 14px; height: 14px; }
+.wa-sched-list { display: grid; gap: .6rem; max-height: 65vh; overflow: auto; }
+.wa-sched { border: 1px solid var(--line, rgba(127,127,127,.25)); border-left: 3px solid #e07b24; border-radius: 10px; padding: .6rem .75rem; }
+.wa-sched.is-failed { border-left-color: var(--danger, #ef4444); }

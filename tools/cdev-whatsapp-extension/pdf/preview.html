@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <title>Documento — CDEV WhatsApp</title>
+    <style>
+      html, body { margin: 0; height: 100%; background: #0b141a; color: #e9edef; font: 14px "Segoe UI", sans-serif; }
+      header { height: 52px; display: flex; align-items: center; gap: 12px; padding: 0 16px; border-bottom: 1px solid rgba(255,255,255,.08); }
+      header strong { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      a.btn { display: inline-flex; align-items: center; height: 34px; padding: 0 14px; border-radius: 10px; background: #00a884; color: #062015; font-weight: 600; text-decoration: none; }
+      iframe { width: 100%; height: calc(100% - 53px); border: 0; background: #525659; }
+      p { padding: 24px; color: #8696a0; }
+    </style>
+  </head>
+  <body>
+    <header><strong id="name">Documento</strong><a class="btn" id="dl" download>Baixar PDF</a></header>
+    <iframe id="frame" title="PDF"></iframe>
+    <script src="preview.js"></script>
+  </body>
+</html>
