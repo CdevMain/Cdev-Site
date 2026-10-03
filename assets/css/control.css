@@ -501,3 +501,14 @@ button.ms-var:hover { border-color: var(--aqua); color: var(--mist); }
 .cat-row.err .field { border-color: var(--red); }
 .cat-n { text-align: right; }
 @media (max-width: 640px) { .cat-row, [data-group="TAG"] .cat-row { grid-template-columns: 2.2rem 1fr 2rem; } .cat-row [data-c="keywords"] { grid-column: 1 / -1; } .cat-n { display: none; } }
+
+.cat-msg { grid-column: 1 / -1; margin: -.1rem 0 .3rem 2.65rem; padding: .45rem .6rem; border: 1px dashed var(--line); border-radius: 6px; }
+.cat-msg summary { cursor: pointer; color: var(--muted2); }
+.cat-msg label { display: grid; gap: .25rem; margin-top: .5rem; }
+.cat-msg textarea { resize: vertical; }
+/* Motor de mensagens v2: argumento e tecnica por versao, diagnostico */
+.ms-varg { display: flex; flex-wrap: wrap; align-items: center; gap: .3rem; margin: .1rem 0 .4rem; }
+.ms-varg .muted { flex-basis: 100%; line-height: 1.4; }
+.ms-diag { margin: .2rem 0 .6rem; }
+.ms-diag summary { cursor: pointer; }
+.ms-diag ul { margin: .3rem 0 0 1rem; padding: 0; display: grid; gap: .15rem; }

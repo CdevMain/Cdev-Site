@@ -187,12 +187,17 @@
         ${t.kind === 'NICHO' ? `<input class="field" data-c="keywords" value="${esc((t.keywords || []).join(', '))}" placeholder="palavras-chave: academia, crossfit, gym">` : '<span></span>'}
         <span class="tiny muted mono cat-n">${t.name ? `${used(t.kind, t.name)} leads` : 'novo'}</span>
         <button type="button" class="icon-btn" data-c-del title="Excluir">${icon('trash')}</button>
+        ${t.kind === 'NICHO' ? `<details class="cat-msg" ${t.name ? '' : 'open'}><summary class="tiny">Mensagens deste nicho: benefícios, dores e cuidados${(t.benefits || []).length ? ` · ${(t.benefits || []).length} benefício(s)` : ' · usa o padrão'}</summary>
+          <label><span class="tiny muted">Benefícios (um por linha). Completam a frase "Um site próprio ajuda a…"</span><textarea class="field" rows="2" data-c="benefits" placeholder="mostrar o cardápio, os horários e facilitar pedidos">${esc((t.benefits || []).join('\n'))}</textarea></label>
+          <label><span class="tiny muted">Dores comuns (uma por linha). Viram pergunta, nunca afirmação: "Hoje vocês lidam com…?"</span><textarea class="field" rows="2" data-c="pains" placeholder="ligações perguntando cardápio e horário">${esc((t.pains || []).join('\n'))}</textarea></label>
+          <label><span class="tiny muted">Cuidados (aparecem no gerador). Cite o conselho (OAB, CRM, CRO…) para ativar o filtro de área regulada.</span><input class="field" data-c="notes" value="${esc(t.notes || '')}" placeholder="Sem promessa de resultado."></label>
+        </details>` : ''}
       </div>`;
     const group = (kind, title, hint) => `<section class="cat-group" data-group="${kind}"><header><h3>${title}</h3><p class="tiny muted">${hint}</p></header>
         <div class="cat-list">${T.rows.filter((t) => t.kind === kind).map(rowHtml).join('')}</div>
         <button type="button" class="btn btn-sm" data-c-add="${kind}">${icon('plus')}Adicionar ${kind === 'NICHO' ? 'nicho' : 'tag'}</button></section>`;
     const body = `<div class="cat-editor">
-        ${group('NICHO', 'Nichos (categorias)', 'Separação automática: leads do agente recebem o nicho do perfil; leads manuais/CSV sem segmento recebem o primeiro nicho cujas palavras-chave aparecem no nome, atividade ou notas.')}
+        ${group('NICHO', 'Nichos (categorias)', 'Separação automática: leads do agente recebem o nicho do perfil; leads manuais/CSV sem segmento recebem o primeiro nicho cujas palavras-chave aparecem no nome, atividade ou notas. O gerador de mensagens usa os benefícios, dores e cuidados de cada nicho; nicho novo funciona sem mexer no código.')}
         ${group('TAG', 'Tags', 'Tags livres com cor. Aparecem nos cards e servem de filtro (#tag na busca). Renomear atualiza todos os leads.')}
         <div class="row" style="margin-top:.8rem"><button type="button" class="btn btn-sm" data-c-apply>${icon('zap')}Aplicar nichos aos leads sem nicho</button></div>
       </div>`;
@@ -201,7 +206,8 @@
       title: 'Categorias e tags', wide: true, body,
       actions: [{ label: 'Cancelar', value: false }, {
         label: 'Salvar', primary: true, handler: async (el) => {
-          const rows = $$('.cat-row', el).map((r) => ({ el: r, id: r.dataset.cat, kind: r.dataset.kind, orig: r.dataset.orig, name: $('[data-c="name"]', r).value.trim(), color: $('[data-c="color"]', r).value, keywords: r.dataset.kind === 'NICHO' ? $('[data-c="keywords"]', r).value.split(',').map((x) => x.trim()).filter(Boolean) : [] }));
+          const rows = $$('.cat-row', el).map((r) => ({ el: r, id: r.dataset.cat, kind: r.dataset.kind, orig: r.dataset.orig, name: $('[data-c="name"]', r).value.trim(), color: $('[data-c="color"]', r).value, keywords: r.dataset.kind === 'NICHO' ? $('[data-c="keywords"]', r).value.split(',').map((x) => x.trim()).filter(Boolean) : [],
+            lines: (k) => ($(`[data-c="${k}"]`, r)?.value || '').split('\n').map((x) => x.trim()).filter(Boolean), notes: $('[data-c="notes"]', r)?.value.trim() || null }));
           const seen = new Set();
           for (const r of rows) {
             if (!r.name) { r.el.classList.add('err'); throw new Error('Há uma linha sem nome.'); }
@@ -213,9 +219,11 @@
             i += 1;
             if (r.id && r.orig && norm(r.orig) !== norm(r.name)) await api.rpc('cc_rename_tag', { p_kind: r.kind, p_old: r.orig, p_new: r.name });
             const rec = { kind: r.kind, name: r.name, color: r.color, keywords: r.keywords, sort: i * 10, updated_at: new Date().toISOString() };
+            if (r.kind === 'NICHO') Object.assign(rec, { benefits: r.lines('benefits'), pains: r.lines('pains'), notes: r.notes });
             if (r.id) await api.update('crm_tags', r.id, rec); else await api.insert('crm_tags', rec);
           }
           await T.load(true);
+          if (CC.messaging?.refreshCategories) CC.messaging.refreshCategories();
           CC.toast('Categorias salvas.');
           return true;
         }

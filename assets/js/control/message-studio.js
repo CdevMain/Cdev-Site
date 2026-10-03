@@ -38,7 +38,11 @@
       return opt('AUTO', 'Automático (melhor para o lead)', st.templateId) + opt('COMPOSE', 'Composição modular (sem template)', st.templateId)
         + group(niche ? M().NICHES[niche].label : 'Nicho', mine) + group('Universal', uni) + group('Outros nichos', other);
     };
-    const auto = M().autoStrategy(M().levelVars(vars, M().autoLevel(vars)));
+    const autoVars = M().levelVars(vars, M().autoLevel(vars));
+    const auto = M().autoStrategy(autoVars);
+    const autoArgs = M().rankArguments(autoVars, auto.strategy);
+    const argName = (k) => M().ARGUMENTS[k]?.name || k;
+    const diag = M().diagnose(autoVars);
     const dataChips = () => {
       const groups = [['basico', 'Básico'], ['medio', 'Médio'], ['avancado', 'Avançado']];
       return groups.map(([g, t]) => `<div class="ms-vargroup"><span>${t}</span>${M().VAR_ORDER.filter((k) => M().VARIABLES[k].group === g && !k.startsWith('tem_')).map((k) => {
@@ -73,7 +77,8 @@
               <label><span>Personalização</span><select class="cc-select" data-ms="level">${M().LEVELS.map(([k, t]) => opt(k, k === 'AUTO' ? `Automática (${({ BASICO: 'básica', MEDIO: 'média', AVANCADO: 'avançada' })[M().autoLevel(vars)]})` : t, st.level)).join('')}</select></label>
               <button class="btn btn-primary ms-gen" data-ms-generate>${icon('rocket')}Gerar mensagem</button>
             </div>
-            <p class="ms-auto tiny muted" data-ms-info>Nicho: <b>${esc(niche ? M().NICHES[niche].label : 'não identificado (usa templates universais)')}</b> · automática sugere <b>${esc(auto.label)}</b> porque ${esc(auto.why)}.${niche && M().NICHES[niche].notes ? ` <span class="ms-rule">${esc(M().NICHES[niche].notes)}</span>` : ''}</p>
+            <p class="ms-auto tiny muted" data-ms-info>Nicho: <b>${esc(niche ? M().NICHES[niche].label : 'não identificado (usa o padrão universal)')}</b> · automática sugere <b>${esc(auto.label)}</b> porque ${esc(auto.why)} · argumento: <b>${esc(argName(autoArgs[0]))}</b>${autoArgs[1] ? ` (alternativas: ${esc(autoArgs.slice(1, 3).map(argName).join(', '))})` : ''}.${niche && M().NICHES[niche].notes ? ` <span class="ms-rule">${esc(M().NICHES[niche].notes)}</span>` : ''}</p>
+            ${diag.length ? `<details class="ms-diag"><summary class="tiny muted">Diagnóstico do lead (${diag.length} ${diag.length === 1 ? 'fato' : 'fatos'})</summary><ul>${diag.map((d) => `<li class="tiny">${esc(d.fact)}</li>`).join('')}</ul></details>` : ''}
             <div class="ms-error" data-ms-error hidden></div>
             <div class="ms-versions" data-ms-versions></div>
             <div class="ms-editor">
@@ -87,7 +92,7 @@
                 <span class="spacer"></span>
                 <button class="btn btn-primary ms-wa" data-ms-wa ${phone ? '' : 'disabled title="Lead sem telefone"'}>${icon('msg')}Abrir WhatsApp</button>
               </div>
-              <p class="tiny muted" data-ms-sentline style="margin-top:.45rem">${phone ? `Abre a conversa com ${esc(CC.fmtPhone(phone))} com a mensagem preenchida, sempre na mesma aba do WhatsApp. Você decide quando enviar.` : 'Este lead não tem telefone cadastrado.'}</p>
+              <p class="tiny muted" data-ms-sentline style="margin-top:.45rem">${phone ? `Abre a conversa com ${esc(CC.fmtPhone(phone))} com a mensagem preenchida ${CC.whatsappMode && CC.whatsappMode() === 'desktop' ? 'no app do WhatsApp (na janela já aberta)' : 'sempre na mesma aba do WhatsApp'}. Você decide quando enviar.` : 'Este lead não tem telefone cadastrado.'}</p>
             </div>
           </section>
           <aside class="ms-side">
@@ -106,7 +111,7 @@
     const refreshEditorState = () => {
       const v = text.value;
       $('[data-ms-count]', el).textContent = `${v.length} caracteres`;
-      const problem = v.trim() ? M().validateFinal(v) : '';
+      const problem = v.trim() ? (M().validateFinal(v, { niche }) || M().warnings(v, { niche }).map((x) => `Atenção: ${x}.`).join(' ')) : '';
       const w = $('[data-ms-warn]', el); w.hidden = !problem; w.textContent = problem;
       const edited = st.generated && v.trim() !== st.generated.trim();
       $('[data-ms-state]', el).innerHTML = !v.trim() ? 'Gere uma mensagem ou escreva a sua.' : st.generated ? (edited ? '<span class="badge blue">editada</span>' : '<span class="badge gray">gerada</span>') : '<span class="badge blue">escrita manualmente</span>';
@@ -124,6 +129,7 @@
       box.innerHTML = `<div class="ms-vhead tiny muted">Estratégia: <b>${esc(r.strategyLabel || '')}</b>${r.why ? ` (${esc(r.why)})` : ''} · personalização ${esc(({ BASICO: 'básica', MEDIO: 'média', AVANCADO: 'avançada' })[r.level] || '')}</div>
         <div class="ms-vgrid">${r.versions.map((v, i) => `<article class="ms-version ${st.meta && st.meta.index === i ? 'is-used' : ''}">
           <header><strong>Versão ${i + 1}</strong><span class="badge gray">${esc(M().TONES.find(([k]) => k === v.tone)?.[1] || v.tone)}</span><span class="tiny muted" title="${esc(v.templateName)}">${esc(v.source === 'TEMPLATE' ? v.templateName : 'modular')}</span></header>
+          ${v.argumentLabel ? `<div class="ms-varg tiny"><span class="badge blue" title="Argumento">${esc(v.argumentLabel)}</span>${v.techniqueLabel ? `<span class="badge gray" title="${esc(M().TECHNIQUES[v.technique]?.description || '')}">${esc(v.techniqueLabel)}</span>` : ''}${v.evidence ? `<span class="muted" title="Fato do lead que sustenta o argumento">${esc(v.evidence)}</span>` : ''}</div>` : ''}
           <div class="ms-vtext">${esc(v.text)}</div>
           <footer><button class="btn btn-sm btn-primary" data-ms-use="${i}">Usar</button><button class="btn btn-sm" data-ms-vcopy="${i}">${icon('copy')}Copiar</button></footer>
         </article>`).join('')}</div>`;
@@ -168,7 +174,7 @@
       }
       $('[data-ms-last]', el).innerHTML = lastBox(); $('[data-ms-hist]', el).innerHTML = historyList();
     };
-    const guard = () => { const p = M().validateFinal(text.value); if (p) { CC.toast(p, 'error'); refreshEditorState(); return false; } return true; };
+    const guard = () => { const p = M().validateFinal(text.value, { niche }); if (p) { CC.toast(p, 'error'); refreshEditorState(); return false; } return true; };
 
     el.addEventListener('change', (e) => {
       const s = e.target.closest('[data-ms]'); if (!s) return;
@@ -290,6 +296,7 @@
   }
 
   CC.routes.mensagens = async (root, r) => {
+    if (CC.tags) await CC.tags.load();
     const [rows, leads, projects] = await Promise.all([
       api.list('message_templates', { order: 'name' }),
       api.list('leads', { order: 'updated_at', asc: false, limit: 300 }),
