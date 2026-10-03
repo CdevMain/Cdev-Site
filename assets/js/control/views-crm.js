@@ -5,49 +5,130 @@
   const STAGES = ['LEAD', 'CONTATADO', 'RESPONDEU', 'DEMO_ENVIADA', 'NEGOCIACAO', 'CLIENTE', 'PERDIDO'];
 
   // ================================================================== LEADS
+  const instaHandle = (v) => (v ? String(v).replace(/^@|https?:\/\/(www\.)?instagram\.com\//g, '').replace(/[/?].*$/, '') : '');
+  const pkey = (v) => { let d = CC.digits(v || ''); if ((d.length === 12 || d.length === 13) && d.startsWith('55')) d = d.slice(2); return d; };
+  const mobileOf = (l) => [l.whatsapp, l.phone].find((v) => /^[1-9][1-9]9\d{8}$/.test(pkey(v))) || '';
+
+  // Card do pipeline: nicho colorido, estrelas coloridas, nota/avaliacoes, tags e acoes rapidas
+  const leadCard = (l) => {
+    const niche = CC.tags.niche(l);
+    const mob = mobileOf(l); const tel = l.phone || l.whatsapp;
+    const tags = (l.tags || []).filter((t) => t !== 'favorito');
+    const fav = (l.tags || []).includes('favorito');
+    const due = l.next_action_at ? daysUntil(l.next_action_at) : null;
+    return `<div class="pipe-card ${fav ? 'is-fav' : ''}" draggable="true" data-lead="${l.id}" ${niche ? `style="--nc:${esc(CC.tags.color('NICHO', niche))}"` : ''}>
+      <div class="pc-top"><strong>${esc(l.company)}</strong>${fav ? '<span class="pc-fav" title="Favorito">★</span>' : ''}</div>
+      <div class="pc-meta">${niche ? CC.tags.chip('NICHO', niche, { small: true }) : ''}<small>${esc([l.city, l.state].filter(Boolean).join(' - '))}</small></div>
+      <div class="pc-score">${l.potential ? CC.potStars(l.potential) : ''}${CC.googleBadge(l)}</div>
+      ${tags.length ? `<div class="pc-tags">${tags.slice(0, 4).map((t) => CC.tags.chip('TAG', t, { small: true })).join('')}${tags.length > 4 ? `<span class="tiny muted">+${tags.length - 4}</span>` : ''}</div>` : ''}
+      ${due != null || l.demo_project_id ? `<small class="pc-due">${due != null ? `<span class="${due < 0 ? 'late' : due === 0 ? 'today' : ''}">follow-up ${fmtDate(l.next_action_at, { short: true })}</span>` : ''}${l.demo_project_id ? ' · demo' : ''}</small>` : ''}
+      <div class="pc-fast" data-fa-bar>
+        ${mob ? `<button type="button" class="fa wa" data-wa-phone="${esc(mob)}" title="WhatsApp ${esc(CC.fmtPhone(mob))}">${icon('msg')}</button>` : ''}
+        ${tel ? `<a class="fa" href="tel:+55${esc(pkey(tel))}" data-fa="call" title="Ligar ${esc(CC.fmtPhone(tel))}">${icon('phone')}</a><button type="button" class="fa" data-fa="copy" title="Copiar ${esc(CC.fmtPhone(tel))}">${icon('copy')}</button>` : ''}
+        ${l.status !== 'CLIENTE' && l.status !== 'PERDIDO' ? `<button type="button" class="fa sent" data-fa="sent" title="Marcar mensagem como enviada (move para ${esc(label('CONTATADO'))})">${icon('check')}<span>Enviada</span></button>` : ''}
+        <button type="button" class="fa" data-fa="tag" title="Tags">${icon('plus')}<span>Tag</span></button>
+        <button type="button" class="fa ${fav ? 'on' : ''}" data-fa="fav" title="${fav ? 'Remover dos favoritos' : 'Favoritar'}">★</button>
+      </div>
+    </div>`;
+  };
+
+  // Acoes rapidas (compartilhadas pelo pipeline e pela tabela de prospeccao)
+  CC.leadFastAction = async (btn, lead, { leads = [], redraw } = {}) => {
+    const act = btn.dataset.fa;
+    if (act === 'call') return false; // deixa o link tel: seguir
+    if (act === 'copy') { try { await navigator.clipboard.writeText(CC.fmtPhone(lead.phone || lead.whatsapp)); CC.toast(`Telefone copiado: ${CC.fmtPhone(lead.phone || lead.whatsapp)}`); } catch (e) { CC.toast('Não foi possível copiar.', 'error'); } return true; }
+    if (act === 'tag') { CC.openTagPicker(btn, lead, { leads, onChange: () => redraw && redraw() }); return true; }
+    if (act === 'fav') { await CC.toggleLeadTag(lead, 'favorito'); if (redraw) redraw(); return true; }
+    if (act === 'sent') {
+      await CC.busy(btn, async () => {
+        const prev = lead.status;
+        const patch = await CC.markLeadMessageSent(lead);
+        CC.toast(`${lead.company}: mensagem enviada${patch.status && patch.status !== prev ? ` · movido para ${label(patch.status)}` : ''}. Follow-up em 3 dias.`);
+      });
+      if (redraw) redraw();
+      return true;
+    }
+    return false;
+  };
+
   CC.routes.leads = async (root, r) => {
     const [rows, projects] = await Promise.all([
       api.list('leads', { order: 'created_at', asc: false, limit: 5000 }),
-      api.list('projects', { select: 'id,name,slug,status' })
+      api.list('projects', { select: 'id,name,slug,status' }),
+      CC.tags.load(true)
     ]);
     const view = r.query.v || 'pipeline';
-    const st = { filter: r.query.f || 'ativos', sort: 'score', q: '' };
+    const st = { filter: r.query.f || 'ativos', sort: 'score', q: '', niche: r.query.n || '', tag: r.query.t || '' };
     const filters = [['ativos', 'Em aberto'], ['todos', 'Todos'], ['followup', 'Follow-up hoje'], ...STAGES.map((s) => [s, label(s)])];
     const pred = (k) => (l) => (k === 'todos' ? true : k === 'ativos' ? !['CLIENTE', 'PERDIDO'].includes(l.status) : k === 'followup' ? l.next_action_at && daysUntil(l.next_action_at) <= 0 && !['CLIENTE', 'PERDIDO'].includes(l.status) : l.status === k);
-    const counts = Object.fromEntries(filters.map(([k]) => [k, rows.filter(pred(k)).length]));
-    const sorts = [['score', 'Maior score'], ['newest', 'Mais recente'], ['oldest', 'Mais antigo'], ['name', 'Empresa'], ['next', 'Próximo follow-up'], ['activity', 'Última atividade']];
-    const sorter = { score: SORTERS.num('score', -1), newest: SORTERS.date('created_at', -1), oldest: SORTERS.date('created_at'), name: SORTERS.name('company'), next: SORTERS.date('next_action_at'), activity: SORTERS.date('updated_at', -1) };
-    const card = (l) => `<div class="pipe-card" draggable="true" data-lead="${l.id}"><strong>${esc(l.company)}</strong><small>${esc([l.segment, l.city].filter(Boolean).join(' · '))}</small>
-      <small>${l.potential ? `${'★'.repeat(l.potential)} · ` : ''}score ${l.score}${l.next_action_at ? ` · follow-up ${fmtDate(l.next_action_at, { short: true })}` : ''}${l.demo_project_id ? ' · demo' : ''}</small></div>`;
+    const sorts = [['score', 'Maior score'], ['potential', 'Maior potencial'], ['rating', 'Nota no Google'], ['reviews', 'Mais avaliações'], ['newest', 'Mais recente'], ['oldest', 'Mais antigo'], ['name', 'Empresa'], ['next', 'Próximo follow-up'], ['activity', 'Última atividade']];
+    const sorter = {
+      score: SORTERS.num('score', -1), newest: SORTERS.date('created_at', -1), oldest: SORTERS.date('created_at'), name: SORTERS.name('company'), next: SORTERS.date('next_action_at'), activity: SORTERS.date('updated_at', -1),
+      potential: (a, b) => (b.potential || 0) - (a.potential || 0) || (b.google_reviews || 0) - (a.google_reviews || 0),
+      rating: (a, b) => (Number(b.google_rating) || 0) - (Number(a.google_rating) || 0) || (b.google_reviews || 0) - (a.google_reviews || 0),
+      reviews: (a, b) => (b.google_reviews || 0) - (a.google_reviews || 0)
+    };
+    const normT = (v) => String(v || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+    const extraOk = (l) => (!st.niche || normT(CC.tags.niche(l)) === normT(st.niche)) && (!st.tag || (l.tags || []).some((t) => normT(t) === normT(st.tag)));
+    const opt = (v, t, cur) => `<option value="${esc(v)}" ${String(cur) === String(v) ? 'selected' : ''}>${esc(t)}</option>`;
+    const extraBar = () => {
+      const niches = CC.tags.list('NICHO', rows.map((l) => ({ segment: CC.tags.niche(l) })));
+      const tagNames = CC.tags.list('TAG', rows);
+      return `<select class="cc-select" data-lf="niche" title="Nicho">${opt('', 'Todos os nichos', st.niche)}${niches.map((n) => opt(n, `${n} (${rows.filter((l) => normT(CC.tags.niche(l)) === normT(n)).length})`, st.niche)).join('')}</select>
+        <select class="cc-select" data-lf="tag" title="Tag">${opt('', 'Todas as tags', st.tag)}${tagNames.map((n) => opt(n, `#${n}`, st.tag)).join('')}</select>`;
+    };
 
     const draw = (keepFocus) => {
-      const list = rows.filter(pred(st.filter)).filter((l) => matchQ(l, st.q, ['company', 'name', 'city', 'segment', 'phone', 'whatsapp', 'email', 'instagram'])).sort(sorter[st.sort]);
+      const base = rows.filter(extraOk).filter((l) => CC.leadSearch(l, st.q));
+      const counts = Object.fromEntries(filters.map(([k]) => [k, base.filter(pred(k)).length]));
+      const list = base.filter(pred(st.filter)).sort(sorter[st.sort] || sorter.score);
       if (view === 'pipeline') {
         const stages = st.filter === 'todos' ? STAGES : STAGES.filter((s) => list.some((l) => l.status === s) || !['CLIENTE', 'PERDIDO'].includes(s));
-        $('#list', root).innerHTML = `<div class="pipeline">${stages.map((s) => `<div class="pipe-col" data-stage="${s}"><h4>${label(s)}<span>${list.filter((l) => l.status === s).length}</span></h4>${list.filter((l) => l.status === s).map(card).join('')}</div>`).join('')}</div>
-          <p class="tiny muted mono" style="margin-top:.4rem">Arraste os cartões entre as colunas para mudar o status.</p>`;
+        $('#list', root).innerHTML = `<div class="pipeline">${stages.map((s) => `<div class="pipe-col" data-stage="${s}"><h4>${label(s)}<span>${list.filter((l) => l.status === s).length}</span></h4>${list.filter((l) => l.status === s).slice(0, 300).map(leadCard).join('')}</div>`).join('')}</div>
+          <p class="tiny muted mono" style="margin-top:.4rem">Arraste os cartões entre as colunas. Ações rápidas no rodapé de cada cartão: WhatsApp, ligar, copiar, <b>Enviada</b> (move para ${esc(label('CONTATADO'))}), tags e favorito.</p>`;
       } else {
         $('#list', root).innerHTML = table([
-          { label: 'Empresa', render: (l) => `<strong>${esc(l.company)}</strong><span class="sub">${esc([l.name, l.segment, l.city].filter(Boolean).join(' · '))}</span>` },
+          { label: 'Empresa', render: (l) => { const n = CC.tags.niche(l); return `<strong>${esc(l.company)}</strong><span class="sub">${esc([l.name, l.city].filter(Boolean).join(' · '))}</span><div class="pc-tags">${n ? CC.tags.chip('NICHO', n, { small: true }) : ''}${(l.tags || []).map((t) => CC.tags.chip('TAG', t, { small: true })).join('')}</div>`; } },
           { label: 'Contato', render: (l) => `<span class="mono tiny">${esc(l.whatsapp || l.phone || '')}</span><span class="sub">${esc(l.instagram || l.email || '')}</span>` },
-          { label: 'Potencial', render: (l) => potStars(l.potential) },
+          { label: 'Potencial', render: (l) => CC.potStars(l.potential) },
+          { label: 'Google', render: (l) => CC.googleBadge(l) || '<span class="muted small">—</span>' },
           { label: 'Score', cls: 'num', render: (l) => l.score },
           { label: 'Status', render: (l) => badge(l.status) },
           { label: 'Follow-up', render: (l) => (l.next_action_at ? `<span class="badge ${CC.dueTone(daysUntil(l.next_action_at))}">${fmtDate(l.next_action_at)}</span>` : '—') },
-          { label: 'Origem', render: (l) => `<span class="small">${label(l.source)}</span>` }
+          { label: 'Ações', render: (l) => `<div class="pc-fast inline">${mobileOf(l) ? `<button type="button" class="fa wa" data-wa-phone="${esc(mobileOf(l))}" title="WhatsApp">${icon('msg')}</button>` : ''}${!['CLIENTE', 'PERDIDO'].includes(l.status) ? `<button type="button" class="fa sent" data-fa="sent" data-fa-lead="${l.id}" title="Marcar mensagem como enviada">${icon('check')}<span>Enviada</span></button>` : ''}<button type="button" class="fa" data-fa="tag" data-fa-lead="${l.id}" title="Tags">${icon('plus')}<span>Tag</span></button></div>` }
         ], list, { rowAttr: (l) => `class="clickable" data-lead="${l.id}"`, empty: 'Nenhum lead.' });
       }
-      if (!keepFocus) { $('#tb', root).innerHTML = toolbar({ filters, sorts, state: st, counts }); bindToolbar($('#tb', root), st, draw); }
+      if (!keepFocus) {
+        $('#tb', root).innerHTML = toolbar({ filters, sorts, state: st, counts, extra: extraBar() });
+        bindToolbar($('#tb', root), st, draw);
+        const q = $('[data-q]', root); if (q) { q.placeholder = 'Buscar: nome, cidade, telefone, #tag, nicho:academia, ★4, nota:4.5'; q.style.minWidth = '19rem'; }
+      } else {
+        $$('#tb [data-filter]', root).forEach((b) => { const n = b.querySelector('.n'); if (n) n.textContent = counts[b.dataset.filter]; });
+      }
       st.visible = list;
     };
 
     root.innerHTML = `${pageHead('CRM', 'Leads', 'Cadastro manual e CSV (R$0). Lead → demo → mensagem → cliente, sem recadastrar nada.',
-      `<a class="btn" href="#/mensagens">${icon('msg')}Modelos</a><button class="btn" data-import>${icon('upload')}Importar CSV</button><button class="btn" data-export>${icon('download')}Exportar CSV</button><button class="btn btn-primary" data-new>${icon('plus')}Novo lead</button>`)}
+      `<a class="btn" href="#/mensagens">${icon('msg')}Modelos</a><button class="btn" data-cats>${icon('layers')}Categorias e tags</button><button class="btn" data-import>${icon('upload')}Importar CSV</button><button class="btn" data-export>${icon('download')}Exportar CSV</button><button class="btn btn-primary" data-new>${icon('plus')}Novo lead</button>`)}
       <div class="segmented-tabs" style="margin-bottom:1rem"><a class="segmented-tab ${view === 'pipeline' ? 'active' : ''}" href="#/leads?v=pipeline">${icon('layout')}Pipeline</a><a class="segmented-tab ${view === 'lista' ? 'active' : ''}" href="#/leads?v=lista">${icon('menu')}Lista</a></div>
       <section class="panel panel-pad"><div id="tb"></div><div id="list"></div></section>`;
     draw();
 
-    root.addEventListener('click', (e) => { const c = e.target.closest('[data-lead]'); if (c) openLead(rows.find((l) => l.id === c.dataset.lead), projects); });
+    const redraw = () => draw(true);
+    const onLeadChanged = (l) => { const i = rows.findIndex((x) => x.id === l.id); if (i >= 0) Object.assign(rows[i], l); redraw(); };
+    root.addEventListener('change', (e) => { const s = e.target.closest('[data-lf]'); if (!s) return; st[s.dataset.lf] = s.value; CC.router.setQuery({ [s.dataset.lf === 'niche' ? 'n' : 't']: s.value }); draw(); });
+    root.addEventListener('click', async (e) => {
+      const fa = e.target.closest('[data-fa]');
+      if (fa) {
+        const host = fa.closest('[data-lead]'); const id = fa.dataset.faLead || host?.dataset.lead;
+        const lead = rows.find((l) => l.id === id); if (!lead) return;
+        if (fa.dataset.fa !== 'call') { e.preventDefault(); e.stopPropagation(); }
+        try { await CC.leadFastAction(fa, lead, { leads: rows, redraw }); } catch (err) { CC.toast(CC.errMsg(err), 'error'); }
+        return;
+      }
+      if (e.target.closest('[data-fa-bar], a, select, input')) return;
+      const c = e.target.closest('[data-lead]'); if (c) openLead(rows.find((l) => l.id === c.dataset.lead), projects, onLeadChanged);
+    });
     // drag and drop entre etapas
     root.addEventListener('dragstart', (e) => { const c = e.target.closest('[data-lead]'); if (c) e.dataTransfer.setData('text/plain', c.dataset.lead); });
     root.addEventListener('dragover', (e) => { const col = e.target.closest('[data-stage]'); if (col) { e.preventDefault(); col.classList.add('drop'); } });
@@ -66,17 +147,19 @@
       } catch (err) { CC.toast(CC.errMsg(err), 'error'); }
     });
     $('[data-new]', root).onclick = () => CC.actions.editLead();
+    $('[data-cats]', root).onclick = async () => { if (await CC.editCategories(rows)) CC.router.render(); };
     $('[data-import]', root).onclick = () => importLeads(rows);
     $('[data-export]', root).onclick = () => csv.download(`leads-${todayISO()}.csv`, csv.stringify(st.visible, [
       { key: 'company', label: 'Empresa' }, { key: 'name', label: 'Nome' }, { key: 'segment', label: 'Segmento' }, { key: 'city', label: 'Cidade' },
       { key: 'phone', label: 'Telefone' }, { key: 'whatsapp', label: 'WhatsApp' }, { key: 'email', label: 'Email' }, { key: 'instagram', label: 'Instagram' },
       { key: 'website', label: 'Site' }, { key: 'status', label: 'Status' }, { key: 'score', label: 'Score' }, { key: 'source', label: 'Origem' },
+      { label: 'Tags', value: (l) => (l.tags || []).join(', ') },
       { key: 'next_action_at', label: 'Follow-up' }, { key: 'notes', label: 'Observações' }, { key: 'created_at', label: 'Cadastro' }]));
-    if (r.query.id) { const l = rows.find((x) => x.id === r.query.id); if (l) openLead(l, projects); }
+    if (r.query.id) { const l = rows.find((x) => x.id === r.query.id); if (l) openLead(l, projects, onLeadChanged); }
   };
 
   // ------------------------------------------------------------------ Detalhe do lead
-  async function openLead(lead, projects) {
+  async function openLead(lead, projects, onChange) {
     lead = (await api.get('leads', lead.id)) || lead; // dados completos e atuais
     const acts = await api.list('lead_activities', { filters: [['eq', 'lead_id', lead.id]], order: 'created_at', asc: false, limit: 50 });
     const demo = projects.find((p) => p.id === lead.demo_project_id);
@@ -90,7 +173,10 @@
     const done = REQUIRED.length - missing.length;
     const initials = String(lead.company || '?').trim().split(/\s+/).slice(0, 2).map((w) => w[0]).join('').toUpperCase();
     const insta = lead.instagram ? String(lead.instagram).replace(/^@|https?:\/\/(www\.)?instagram\.com\//g, '').replace(/\/.*$/, '') : '';
-    const pot = lead.potential ? `<span class="pot" title="Potencial ${lead.potential} de 5">${'★'.repeat(lead.potential)}<i>${'★'.repeat(5 - lead.potential)}</i></span>` : '';
+    const pot = lead.potential ? CC.potStars(lead.potential) : '';
+    await CC.tags.load();
+    const niche = CC.tags.niche(lead);
+    const tagBox = () => `${niche ? CC.tags.chip('NICHO', niche) : ''}${(lead.tags || []).map((t) => CC.tags.chip('TAG', t, { x: true })).join('')}<button type="button" class="tag-add" data-lp-tag>${icon('plus')}Tag</button>`;
     const body = `
       <div class="lead-profile">
         <header class="lp-head">
@@ -101,7 +187,8 @@
           <div class="lp-main">
             <h2>${esc(lead.company)}</h2>
             <div class="lp-sub">${esc([lead.legal_name && lead.legal_name !== lead.company ? lead.legal_name : '', lead.document ? `${lead.document.length === 14 ? 'CNPJ' : 'CPF'} ${CC.fmtDoc(lead.document)}` : '', lead.segment].filter(Boolean).join(' · ') || 'Cadastro sem dados fiscais')}</div>
-            <div class="row lp-badges">${badge(lead.status)}${pot}<span class="badge blue">score ${lead.score}</span>${lead.next_action_at ? `<span class="badge ${CC.dueTone(daysUntil(lead.next_action_at))}">follow-up ${fmtDate(lead.next_action_at)}</span>` : ''}${lead.sale_value ? `<span class="badge green">venda ${CC.money(lead.sale_value)}</span>` : ''}</div>
+            <div class="row lp-badges">${badge(lead.status)}${pot}${CC.googleBadge(lead)}<span class="badge blue">score ${lead.score}</span>${lead.next_action_at ? `<span class="badge ${CC.dueTone(daysUntil(lead.next_action_at))}">follow-up ${fmtDate(lead.next_action_at)}</span>` : ''}${lead.sale_value ? `<span class="badge green">venda ${CC.money(lead.sale_value)}</span>` : ''}</div>
+            <div class="lp-tags" data-lp-tags>${tagBox()}</div>
           </div>
           <div class="lp-actions"><button class="btn btn-sm" data-edit>${icon('edit')}Editar cadastro</button>${lead.client_id ? `<a class="btn btn-sm btn-primary" href="#/clientes/${lead.client_id}">${icon('user')}Abrir cliente</a>` : `<button class="btn btn-sm btn-primary" data-convert>${icon('check')}Converter em cliente</button>`}</div>
         </header>
@@ -191,9 +278,18 @@
         const studio = $('[data-lp-studio]', el);
         CC.messageStudio.mount(studio, {
           lead, demoUrl: demo ? CC.demoUrl(demo.slug) : '',
-          onLeadChanged: (l, opts = {}) => { if (opts.edit) { close(null); CC.actions.editLead(lead); } }
+          onLeadChanged: (l, opts = {}) => { if (opts.edit) { close(null); CC.actions.editLead(lead); return; } if (onChange) onChange(l); }
         }).catch((err) => { studio.innerHTML = `<p class="small" style="color:var(--red)">${esc(CC.errMsg(err))}</p>`; });
         $$('[data-edit]', el).forEach((b) => { b.onclick = () => { close(null); CC.actions.editLead(lead); }; });
+        const tagsEl = $('[data-lp-tags]', el);
+        const tagsChanged = () => { tagsEl.innerHTML = tagBox(); if (onChange) onChange(lead); };
+        tagsEl.addEventListener('click', async (e) => {
+          const x = e.target.closest('[data-tag-x]');
+          try {
+            if (x) { await CC.toggleLeadTag(lead, x.dataset.tagX); tagsChanged(); return; }
+            const add = e.target.closest('[data-lp-tag]'); if (add) CC.openTagPicker(add, lead, { onChange: tagsChanged });
+          } catch (err) { CC.toast(CC.errMsg(err), 'error'); }
+        });
         const showTab = (name) => {
           $$('[data-lp-tab]', el).forEach((x) => x.classList.toggle('active', x.dataset.lpTab === name));
           $$('[data-lp-panel]', el).forEach((p) => { p.hidden = p.dataset.lpPanel !== name; });
@@ -376,7 +472,7 @@
   const oppTier = (l) => { const s = oppScore(l); return !s ? 'NONE' : s >= 80 ? 'ALTA' : s >= 50 ? 'MEDIA' : 'BAIXA'; };
   const TIER = { ALTA: ['Alta', 'ok'], MEDIA: ['Média', 'mid'], BAIXA: ['Baixa', 'low'], NONE: ['Sem nota', 'none'] };
   const isFav = (l) => (l.tags || []).includes('favorito');
-  const FILTER_DEFAULT = { scope: 'prospect', q: '', uf: '', city: '', status: 'open', opp: '', site: '', contact: '', rating: '', revMin: '', revMax: '', profile: '', fav: false, today: false, sort: 'opp' };
+  const FILTER_DEFAULT = { scope: 'prospect', q: '', uf: '', city: '', status: 'open', opp: '', site: '', contact: '', rating: '', revMin: '', revMax: '', profile: '', tag: '', fav: false, today: false, sort: 'opp' };
   const loadFilters = () => { try { return { ...FILTER_DEFAULT, ...JSON.parse(localStorage.getItem('cdev:prospect-filters') || '{}') }; } catch (e) { return { ...FILTER_DEFAULT }; } };
   const saveFilters = (f) => { try { localStorage.setItem('cdev:prospect-filters', JSON.stringify(f)); } catch (e) { /* sem storage */ } };
 
@@ -387,7 +483,8 @@
       api.list('prospect_runs', { order: 'started_at', asc: false, limit: 30 }),
       api.list('prospect_city_log', { order: 'run_date', asc: false, limit: 1000 }),
       api.list('prospect_commercial_summary', { limit: 1 }),
-      api.list('projects', { select: 'id,name,slug,status' })
+      api.list('projects', { select: 'id,name,slug,status' }),
+      CC.tags.load(true)
     ]);
     const sum = sumRows[0] || {};
     const today = todayISO();
@@ -399,7 +496,8 @@
 
     const scoped = () => allLeads.filter((l) => (f.scope === 'all' || l.profile_key) && (!f.profile || l.profile_key === f.profile));
     const passes = (l) => {
-      if (f.q && !matchQ(l, f.q, ['company', 'name', 'legal_name', 'city', 'state', 'address', 'neighborhood', 'phone', 'whatsapp', 'instagram', 'email', 'segment', (x) => CC.digits(x.document || '')])) return false;
+      if (f.q && !CC.leadSearch(l, f.q)) return false;
+      if (f.tag && !(l.tags || []).some((t) => t.toLowerCase() === f.tag.toLowerCase())) return false;
       if (f.uf && l.state !== f.uf) return false;
       if (f.city && String(l.city || '').toLowerCase() !== f.city.toLowerCase()) return false;
       if (f.status === 'open' && ['CLIENTE', 'PERDIDO'].includes(l.status)) return false;
@@ -447,7 +545,7 @@
       const cities = [...new Set(base.filter((l) => !f.uf || l.state === f.uf).map((l) => l.city).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'pt-BR'));
       return `
         <div class="pf-row">
-          <label class="pf-search">${icon('search')}<input class="field" data-f="q" placeholder="Buscar nome, endereço, cidade, telefone, CNPJ..." value="${esc(f.q)}"></label>
+          <label class="pf-search">${icon('search')}<input class="field" data-f="q" placeholder="Buscar nome, cidade, telefone, CNPJ, #tag, nicho:academia, ★4..." value="${esc(f.q)}"></label>
           <select class="cc-select" data-f="scope" title="Origem">${opt('prospect', 'Prospectados pelo agente', f.scope)}${opt('all', 'Todos os leads do CRM', f.scope)}</select>
           <select class="cc-select" data-f="profile" title="Perfil">${opt('', 'Todos os nichos', f.profile)}${profiles.map((p) => opt(p.key, p.name, f.profile)).join('')}</select>
         </div>
@@ -459,6 +557,7 @@
           <label><span>Site</span><select class="cc-select" data-f="site">${opt('', 'Com ou sem site', f.site)}${opt('nosite', 'Sem site próprio', f.site)}${opt('none', 'Sem nenhum link', f.site)}${opt('social', 'Só redes sociais/Linktree', f.site)}${opt('own', 'Com site próprio', f.site)}</select></label>
           <label><span>Contato</span><select class="cc-select" data-f="contact">${opt('', 'Qualquer', f.contact)}${opt('whatsapp', 'Tem celular/WhatsApp', f.contact)}${opt('phone', 'Tem telefone válido', f.contact)}${opt('instagram', 'Tem Instagram', f.contact)}${opt('email', 'Tem e-mail', f.contact)}${opt('none', 'Sem contato', f.contact)}</select></label>
           <label><span>Nota no Google</span><select class="cc-select" data-f="rating">${opt('', 'Qualquer', f.rating)}${['4', '4.3', '4.5', '4.7', '4.8'].map((v) => opt(v, `${v.replace('.', ',')}+ ★`, f.rating)).join('')}</select></label>
+          <label><span>Tag</span><select class="cc-select" data-f="tag">${opt('', 'Todas', f.tag)}${CC.tags.list('TAG', base).map((t) => opt(t, `#${t}`, f.tag)).join('')}</select></label>
           <label><span>Avaliações</span><div class="pf-range"><input class="field" type="number" min="0" data-f="revMin" placeholder="mín." value="${esc(f.revMin)}"><i>–</i><input class="field" type="number" min="0" data-f="revMax" placeholder="máx." value="${esc(f.revMax)}"></div></label>
         </div>
         <div class="pf-chips">
@@ -494,6 +593,8 @@
         ${sk !== 'NONE' ? `<a class="qc-btn ${sk === 'OWN' ? 'site' : ''}" href="${esc(CC.safeUrl(/^https?:/i.test(l.website) ? l.website : `https://${l.website}`))}" target="_blank" rel="noopener">${sk === 'OWN' ? 'Site' : 'Link'}</a>` : ''}
         ${insta ? `<a class="qc-btn" href="https://instagram.com/${esc(insta)}" target="_blank" rel="noopener">Instagram</a>` : ''}
         ${l.maps_url ? `<a class="qc-btn" href="${esc(CC.safeUrl(l.maps_url))}" target="_blank" rel="noopener">Maps</a>` : ''}
+        ${!['CLIENTE', 'PERDIDO'].includes(l.status) ? `<button type="button" class="qc-btn sent" data-fa="sent" data-fa-lead="${l.id}" title="Marcar mensagem como enviada">${icon('check')}Enviada</button>` : ''}
+        <button type="button" class="qc-btn" data-fa="tag" data-fa-lead="${l.id}" title="Tags">${icon('plus')}Tag</button>
       </div>`;
     };
     const siteBadge = (l) => ({ NONE: '<span class="site-tag none">Sem site próprio</span>', SOCIAL: '<span class="site-tag social">Só redes sociais</span>', OWN: '<span class="site-tag own">Site próprio</span>' }[siteKind(l)]);
@@ -510,9 +611,9 @@
           const [tLabel, tCls] = TIER[oppTier(l)];
           return `<tr data-row="${l.id}">
             <td><button class="fav ${isFav(l) ? 'on' : ''}" data-fav="${l.id}" title="${isFav(l) ? 'Remover dos favoritos' : 'Favoritar'}">★</button></td>
-            <td class="p-lead" data-open="${l.id}"><span class="p-thumb" data-photo-path="${esc(l.photo_path || '')}">${esc(initials(l))}</span><span><strong>${esc(l.company)}</strong><span class="sub">${esc([l.neighborhood, [l.city, l.state].filter(Boolean).join(' - ')].filter(Boolean).join(' · ') || '—')}${f.profile || f.scope === 'prospect' ? '' : ` · ${esc(profName(l.profile_key))}`}</span></span></td>
+            <td class="p-lead" data-open="${l.id}"><span class="p-thumb" data-photo-path="${esc(l.photo_path || '')}">${esc(initials(l))}</span><span><strong>${esc(l.company)}</strong><span class="sub">${esc([l.neighborhood, [l.city, l.state].filter(Boolean).join(' - ')].filter(Boolean).join(' · ') || '—')}</span><span class="pc-tags">${CC.tags.niche(l) ? CC.tags.chip('NICHO', CC.tags.niche(l), { small: true }) : ''}${(l.tags || []).filter((t) => !['favorito', 'prospeccao'].includes(t)).map((t) => CC.tags.chip('TAG', t, { small: true })).join('')}</span></span></td>
             <td><span class="opp ${tCls}"><i></i>${tLabel}${oppScore(l) ? ` · ${oppScore(l)}` : ''}</span></td>
-            <td class="nowrap">${l.google_rating != null ? `<b class="gstar">★ ${String(l.google_rating).replace('.', ',')}</b> <span class="muted small">${Number(l.google_reviews || 0).toLocaleString('pt-BR')} aval.</span>` : '<span class="muted small">—</span>'}</td>
+            <td class="nowrap">${CC.googleBadge(l) || '<span class="muted small">—</span>'}${l.potential ? `<div style="margin-top:.2rem">${CC.potStars(l.potential)}</div>` : ''}</td>
             <td>${siteBadge(l)}</td>
             <td>${quick(l)}</td>
             <td><div class="p-st"><select class="cc-select p-status" data-status="${l.id}" aria-label="Status">${STAGES.map((s) => opt(s, label(s), l.status)).join('')}</select><button class="qc-btn" data-open="${l.id}">Detalhes</button><button class="qc-btn icon" data-copy-lead="${l.id}" title="Copiar dados do lead">${icon('copy')}</button></div></td>
@@ -528,7 +629,7 @@
     const st = { visible: [] };
 
     root.innerHTML = `${pageHead('CRM', 'Prospecção', 'Leads encontrados pelo agente diário e pelo CRM, com filtros por nota, avaliações, site e contato.',
-      `<button class="btn" data-copy-visible>${icon('copy')}Copiar leads visíveis</button><button class="btn" data-export>${icon('download')}Exportar CSV</button><button class="btn btn-primary" data-new-profile>${icon('plus')}Novo perfil</button>`)}
+      `<button class="btn" data-cats>${icon('layers')}Categorias e tags</button><button class="btn" data-copy-visible>${icon('copy')}Copiar leads visíveis</button><button class="btn" data-export>${icon('download')}Exportar CSV</button><button class="btn btn-primary" data-new-profile>${icon('plus')}Novo perfil</button>`)}
       <div class="p-kpis" id="p-kpis"></div>
       <section class="panel panel-pad pf" id="p-filters">${filterBar()}</section>
       <section class="panel" style="margin-top:1rem">
@@ -600,6 +701,13 @@
     });
     const copy = async (text, msg) => { try { await navigator.clipboard.writeText(text); CC.toast(msg); } catch (err) { CC.toast('Não foi possível copiar.', 'error'); } };
     root.addEventListener('click', async (e) => {
+      const fa = e.target.closest('[data-fa]');
+      if (fa) {
+        const lead = allLeads.find((l) => l.id === fa.dataset.faLead); if (!lead) return;
+        e.preventDefault(); e.stopPropagation();
+        try { await CC.leadFastAction(fa, lead, { leads: allLeads, redraw: drawList }); } catch (err) { CC.toast(CC.errMsg(err), 'error'); }
+        return;
+      }
       const pre = e.target.closest('[data-preset]');
       if (pre) {
         const k = pre.dataset.preset;
@@ -635,9 +743,10 @@
       }
       const sp = e.target.closest('[data-show-profile]'); if (sp) { Object.assign(f, { ...FILTER_DEFAULT, scope: 'prospect', profile: sp.dataset.showProfile, status: '' }); refreshBar(); drawList(); $('#p-filters', root).scrollIntoView({ behavior: 'smooth' }); return; }
       if (e.target.closest('a, select, input, label')) return;
-      const op = e.target.closest('[data-open]'); if (op) { openLead(allLeads.find((l) => l.id === op.dataset.open), projects); return; }
+      const op = e.target.closest('[data-open]'); if (op) { openLead(allLeads.find((l) => l.id === op.dataset.open), projects, (l) => { const x = allLeads.find((y) => y.id === l.id); if (x) Object.assign(x, l); drawList(); }); return; }
       const ed = e.target.closest('[data-edit-profile]');
       if (ed && await editProfile(profiles.find((p) => p.key === ed.dataset.editProfile))) { CC.toast('Perfil salvo.'); CC.router.render(); }
+      if (e.target.closest('[data-cats]')) { if (await CC.editCategories(allLeads)) CC.router.render(); return; }
       if (e.target.closest('[data-new-profile]') && await editProfile(null)) { CC.toast('Perfil criado.'); CC.router.render(); }
       if (e.target.closest('[data-export]')) {
         const bought2 = (l) => (l.status === 'CLIENTE' ? 'Sim' : l.status === 'PERDIDO' ? 'Não' : l.status === 'LEAD' ? '' : 'Em negociação');

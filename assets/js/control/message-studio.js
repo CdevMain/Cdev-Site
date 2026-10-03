@@ -192,7 +192,7 @@
           if (!r.ok) return;
           await record('WHATSAPP_ABERTO', { whatsapp_opened_at: new Date().toISOString() });
           await api.insert('lead_activities', { lead_id: lead.id, type: 'MENSAGEM', content: `WhatsApp aberto com mensagem (${M().STRATEGIES[st.meta?.strategy]?.name || 'texto manual'}). Aguardando confirmação de envio.` });
-          $('[data-ms-sentline]', el).innerHTML = `WhatsApp aberto na aba CDEV. Depois de enviar, confirme: <button class="btn btn-sm btn-primary" data-ms-sent="${st.sessionId}">${icon('check')}Marcar como enviada</button>`;
+          $('[data-ms-sentline]', el).innerHTML = `${r.mode === 'desktop' ? 'Conversa aberta no app do WhatsApp' : 'WhatsApp aberto na aba CDEV'}. Depois de enviar, confirme: <button class="btn btn-sm btn-primary" data-ms-sent="${st.sessionId}">${icon('check')}Marcar como enviada</button>`;
           return;
         }
         if (b.dataset.msSent) {

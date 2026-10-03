@@ -122,7 +122,7 @@
     ATIVO: 'Ativo', INATIVO: 'Inativo', ATIVA: 'Ativa', SUSPENSA: 'Suspensa', CANCELADA: 'Cancelada', EXPIRADO: 'Expirado', TRANSFERIDO: 'Transferido',
     ONLINE: 'Online', OFFLINE: 'Offline', INSTAVEL: 'Com problemas', MANUTENCAO: 'Manutenção', DESCONHECIDO: 'Sem dados',
     ABERTO: 'Aberto', RESOLVIDO: 'Resolvido', OK: 'OK', FALHOU: 'Falhou',
-    LEAD: 'Lead', CONTATADO: 'Contatado', RESPONDEU: 'Respondeu', DEMO_ENVIADA: 'Demo enviada', NEGOCIACAO: 'Negociação', CLIENTE: 'Cliente', PERDIDO: 'Perdido',
+    LEAD: 'Lead', CONTATADO: 'Mensagem enviada', RESPONDEU: 'Respondeu', DEMO_ENVIADA: 'Demo enviada', NEGOCIACAO: 'Negociação', CLIENTE: 'Cliente', PERDIDO: 'Perdido',
     VPS: 'VPS', SERVIDOR_PROPRIO: 'Servidor próprio', SHARED: 'Shared Hosting', CLOUD: 'Cloud', VERCEL: 'Vercel', NETLIFY: 'Netlify', CLOUDFLARE_PAGES: 'Cloudflare Pages', OUTRO: 'Outro',
     MANUAL: 'Manual', CSV: 'CSV', WEB: 'Web', GOOGLE: 'Google Maps', AUTOMATICO: 'Automático', WHATSAPP: 'WhatsApp', EMAIL: 'E-mail'
   };
@@ -468,24 +468,40 @@
     return '';
   };
   const WHATSAPP_TARGET = 'CDEV_WHATSAPP';
+  // Modos: 'desktop' = app do WhatsApp instalado (whatsapp://): troca o chat na janela que ja esta aberta, sem aba nova;
+  //        'web' = WhatsApp Web numa aba unica (CDEV_WHATSAPP); 'app' = celular (wa.me).
+  const isMobileUA = () => /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
   const whatsappMode = () => {
     const m = setting('whatsapp_mode', 'auto');
-    if (m === 'web' || m === 'app') return m;
-    return /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) ? 'app' : 'web';
+    if (m === 'web' || m === 'app' || m === 'desktop') return m;
+    return isMobileUA() ? 'app' : 'desktop';
   };
-  const whatsappUrl = (phone, message = '') => {
+  const whatsappUrl = (phone, message = '', mode = whatsappMode()) => {
     const n = normalizePhone(phone); if (!n) return '';
     const text = message ? encodeURIComponent(message) : '';
-    return whatsappMode() === 'web'
+    if (mode === 'desktop') return `whatsapp://send?phone=${n}${text ? `&text=${text}` : ''}`;
+    return mode === 'web'
       ? `https://web.whatsapp.com/send?phone=${n}${text ? `&text=${text}` : ''}`
       : `https://wa.me/${n}${text ? `?text=${text}` : ''}`;
   };
-  // Abre (ou reutiliza) a aba nomeada CDEV_WHATSAPP. Nunca usa _blank.
-  // Obs.: o navegador so deixa reutilizar a aba criada pelo proprio CDEV; uma aba do WhatsApp aberta
-  // manualmente antes nao pode ser controlada por seguranca.
+  // Dispara um protocolo (whatsapp://) sem sair da pagina e sem abrir aba
+  const launchProtocol = (url) => {
+    let frame = document.getElementById('cc-proto-frame');
+    if (!frame) { frame = document.createElement('iframe'); frame.id = 'cc-proto-frame'; frame.style.display = 'none'; frame.setAttribute('aria-hidden', 'true'); document.body.appendChild(frame); }
+    try { frame.src = url; } catch (e) { const a = document.createElement('a'); a.href = url; a.click(); }
+  };
+  // desktop: o app do WhatsApp so troca de conversa (janela ja aberta). web: reaproveita a aba CDEV_WHATSAPP.
+  // Obs.: no modo web o navegador precisa recarregar a aba para trocar de contato (o WhatsApp Web nao aceita
+  // comandos de outro site). Para trocar de conversa sem recarregar, use o app do WhatsApp (modo desktop).
   const openWhatsAppContact = (phone, message = '') => {
-    const url = whatsappUrl(phone, message);
+    const mode = whatsappMode();
+    const url = whatsappUrl(phone, message, mode);
     if (!url) { toast('Número de WhatsApp ausente ou inválido para este contato.', 'error'); return { ok: false, reason: 'phone' }; }
+    if (mode === 'desktop') {
+      launchProtocol(url);
+      toast('Abrindo a conversa no app do WhatsApp…');
+      return { ok: true, url, mode };
+    }
     let win = null;
     try { win = window.open(url, WHATSAPP_TARGET); } catch (e) { win = null; }
     if (!win) {
@@ -493,7 +509,7 @@
       return { ok: false, reason: 'popup', url };
     }
     try { win.focus(); } catch (e) { /* alguns navegadores nao deixam focar */ }
-    return { ok: true, url };
+    return { ok: true, url, mode };
   };
   // Qualquer elemento com data-wa-phone abre o WhatsApp pela funcao central (texto opcional em data-wa-text)
   document.addEventListener('click', (e) => {
@@ -635,6 +651,6 @@
     daysUntil, addDays, duration, relTime, dueLabel, dueTone, label, badge, TONES, SEV, toast, modal, confirmDialog, VALIDATORS,
     formHtml, readForm, formModal, table, csv, toolbar, bindToolbar, matchQ, SORTERS, pageHead, waLink, waNumber, busy, optionHtml,
     fmtDoc, fmtCep, fmtPhone, lookupCep, lookupCnpj, media, validCpf, validCnpj, bindLookups,
-    normalizePhone, whatsappUrl, openWhatsAppContact, WHATSAPP_TARGET
+    normalizePhone, whatsappUrl, openWhatsAppContact, whatsappMode, WHATSAPP_TARGET
   });
 })();
