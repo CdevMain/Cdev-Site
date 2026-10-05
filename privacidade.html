@@ -1,0 +1,614 @@
+﻿
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Carlos Eduardo - Política de Privacidade</title>
+  <meta name="description" content="Como o site de Carlos Eduardo (CDEV) trata dados de visitantes: Google Analytics e Microsoft Clarity só com consentimento, cookies, direitos pela LGPD e contato." />
+  <link rel="canonical" href="https://cdev.com.br/privacidade" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            ink: '#080e10',
+            ink2: '#0c1518',
+            ink3: '#111d21',
+            mist: '#e8f2f5',
+            muted: '#4a6570',
+            accent: '#1e6275',
+            aqua: '#2b8ba5',
+            java: '#e07b24',
+            line: 'rgba(30,98,117,.18)',
+            lineStrong: 'rgba(30,98,117,.45)',
+            faint: 'rgba(30,98,117,.07)'
+          },
+          fontFamily: {
+            display: ['Syne', 'sans-serif'],
+            mono: ['DM Mono', 'monospace']
+          },
+          boxShadow: {
+            glow: '0 0 30px rgba(30,98,117,.35)'
+          },
+          keyframes: {
+            fadeup: {
+              '0%': { opacity: '0', transform: 'translateY(26px)' },
+              '100%': { opacity: '1', transform: 'translateY(0)' }
+            },
+            orbpulse: {
+              '0%,100%': { transform: 'translate(-50%,-50%) scale(1)', opacity: '1' },
+              '50%': { transform: 'translate(-50%,-50%) scale(1.2)', opacity: '.5' }
+            }
+          },
+          animation: {
+            fadeup: 'fadeup .7s ease forwards',
+            orbpulse: 'orbpulse 7s ease-in-out infinite'
+          }
+        }
+      }
+    };
+  </script>
+  <style type="text/tailwindcss">
+    @layer base {
+      :root {
+        --line: rgba(30,98,117,.18);
+        --line-strong: rgba(30,98,117,.45);
+        --faint: rgba(30,98,117,.07);
+        --fd: 'Syne', sans-serif;
+        --fm: 'DM Mono', monospace;
+      }
+
+      html {
+        scroll-behavior: smooth;
+        zoom: 1.25;
+      }
+
+      @supports not (zoom: 1) {
+        html { font-size: 125%; }
+      }
+
+      body {
+        @apply bg-ink text-mist font-display overflow-x-hidden;
+        cursor: none;
+      }
+      body, body * { cursor: none; }
+
+      body::before {
+        content: '';
+        position: fixed;
+        inset: 0;
+        z-index: 1;
+        pointer-events: none;
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+        opacity: .5;
+      }
+
+      @media (pointer: coarse) {
+        body, body * { cursor: auto; }
+        #cur { display: none; }
+      }
+    }
+
+    @layer components {
+      .navbar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 50;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1.4rem 3rem;
+        border-bottom: 1px solid transparent;
+        transition: border-color .3s, background .3s;
+      }
+      .navbar.scrolled {
+        background: rgba(8,14,16,.92);
+        backdrop-filter: blur(20px);
+        border-color: var(--line);
+      }
+      .nav-logo {
+        display: flex;
+        align-items: center;
+        gap: .75rem;
+        font-family: var(--fm);
+        font-size: .82rem;
+        letter-spacing: .2em;
+        text-transform: uppercase;
+        color: #2b8ba5;
+        text-decoration: none;
+      }
+      .nav-links {
+        display: flex;
+        align-items: center;
+        gap: 2.5rem;
+        list-style: none;
+      }
+      .nav-link {
+        font-size: .75rem;
+        font-weight: 500;
+        letter-spacing: .14em;
+        text-transform: uppercase;
+        color: #4a6570;
+        text-decoration: none;
+        transition: color .2s;
+        position: relative;
+      }
+      .nav-link::after {
+        content: '';
+        position: absolute;
+        bottom: -3px;
+        left: 0;
+        width: 0;
+        height: 1px;
+        background: #2b8ba5;
+        transition: width .25s;
+      }
+      .nav-link:hover { color: #e8f2f5; }
+      .nav-link:hover::after { width: 100%; }
+      .nav-link.active {
+        color: #2b8ba5;
+        border-bottom: 1px solid #2b8ba5;
+      }
+      .nav-pill {
+        color: #2b8ba5;
+        border: 1px solid var(--line-strong);
+        padding: .3rem .8rem;
+        border-radius: 2px;
+        font-size: .75rem;
+        letter-spacing: .14em;
+        text-transform: uppercase;
+        text-decoration: none;
+      }
+      .nav-pill:hover { background: var(--faint); }
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: .6rem;
+        padding: .9rem 2.2rem;
+        border-radius: 2px;
+        font-family: var(--fd);
+        font-size: .8rem;
+        font-weight: 700;
+        letter-spacing: .12em;
+        text-transform: uppercase;
+        text-decoration: none;
+        transition: all .25s;
+        cursor: none;
+      }
+      .btn-primary {
+        background: linear-gradient(135deg, #1e6275 0%, #2b8ba5 100%);
+        color: #e8f2f5;
+        border: 1px solid rgba(43,139,165,.35);
+        box-shadow: 0 0 30px rgba(30,98,117,.3);
+      }
+      .btn-primary:hover {
+        background: linear-gradient(135deg, #2b8ba5 0%, #3aa1bb 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 40px rgba(30,98,117,.5);
+      }
+      .btn-ghost {
+        border: 1px solid var(--line-strong);
+        color: #4a6570;
+      }
+      .btn-ghost:hover { color: #2b8ba5; border-color: #2b8ba5; transform: translateY(-2px); }
+      .section-label {
+        @apply font-mono text-[0.7rem] uppercase tracking-[0.24em] text-aqua flex items-center gap-3;
+      }
+      .section-title {
+        @apply text-[clamp(1.9rem,3.8vw,3.2rem)] font-extrabold leading-tight;
+      }
+      .card {
+        @apply bg-ink2 border border-line p-7 transition hover:bg-ink3;
+      }
+      .tag {
+        @apply font-mono text-[0.6rem] uppercase tracking-[0.18em] px-2.5 py-1 rounded-sm border border-lineStrong text-aqua bg-faint;
+      }
+      .tag-java {
+        @apply text-java border-[rgba(224,123,36,.35)] bg-[rgba(224,123,36,.08)];
+      }
+      .tag-js {
+        color: #f7df1e;
+        border-color: rgba(247,223,30,.4);
+        background: rgba(247,223,30,.12);
+      }
+      .tag-ts {
+        color: #3178c6;
+        border-color: rgba(49,120,198,.35);
+        background: rgba(49,120,198,.12);
+      }
+      .tag-react {
+        color: #61dafb;
+        border-color: rgba(97,218,251,.35);
+        background: rgba(97,218,251,.12);
+      }
+      .tag-vue {
+        color: #42b883;
+        border-color: rgba(66,184,131,.35);
+        background: rgba(66,184,131,.12);
+      }
+      .tag-node {
+        color: #3c873a;
+        border-color: rgba(60,135,58,.35);
+        background: rgba(60,135,58,.12);
+      }
+      .tag-php {
+        color: #8892bf;
+        border-color: rgba(136,146,191,.35);
+        background: rgba(136,146,191,.12);
+      }
+      .tag-csharp {
+        color: #9b4f96;
+        border-color: rgba(155,79,150,.35);
+        background: rgba(155,79,150,.12);
+      }
+      .tag-postgres {
+        color: #336791;
+        border-color: rgba(51,103,145,.35);
+        background: rgba(51,103,145,.12);
+      }
+      .tag-tailwind {
+        color: #38bdf8;
+        border-color: rgba(56,189,248,.35);
+        background: rgba(56,189,248,.12);
+      }
+      .tag-twig {
+        color: #76a075;
+        border-color: rgba(118,160,117,.35);
+        background: rgba(118,160,117,.12);
+      }
+      .tag-sql {
+        color: #2b8ba5;
+        border-color: rgba(43,139,165,.35);
+        background: rgba(43,139,165,.12);
+      }
+      .tag-sqlite {
+        color: #006090;
+        border-color: rgba(0,96,144,.35);
+        background: rgba(0,96,144,.12);
+      }
+      .tag-wordpress {
+        color: #21759b;
+        border-color: rgba(33,117,155,.35);
+        background: rgba(33,117,155,.12);
+      }
+      .tag-css {
+        color: #264de4;
+        border-color: rgba(38,77,228,.35);
+        background: rgba(38,77,228,.12);
+      }
+      .tag-docker {
+        color: #2496ed;
+        border-color: rgba(36,150,237,.35);
+        background: rgba(36,150,237,.12);
+      }
+      .tag-figma {
+        color: #f24e1e;
+        border-color: rgba(242,78,30,.35);
+        background: rgba(242,78,30,.12);
+      }
+      .icon-chip {
+        @apply h-11 w-11 rounded-lg border border-[rgba(224,123,36,.25)] bg-[rgba(224,123,36,.08)] flex items-center justify-center;
+      }
+    }
+
+    @layer utilities {
+      .text-outline {
+        -webkit-text-stroke: 1.5px theme('colors.accent');
+        color: transparent;
+      }
+      .grid-mask {
+        background-image:
+          linear-gradient(var(--line) 1px, transparent 1px),
+          linear-gradient(90deg, var(--line) 1px, transparent 1px);
+        background-size: 64px 64px;
+        mask-image: radial-gradient(ellipse 80% 70% at 30% 50%, black 20%, transparent 100%);
+      }
+      .reveal {
+        opacity: 0;
+        transform: translateY(30px);
+        transition: opacity .75s ease, transform .75s ease;
+      }
+      .reveal.vis {
+        opacity: 1;
+        transform: translateY(0);
+      }
+      .timeline-dot {
+        position: absolute;
+        left: -1.65rem;
+        top: .4rem;
+        width: .6rem;
+        height: .6rem;
+        border-radius: 999px;
+        background: #080e10;
+        border: 2px solid #2b8ba5;
+        box-shadow: 0 0 10px rgba(43,139,165,.35);
+      }
+    }
+
+    #cur {
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 9999;
+      pointer-events: none;
+    }
+    #cdot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: #2b8ba5;
+      position: absolute;
+      transform: translate(-50%, -50%);
+      transition: width .15s, height .15s;
+      box-shadow: 0 0 12px rgba(43,139,165,.9);
+    }
+    #cring {
+      width: 38px;
+      height: 38px;
+      border-radius: 999px;
+      border: 1.5px solid #1e6275;
+      position: absolute;
+      transform: translate(-50%, -50%);
+      transition: width .25s, height .25s, opacity .25s;
+      opacity: .4;
+    }
+    body.hov #cdot {
+      width: 14px;
+      height: 14px;
+      background: #ffffff;
+      box-shadow: 0 0 12px rgba(255,255,255,.9);
+    }
+    body.hov #cring {
+      width: 58px;
+      height: 58px;
+      opacity: .7;
+      border-color: #ffffff;
+    }
+    body.down #cdot { width: 6px; height: 6px; }
+    body.down #cring { width: 28px; height: 28px; opacity: .9; border-color: #2b8ba5; }
+
+    #shock {
+      position: fixed;
+      inset: 0;
+      z-index: 9990;
+      pointer-events: none;
+      overflow: hidden;
+    }
+    #shock-ring {
+      position: absolute;
+      border-radius: 50%;
+      border: 3px solid #2b8ba5;
+      box-shadow: 0 0 40px rgba(43,139,165,.6), 0 0 80px rgba(30,98,117,.6), inset 0 0 40px rgba(30,98,117,.6);
+      opacity: 0;
+      transform: translate(-50%, -50%) scale(0);
+    }
+    #shock-fill {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      transition: opacity .1s;
+    }
+
+    @media (min-width: 1024px) {
+      main > section:first-of-type {
+        padding-top: clamp(6rem, 8vw, 7.5rem);
+        padding-bottom: clamp(4rem, 6vw, 5.5rem);
+        padding-left: clamp(1.5rem, 3vw, 2.5rem);
+        padding-right: clamp(1.5rem, 3vw, 2.5rem);
+      }
+      #story,
+      #mods,
+      #craft {
+        padding-top: clamp(5rem, 7vw, 7rem);
+        padding-bottom: clamp(5rem, 7vw, 7rem);
+        padding-left: clamp(1.5rem, 3vw, 2.5rem);
+        padding-right: clamp(1.5rem, 3vw, 2.5rem);
+      }
+      footer {
+        padding-left: clamp(1.5rem, 3vw, 2.5rem);
+        padding-right: clamp(1.5rem, 3vw, 2.5rem);
+      }
+    }
+      /* Barra de rolagem CDEV */
+    html, * { scrollbar-width: thin; scrollbar-color: #1e6275 #0a1215; }
+    ::-webkit-scrollbar { width: 10px; height: 10px; }
+    ::-webkit-scrollbar-track { background: #0a1215; }
+    ::-webkit-scrollbar-thumb { background: linear-gradient(180deg, #1e6275, #2b8ba5); border-radius: 999px; border: 2px solid #0a1215; }
+    ::-webkit-scrollbar-thumb:hover { background: #2b8ba5; }
+    ::-webkit-scrollbar-corner { background: #0a1215; }
+</style>
+<style>
+    /* Politica de privacidade */
+    .pv-body { overflow-wrap: anywhere; font-size: .95rem; line-height: 1.8; color: #a9c0c8; max-width: 46rem; }
+    .pv-body p + p, .pv-body p + h3, .pv-body ul + p, .pv-body ul + h3, .pv-body p + ul { margin-top: 1rem; }
+    .pv-body h3 { font-size: .8rem; font-family: var(--fm); letter-spacing: .18em; text-transform: uppercase; color: #2b8ba5; margin: 1.6rem 0 .6rem; }
+    .pv-body h3:first-child { margin-top: 0; }
+    .pv-body strong { color: #e8f2f5; font-weight: 600; }
+    .pv-body a { color: #e8f2f5; text-decoration: underline; text-decoration-color: rgba(43,139,165,.6); text-underline-offset: 4px; }
+    .pv-body a:hover { color: #2b8ba5; }
+    .pv-body ul { list-style: none; padding: 0; display: grid; gap: .7rem; }
+    .pv-body li { position: relative; padding-left: 1.4rem; }
+    .pv-body li::before { content: ''; position: absolute; left: 0; top: .78em; width: .55rem; height: 1px; background: #2b8ba5; }
+    .pv-body code { font-family: var(--fm); font-size: .82em; color: #e8f2f5; background: rgba(30,98,117,.15); border: 1px solid var(--line); padding: .05rem .35rem; border-radius: 3px; }
+    .pv-sec { scroll-margin-top: 7rem; padding: 2.4rem 0; border-top: 1px solid var(--line); }
+    .pv-sec:first-child { border-top: 0; padding-top: 0; }
+    .pv-sec h2 { font-size: clamp(1.25rem, 2vw, 1.6rem); font-weight: 800; color: #e8f2f5; margin-bottom: 1rem; display: flex; align-items: baseline; gap: .9rem; }
+    .pv-sec h2 span.n { font-family: var(--fm); font-size: .7rem; font-weight: 400; color: #4a6570; letter-spacing: .1em; }
+    .pv-toc a { display: block; padding: .45rem 0 .45rem .9rem; border-left: 1px solid var(--line); font-size: .78rem; color: #4a6570; text-decoration: none; transition: color .2s, border-color .2s; }
+    .pv-toc a:hover, .pv-toc a.on { color: #e8f2f5; border-color: #2b8ba5; }
+    .pv-table { width: 100%; min-width: 34rem; overflow-wrap: normal; border-collapse: collapse; font-size: .85rem; margin-top: 1rem; }
+    .pv-table th { text-align: left; font-family: var(--fm); font-weight: 400; font-size: .65rem; letter-spacing: .18em; text-transform: uppercase; color: #4a6570; padding: .6rem .8rem .6rem 0; border-bottom: 1px solid var(--line-strong); }
+    .pv-table td { padding: .75rem .8rem .75rem 0; border-bottom: 1px solid var(--line); color: #a9c0c8; vertical-align: top; }
+    .pv-table td:first-child { font-family: var(--fm); color: #e8f2f5; white-space: nowrap; }
+    .pv-table-wrap { overflow-x: auto; }
+    .pv-status { display: inline-flex; align-items: center; gap: .55rem; font-size: .85rem; color: #e8f2f5; }
+    .pv-status i { width: .5rem; height: .5rem; border-radius: 999px; background: #4a6570; }
+    .pv-status[data-state="granted"] i { background: #3fb68b; box-shadow: 0 0 10px rgba(63,182,139,.6); }
+    .pv-status[data-state="denied"] i { background: #e07b24; }
+</style>
+</head>
+<body>
+  <div id="cur"><div id="cring"></div><div id="cdot"></div></div>
+
+  <div id="shock">
+    <div id="shock-fill"></div>
+    <div id="shock-ring"></div>
+  </div>
+
+  <nav id="nav" class="navbar">
+    <a class="nav-logo" href="/#hero">CDEV</a>
+
+    <ul class="nav-links">
+      <li><a class="nav-link" href="/#about" data-i="nav-about">Sobre</a></li>
+      <li><a class="nav-link" href="/#skills" data-i="nav-skills">Skills</a></li>
+      <li><a class="nav-link" href="/#projects" data-i="nav-projects">Projetos</a></li>
+      <li><a class="nav-link" href="/#contact" data-i="nav-contact">Contato</a></li>
+      <li><a class="nav-link" href="/community" data-i="nav-community">Comunidade</a></li>
+    </ul>
+
+    <button id="ltoggle" class="btn btn-ghost text-[0.6rem] font-mono px-3 py-2">
+      <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.5">
+        <circle cx="12" cy="12" r="10"></circle>
+        <path d="M2 12h20"></path>
+        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+      </svg>
+      <span id="ltxt">EN</span>
+    </button>
+  </nav>
+
+  <main class="relative z-10">
+    <section class="relative pt-32 pb-16 px-6 lg:px-12 overflow-hidden">
+      <div class="absolute inset-0 grid-mask"></div>
+      <div class="relative mx-auto max-w-6xl">
+        <div class="flex items-center gap-2 font-mono text-[0.7rem] uppercase tracking-[0.2em] text-muted">
+          <a href="/" class="text-aqua hover:text-mist" data-i="crumb-home">Home</a>
+          <span>›</span>
+          <span data-i="crumb-privacy">Privacidade</span>
+        </div>
+        <div class="section-label mt-6" data-i="pv-label">Privacidade & dados</div>
+        <h1 class="mt-5 text-[clamp(2.4rem,6vw,4.6rem)] font-extrabold leading-[1.02]" data-i="pv-title">Política de<br/><span class="text-outline">privacidade.</span></h1>
+        <p class="mt-6 max-w-2xl text-[1rem] leading-relaxed text-muted" data-i="pv-sub">Como este site trata os dados de quem o visita, escrito de forma direta. Se algo não ficar claro, é só me perguntar.</p>
+        <div class="mt-8 flex flex-wrap items-center gap-x-6 gap-y-4">
+          <span class="pv-status" data-pv-status data-state="none"><i></i><span class="font-mono text-[0.65rem] uppercase tracking-[0.18em] text-muted" data-i="pv-status-label">Sua escolha atual:</span>
+            <span data-pv-state="granted" hidden data-i="pv-status-granted">Análise de uso aceita</span><span data-pv-state="denied" hidden data-i="pv-status-denied">Análise de uso recusada</span><span data-pv-state="none" data-i="pv-status-none">Você ainda não escolheu</span></span>
+          <button type="button" class="btn btn-primary" data-pv-manage data-i="pv-manage">Gerenciar preferências</button>
+        </div>
+        <p class="mt-6 font-mono text-[0.65rem] uppercase tracking-[0.18em] text-muted" data-i="pv-updated">Última atualização: outubro de 2026</p>
+      </div>
+    </section>
+
+    <section class="px-6 lg:px-12 pb-20">
+      <div class="mx-auto max-w-6xl grid grid-cols-1 gap-12 lg:grid-cols-[14rem_minmax(0,1fr)]">
+        <aside class="hidden lg:block">
+          <nav class="pv-toc sticky top-28" aria-label="Seções">
+            <div class="mb-3 font-mono text-[0.65rem] uppercase tracking-[0.2em] text-aqua" data-i="pv-toc">Nesta página</div>
+            <a href="#quem" data-i="pv-s1-t">Quem é o responsável</a><a href="#coleta" data-i="pv-s2-t">O que é coletado</a><a href="#nao-faz" data-i="pv-s3-t">O que não é feito</a><a href="#cookies" data-i="pv-s4-t">Cookies</a><a href="#base-legal" data-i="pv-s5-t">Base legal</a><a href="#compartilhamento" data-i="pv-s6-t">Compartilhamento e transferência internacional</a><a href="#retencao" data-i="pv-s7-t">Por quanto tempo</a><a href="#direitos" data-i="pv-s8-t">Seus direitos</a><a href="#mudancas" data-i="pv-s9-t">Mudanças nesta política</a>
+          </nav>
+        </aside>
+        <div class="min-w-0">
+            <section class="pv-sec" id="quem">
+              <h2><span class="n">01</span><span data-i="pv-s1-t">Quem é o responsável</span></h2>
+              <div class="pv-body"><div data-i="pv-s1"><p>Este site é o portfólio pessoal de <strong>Carlos Eduardo Da Silva</strong>, desenvolvedor em Guaíba, RS, Brasil. Sou o responsável (controlador, nos termos da LGPD) pelos dados tratados aqui.</p><p>Contato para qualquer assunto de privacidade: <a href="mailto:Cdev.main@gmail.com">Cdev.main@gmail.com</a>.</p></div></div>
+            </section>
+            <section class="pv-sec" id="coleta">
+              <h2><span class="n">02</span><span data-i="pv-s2-t">O que é coletado</span></h2>
+              <div class="pv-body"><div data-i="pv-s2"><h3>Só se você aceitar</h3><p>Quando você clica em <strong>Aceitar</strong> no aviso de privacidade, duas ferramentas de análise passam a funcionar:</p><ul><li><strong>Google Analytics</strong> (Google): páginas visitadas, tempo de visita, de onde veio o acesso (busca, link, rede social), tipo de dispositivo e navegador e localização aproximada (cidade ou país), estimada pelo endereço IP.</li><li><strong>Microsoft Clarity</strong> (Microsoft): como a página é navegada, com cliques, rolagem e movimento do cursor, gerando mapas de calor e gravações anônimas da sessão. O Clarity mascara textos sensíveis por padrão.</li></ul><p>Antes da sua escolha, nenhum código dessas ferramentas é carregado. Se recusar, elas continuam desligadas.</p><h3>Sempre, sem identificar você</h3><ul><li><strong>Preferências no seu navegador</strong>: o idioma escolhido (<code>cdev-lang</code>) e a sua escolha sobre a análise de uso (<code>cdev-consent</code>) ficam salvos no armazenamento local do seu navegador. Essas informações não são enviadas para mim nem para terceiros.</li><li><strong>Registros do servidor</strong>: como qualquer site, o servidor registra endereço IP, data e hora, página acessada e navegador, para segurança e correção de erros. Esses registros são apagados periodicamente.</li></ul></div></div>
+            </section>
+            <section class="pv-sec" id="nao-faz">
+              <h2><span class="n">03</span><span data-i="pv-s3-t">O que não é feito</span></h2>
+              <div class="pv-body"><div data-i="pv-s3"><ul><li>Não vendo, alugo ou repasso dados de visitantes.</li><li>Não uso os dados para publicidade nem para criar perfis de anúncio.</li><li>Não há cadastro nem formulário público neste site. Se você me escrever por e-mail ou WhatsApp, a conversa acontece nesses serviços e uso o seu contato apenas para responder.</li></ul></div></div>
+            </section>
+            <section class="pv-sec" id="cookies">
+              <h2><span class="n">04</span><span data-i="pv-s4-t">Cookies</span></h2>
+              <div class="pv-body"><p data-i="pv-s4-intro">Cookies só são gravados depois que você aceita a análise de uso:</p>
+              <div class="pv-table-wrap"><table class="pv-table">
+                <thead><tr><th data-i="pv-c-name">Nome</th><th data-i="pv-c-tool">Ferramenta</th><th data-i="pv-c-purpose">Para que serve</th><th data-i="pv-c-dur">Duração</th></tr></thead>
+                <tbody>
+                  <tr><td>_ga, _ga_*</td><td>Google Analytics</td><td data-i="pv-c-ga">Distinguir visitantes e sessões</td><td data-i="pv-c-2y">até 2 anos</td></tr>
+                  <tr><td>_clck</td><td>Microsoft Clarity</td><td data-i="pv-c-clck">Reconhecer o mesmo visitante entre visitas</td><td data-i="pv-c-1y">1 ano</td></tr>
+                  <tr><td>_clsk</td><td>Microsoft Clarity</td><td data-i="pv-c-clsk">Agrupar as páginas de uma mesma sessão</td><td data-i="pv-c-1d">1 dia</td></tr>
+                </tbody>
+              </table></div>
+              <p data-i="pv-s4-out">Ao recusar ou retirar o consentimento, o site apaga esses cookies do seu navegador.</p></div>
+            </section>
+            <section class="pv-sec" id="base-legal">
+              <h2><span class="n">05</span><span data-i="pv-s5-t">Base legal</span></h2>
+              <div class="pv-body"><div data-i="pv-s5"><p>A análise de uso (Google Analytics e Microsoft Clarity) depende do seu <strong>consentimento</strong> (LGPD, art. 7º, I), que pode ser retirado a qualquer momento. Os registros do servidor se baseiam no <strong>legítimo interesse</strong> de manter o site seguro e funcionando (LGPD, art. 7º, IX).</p></div></div>
+            </section>
+            <section class="pv-sec" id="compartilhamento">
+              <h2><span class="n">06</span><span data-i="pv-s6-t">Compartilhamento e transferência internacional</span></h2>
+              <div class="pv-body"><div data-i="pv-s6"><p>Os dados de análise são processados pelo Google e pela Microsoft, nos servidores dessas empresas, que podem ficar fora do Brasil, como nos Estados Unidos. Cada uma segue a própria política: <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">Política de Privacidade do Google</a> e <a href="https://privacy.microsoft.com/privacystatement" target="_blank" rel="noopener">Declaração de Privacidade da Microsoft</a>.</p></div></div>
+            </section>
+            <section class="pv-sec" id="retencao">
+              <h2><span class="n">07</span><span data-i="pv-s7-t">Por quanto tempo</span></h2>
+              <div class="pv-body"><div data-i="pv-s7"><ul><li>Sua escolha sobre a análise de uso vale por <strong>12 meses</strong>; depois disso, o aviso aparece de novo.</li><li>Os dados de análise ficam guardados pelo prazo de retenção configurado no Google Analytics e no Microsoft Clarity.</li><li>Os registros do servidor são mantidos por tempo limitado e apagados periodicamente.</li></ul></div></div>
+            </section>
+            <section class="pv-sec" id="direitos">
+              <h2><span class="n">08</span><span data-i="pv-s8-t">Seus direitos</span></h2>
+              <div class="pv-body"><div data-i="pv-s8"><p>Pela LGPD (art. 18), você pode pedir a confirmação de que trato dados seus, acesso, correção, anonimização ou eliminação, informações sobre compartilhamento e a revogação do consentimento.</p><p>Para revogar o consentimento, use o botão <strong>Gerenciar preferências</strong> nesta página. Para os demais pedidos, escreva para <a href="mailto:Cdev.main@gmail.com">Cdev.main@gmail.com</a>. Como a análise de uso não identifica visitantes pelo nome, posso pedir informações que ajudem a localizar os seus dados. Você também pode procurar a Autoridade Nacional de Proteção de Dados (ANPD).</p></div></div>
+            </section>
+            <section class="pv-sec" id="mudancas">
+              <h2><span class="n">09</span><span data-i="pv-s9-t">Mudanças nesta política</span></h2>
+              <div class="pv-body"><div data-i="pv-s9"><p>Se eu mudar a forma como os dados são tratados, esta página será atualizada e a data no topo será alterada. Mudanças que exijam um novo consentimento farão o aviso aparecer de novo.</p></div></div>
+            </section>
+        </div>
+      </div>
+    </section>
+
+    <section class="px-6 lg:px-12 py-16 border-t border-line">
+      <div class="mx-auto max-w-6xl flex flex-wrap items-center justify-between gap-6">
+        <div class="text-[0.95rem] text-muted" data-i="pv-cta-q">Ficou alguma dúvida sobre os seus dados?</div>
+        <div class="flex flex-wrap gap-4">
+          <a href="mailto:Cdev.main@gmail.com" class="btn btn-primary" data-i="pv-cta-mail">Enviar e-mail</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="relative z-10 border-t border-line px-6 lg:px-12 py-6">
+    <div class="mx-auto max-w-6xl flex flex-wrap items-center justify-between gap-4 text-[0.65rem] font-mono uppercase tracking-[0.18em] text-muted">
+      <span data-i="footer-copy-short">© 2026 Carlos Eduardo Da Silva</span>
+      <a href="https://github.com/CdevMain" target="_blank" class="text-aqua hover:text-mist">github.com/CdevMain</a>
+    </div>
+  </footer>
+
+  <script src="/assets/js/i18n.js?v=20261007"></script>
+  <script src="/assets/js/consent.js?v=20261007"></script>
+  <script src="/assets/js/site.js?v=20260914"></script>
+  <script>
+    window.addEventListener('scroll', () => {
+      const nav = document.getElementById('nav');
+      if (nav) nav.classList.toggle('scrolled', scrollY > 60);
+    });
+  </script>
+  <script>
+    (function () {
+      var box = document.querySelector('[data-pv-status]');
+      function show(v) {
+        v = v === 'granted' || v === 'denied' ? v : 'none';
+        box.dataset.state = v;
+        box.querySelectorAll('[data-pv-state]').forEach(function (el) { el.hidden = el.getAttribute('data-pv-state') !== v; });
+      }
+      show(window.cdevConsent ? window.cdevConsent.get() : null);
+      document.addEventListener('cdev:consent', function (e) { show(e.detail); });
+      document.querySelector('[data-pv-manage]').addEventListener('click', function () {
+        if (window.cdevConsent) { window.cdevConsent.open(); var b = document.querySelector('.cdev-consent [data-consent="granted"]'); if (b) b.focus(); }
+      });
+      var links = Array.prototype.slice.call(document.querySelectorAll('.pv-toc a'));
+      if ('IntersectionObserver' in window) {
+        var io = new IntersectionObserver(function (es) {
+          es.forEach(function (en) { if (en.isIntersecting) links.forEach(function (a) { a.classList.toggle('on', a.getAttribute('href') === '#' + en.target.id); }); });
+        }, { rootMargin: '-30% 0px -60% 0px' });
+        document.querySelectorAll('.pv-sec').forEach(function (s) { io.observe(s); });
+      }
+    })();
+  </script>
+</body>
+</html>

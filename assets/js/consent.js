@@ -85,6 +85,7 @@
     '.cdev-consent h2{margin:0 0 6px;font-size:15px;font-weight:700;letter-spacing:0;color:#e8f2f5}' +
     '.cdev-consent p{margin:0;color:#a9c0c8}' +
     '.cdev-consent p strong{color:#e8f2f5;font-weight:600}' +
+    '.cdev-consent p a{color:#e8f2f5;text-decoration:underline;text-underline-offset:3px}.cdev-consent p a:hover{color:#2b8ba5}' +
     '.cdev-consent-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}' +
     '.cdev-consent button{font:inherit;font-size:13px;font-weight:600;letter-spacing:.02em;height:40px;padding:0 18px;' +
     'border-radius:8px;border:1px solid rgba(43,139,165,.55);background:transparent;color:#e8f2f5;transition:background-color .2s,border-color .2s,color .2s}' +
@@ -92,7 +93,7 @@
     '.cdev-consent button[data-consent="granted"]{background:#2b8ba5;border-color:#2b8ba5;color:#fff}' +
     '.cdev-consent button[data-consent="granted"]:hover{background:#1e6275;border-color:#1e6275}' +
     '.cdev-consent button:focus-visible,.cdev-consent-link:focus-visible{outline:2px solid #2b8ba5;outline-offset:3px}' +
-    '.cdev-consent-link{font:inherit;background:none;border:0;padding:0;color:inherit;text-transform:inherit;letter-spacing:inherit;text-decoration:underline;text-underline-offset:3px}' +
+    '.cdev-consent-link{color:inherit;text-decoration:underline;text-underline-offset:3px}' +
     '.cdev-consent-link:hover{color:#e8f2f5}' +
     '@media (min-width:640px){.cdev-consent{left:24px;right:auto;bottom:24px}}' +
     '@media (prefers-reduced-motion:reduce){.cdev-consent{transition:none}}';
@@ -108,7 +109,7 @@
   box.hidden = true;
   box.innerHTML =
     '<h2 id="cdev-consent-title" data-i="consent-title">Privacidade e dados de uso</h2>' +
-    '<p data-i="consent-text">Uso o Google Analytics e o Microsoft Clarity para entender como o site é visitado: páginas vistas, origem do acesso, tipo de dispositivo e como a página é navegada (cliques e rolagem). Nada é coletado antes da sua escolha, e você pode mudar de ideia depois em <strong>Privacidade</strong>, no rodapé.</p>' +
+    '<p data-i="consent-text">Uso o Google Analytics e o Microsoft Clarity para entender como o site é visitado: páginas vistas, origem do acesso, tipo de dispositivo e como a página é navegada (cliques e rolagem). Nada é coletado antes da sua escolha. Saiba mais e mude de ideia quando quiser na página de <a href="/privacidade">Privacidade</a>.</p>' +
     '<div class="cdev-consent-actions">' +
     '<button type="button" data-consent="granted" data-i="consent-accept">Aceitar</button>' +
     '<button type="button" data-consent="denied" data-i="consent-reject">Recusar</button>' +
@@ -129,23 +130,26 @@
     if (!b) return;
     var v = b.getAttribute('data-consent');
     saveChoice(v);
+    emit(v);
     if (v === 'granted') loadAll(); else stopAll();
     close();
   });
 
-  // link "Privacidade" no rodape para rever a escolha
-  var footer = document.querySelector('footer');
-  var holder = footer && (footer.querySelector('div') || footer);
-  var link = document.createElement('button');
-  link.type = 'button';
-  link.className = 'cdev-consent-link';
-  link.setAttribute('data-i', 'consent-manage');
-  link.textContent = 'Privacidade';
-  link.addEventListener('click', function () { open(); var f = box.querySelector('[data-consent="granted"]'); if (f) f.focus(); });
-  if (holder) holder.appendChild(link);
-  else { link.style.cssText = 'position:fixed;right:16px;bottom:12px;z-index:8999;font-size:12px;color:#6f8d98'; document.body.appendChild(link); }
+  // link "Privacidade" no rodape -> pagina /privacidade (la o visitante revê a escolha)
+  if (!/^\/privacidade(\.html)?$/.test(location.pathname)) {
+    var footer = document.querySelector('footer');
+    var holder = footer && (footer.querySelector('div') || footer);
+    var link = document.createElement('a');
+    link.href = '/privacidade';
+    link.className = 'cdev-consent-link';
+    link.setAttribute('data-i', 'footer-privacy');
+    link.textContent = 'Privacidade';
+    if (holder) holder.appendChild(link);
+    else { link.style.cssText = 'position:fixed;right:16px;bottom:12px;z-index:8999;font-size:12px;color:#6f8d98'; document.body.appendChild(link); }
+  }
 
   window.cdevConsent = { open: open, get: readChoice };
+  function emit(v) { try { document.dispatchEvent(new CustomEvent('cdev:consent', { detail: v })); } catch (e) { /* ignora */ } }
 
   var choice = readChoice();
   if (choice === 'granted') loadAll();
