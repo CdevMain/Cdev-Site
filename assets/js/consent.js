@@ -1,13 +1,15 @@
 /* CDEV - consentimento de dados de uso (LGPD)
- * O Google Analytics so e carregado DEPOIS que o visitante aceita.
+ * Google Analytics e Microsoft Clarity so sao carregados DEPOIS que o visitante aceita.
  * Textos em assets/js/i18n.js (chaves consent-*); o site.js traduz pelo atributo data-i.
  * Carregar ANTES do site.js. Escolha guardada por 12 meses em localStorage ("cdev-consent").
  */
 (function () {
   var GA_ID = 'G-MNTYE8V4WH';
+  var CLARITY_ID = 'yt7c41y4c5';
   var KEY = 'cdev-consent';
   var MAX_AGE = 365 * 24 * 60 * 60 * 1000;
   var gaLoaded = false;
+  var clarityLoaded = false;
 
   var store = (function () { try { return window.localStorage; } catch (e) { return null; } })();
   var memoryChoice = null; // sem storage: vale so para esta visita
@@ -40,13 +42,32 @@
     document.head.appendChild(s);
   }
 
+  function loadClarity() {
+    if (clarityLoaded) { if (window.clarity) window.clarity('consent'); return; }
+    clarityLoaded = true;
+    (function (c, l, a, r, i, t, y) {
+      c[a] = c[a] || function () { (c[a].q = c[a].q || []).push(arguments); };
+      t = l.createElement(r); t.async = 1; t.src = 'https://www.clarity.ms/tag/' + i;
+      y = l.getElementsByTagName(r)[0]; y.parentNode.insertBefore(t, y);
+    })(window, document, 'clarity', 'script', CLARITY_ID);
+    window.clarity('consent');
+  }
+
+  function loadAll() { loadGA(); loadClarity(); }
+
+  function stopAll() {
+    stopGA();
+    // Clarity: retira o consentimento (para a gravacao e apaga os cookies dele)
+    if (window.clarity) { try { window.clarity('consent', false); } catch (e) { /* ignora */ } }
+  }
+
   function stopGA() {
     window['ga-disable-' + GA_ID] = true;
     // remove os cookies do Analytics que ja tenham sido gravados
     var host = location.hostname.replace(/^www\./, '');
     document.cookie.split(';').forEach(function (c) {
       var name = c.split('=')[0].trim();
-      if (/^_ga($|_)|^_gid$|^_gat/.test(name)) {
+      if (/^_ga($|_)|^_gid$|^_gat|^_clck$|^_clsk$/.test(name)) {
         ['', '; domain=' + host, '; domain=.' + host].forEach(function (d) {
           document.cookie = name + '=; Max-Age=0; path=/' + d;
         });
@@ -87,7 +108,7 @@
   box.hidden = true;
   box.innerHTML =
     '<h2 id="cdev-consent-title" data-i="consent-title">Privacidade e dados de uso</h2>' +
-    '<p data-i="consent-text">Uso o Google Analytics para entender como o site é visitado: páginas vistas, origem do acesso e tipo de dispositivo. Nada é coletado antes da sua escolha, e você pode mudar de ideia depois em <strong>Privacidade</strong>, no rodapé.</p>' +
+    '<p data-i="consent-text">Uso o Google Analytics e o Microsoft Clarity para entender como o site é visitado: páginas vistas, origem do acesso, tipo de dispositivo e como a página é navegada (cliques e rolagem). Nada é coletado antes da sua escolha, e você pode mudar de ideia depois em <strong>Privacidade</strong>, no rodapé.</p>' +
     '<div class="cdev-consent-actions">' +
     '<button type="button" data-consent="granted" data-i="consent-accept">Aceitar</button>' +
     '<button type="button" data-consent="denied" data-i="consent-reject">Recusar</button>' +
@@ -108,7 +129,7 @@
     if (!b) return;
     var v = b.getAttribute('data-consent');
     saveChoice(v);
-    if (v === 'granted') loadGA(); else stopGA();
+    if (v === 'granted') loadAll(); else stopAll();
     close();
   });
 
@@ -127,6 +148,6 @@
   window.cdevConsent = { open: open, get: readChoice };
 
   var choice = readChoice();
-  if (choice === 'granted') loadGA();
+  if (choice === 'granted') loadAll();
   else if (choice !== 'denied') open();
 })();
