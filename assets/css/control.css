@@ -463,6 +463,10 @@ button.ms-var:hover { border-color: var(--aqua); color: var(--mist); }
 .pc-fast.inline { margin: 0; padding: 0; border: 0; flex-wrap: nowrap; }
 .fa { display: inline-flex; align-items: center; justify-content: center; gap: .2rem; min-width: 1.65rem; height: 1.65rem; padding: 0 .4rem; border: 1px solid var(--line); border-radius: 5px; color: var(--muted2); font-family: var(--fm); font-size: 10.5px; background: rgba(8,14,16,.5); text-decoration: none; }
 .fa svg { width: 13px; height: 13px; }
+.fa { white-space: nowrap; flex-shrink: 0; line-height: 1; }
+.fa span { white-space: nowrap; }
+td:has(> .pc-fast.inline) { width: 1%; white-space: nowrap; }
+.pc-fast.inline { width: max-content; }
 .pipe-card .fa[data-fa="tag"] span { display: none; }
 .pipe-card .fa.sent { margin-left: auto; }
 .pipe-card .fa[data-fa="fav"] { order: 9; }

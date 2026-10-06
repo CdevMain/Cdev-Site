@@ -4,7 +4,7 @@
 
 ## Sobre
 
-Desenvolvedor Full Stack de Guaíba, RS, Brasil, com olhar de designer e mente de engenheiro. Começou explorando Java no ecossistema Minecraft, onde criou ferramentas, mods públicos e soluções de otimização para servidores — o que abriu portas para trabalhar com empresas reais.
+Desenvolvedor Full Stack em Caxias do Sul, RS, Brasil, com olhar de designer e mente de engenheiro. Começou explorando Java no ecossistema Minecraft, onde criou ferramentas, mods públicos e soluções de otimização para servidores — o que abriu portas para trabalhar com empresas reais.
 
 Atualmente trabalha na **Pristen**, seguindo disponível para projetos paralelos. É apaixonado por data mining, identificação de falhas em sistemas legados e aprimoramento de experiência, seja no código, seja na interface.
 

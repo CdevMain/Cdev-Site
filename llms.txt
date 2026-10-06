@@ -1,6 +1,6 @@
 # Cdev — Carlos Eduardo
 
-> Desenvolvedor Full Stack e Designer de Guaíba, RS, Brasil. Atua atualmente na Pristen e segue disponível para projetos freelance. Especialista em Frontend (Vue.js, React, TypeScript, Tailwind), Backend (Node.js, PHP, C#, PostgreSQL), UI/UX Design e DevOps/Data Mining. Começou na programação através de Java no ecossistema Minecraft, criando mods públicos e ferramentas de otimização de servidores.
+> Desenvolvedor Full Stack e Designer em Caxias do Sul, RS, Brasil. Atua atualmente na Pristen e segue disponível para projetos freelance. Especialista em Frontend (Vue.js, React, TypeScript, Tailwind), Backend (Node.js, PHP, C#, PostgreSQL), UI/UX Design e DevOps/Data Mining. Começou na programação através de Java no ecossistema Minecraft, criando mods públicos e ferramentas de otimização de servidores.
 
 Este site é um portfólio pessoal. As páginas abaixo têm versões em Markdown equivalentes ao HTML, com o mesmo conteúdo, prontas para leitura por agentes de IA.
 
