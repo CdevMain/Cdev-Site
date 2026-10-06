@@ -444,14 +444,16 @@
     { name: 'daily_max', label: 'Meta máxima por dia', type: 'number', min: 0, required: true },
     { name: 'priority', label: 'Ordem de execução', type: 'number', min: 0 },
     { name: 'active', label: 'Ativo (o agente diário executa)', type: 'checkbox' },
-    { name: 'search_terms', label: 'Termos de busca no Google Maps (um por linha)', type: 'textarea', rows: 3, full: true },
+    { name: 'search_terms', label: 'Termos de busca no Google Maps (um por linha)', type: 'textarea', rows: 7, full: true },
     { name: 'exclude_brands', label: 'Redes/franquias a descartar (uma por linha)', type: 'textarea', rows: 3, full: true },
     { name: 'filters', label: 'Filtros automáticos (JSON)', type: 'json', rows: 5, full: true, hint: 'min_reviews, max_reviews, require_mobile, require_no_website, exclude_closed' },
     { name: 'rules', label: 'Critérios de aprovação e descarte', type: 'textarea', rows: 7, full: true },
     { name: 'tags', label: 'Tags aplicadas aos leads (uma por linha)', type: 'textarea', rows: 2, full: true }
   ];
-  const editProfile = async (row) => {
-    const values = row ? { ...row, search_terms: (row.search_terms || []).join('\n'), exclude_brands: (row.exclude_brands || []).join('\n'), tags: (row.tags || []).join('\n') }
+  const editProfile = async (row, prefill) => {
+    const asForm = (x) => ({ ...x, search_terms: (x.search_terms || []).join('\n'), exclude_brands: (x.exclude_brands || []).join('\n'), tags: (x.tags || []).join('\n') });
+    const values = row ? asForm(row)
+      : prefill ? asForm(prefill)
       : { daily_min: 20, daily_max: 30, priority: 100, active: false, filters: { require_no_website: true, exclude_closed: true } };
     return CC.formModal({
       title: row ? `Perfil: ${row.name}` : 'Novo perfil de prospecção', wide: true,
@@ -464,6 +466,8 @@
       }
     });
   };
+
+  CC.editProspectProfile = editProfile;
 
   // ---------------------------------------------------------------- Classificacao usada nos filtros
   const SOCIAL_RE = /(instagram\.com|facebook\.com|fb\.com|fb\.me|linktr\.ee|linktree|beacons\.ai|bio\.link|taplink|linkbio|wa\.me|whatsapp|tiktok\.com|youtube\.com|ifood\.com|google\.com\/maps|goo\.gl|business\.site|g\.page)/i;
@@ -632,25 +636,14 @@
     const st = { visible: [] };
 
     root.innerHTML = `${pageHead('CRM', 'Prospecção', 'Leads encontrados pelo agente diário e pelo CRM, com filtros por nota, avaliações, site e contato.',
-      `<button class="btn" data-cats>${icon('layers')}Categorias e tags</button><button class="btn" data-copy-visible>${icon('copy')}Copiar leads visíveis</button><button class="btn" data-export>${icon('download')}Exportar CSV</button><button class="btn btn-primary" data-new-profile>${icon('plus')}Novo perfil</button>`)}
+      `<button class="btn" data-cats>${icon('layers')}Categorias e tags</button><button class="btn" data-copy-visible>${icon('copy')}Copiar leads visíveis</button><button class="btn" data-export>${icon('download')}Exportar CSV</button><a class="btn btn-primary" href="#/nichos">${icon('layers')}Nichos do agente <span class="btn-count">${profiles.length}</span></a>`)}
       <div class="p-kpis" id="p-kpis"></div>
       <section class="panel panel-pad pf" id="p-filters">${filterBar()}</section>
       <section class="panel" style="margin-top:1rem">
         <div class="p-head"><span id="p-count" class="small muted"></span><label class="small muted">Ordenar: <select class="cc-select" data-f="sort" style="width:auto;display:inline-block">${opt('opp', 'Oportunidade', f.sort)}${opt('rating', 'Nota no Google', f.sort)}${opt('reviews', 'Mais avaliações', f.sort)}${opt('newest', 'Mais recentes', f.sort)}${opt('name', 'Nome', f.sort)}${opt('city', 'Estado/cidade', f.sort)}</select></label></div>
         <div id="p-list"></div>
       </section>
-      <details class="panel p-more" style="margin-top:1rem"><summary><h2 class="block-title">Perfis do agente (nichos)</h2><span class="tiny muted">${profiles.filter((p) => p.active).length} ativo(s) · executa todo dia às 10:00</span></summary>
-        <div class="panel-body grid-3">${profiles.map((p) => {
-          const last = runs.find((x) => x.profile_key === p.key);
-          const pf = p.filters || {};
-          return `<article class="card" style="padding:1rem;border:1px solid var(--line);border-radius:8px">
-            <strong style="display:block;font-size:var(--fs-md)">${esc(p.name)}</strong>
-            <label class="check tiny" style="margin-top:.35rem"><input type="checkbox" data-toggle-profile="${esc(p.key)}" ${p.active ? 'checked' : ''}> ${p.active ? 'ativo no agente diário' : 'pausado'}</label>
-            <div class="small muted" style="margin:.35rem 0">${esc(p.region)}</div>
-            <div class="tiny mono muted">meta ${p.daily_min}–${p.daily_max}/dia · ${allLeads.filter((l) => l.profile_key === p.key).length} leads${pf.require_no_website ? ' · sem site' : ''}${pf.require_mobile ? ' · só celular' : ''}${pf.min_reviews || pf.max_reviews ? ` · ${pf.min_reviews || 0}–${pf.max_reviews || '∞'} aval.` : ''}</div>
-            <div class="tiny muted" style="margin:.45rem 0 .7rem">${last ? `Última execução ${fmtDate(last.run_date, { short: true })}: <span class="badge ${runBadge(last.status)}">${label(last.status)}</span> +${last.added}` : 'Ainda não executado'}</div>
-            <div class="row"><button class="btn btn-sm" data-edit-profile="${esc(p.key)}">${icon('edit')}Editar critérios</button><button class="btn btn-sm" data-show-profile="${esc(p.key)}">Ver leads</button></div>
-          </article>`; }).join('') || '<div class="notice">Rode <code>supabase/12_prospeccao.sql</code> para criar os perfis.</div>'}</div></details>
+      <a class="panel nx-strip" href="#/nichos"><span>${icon('layers')}<b>Nichos do agente</b></span><span class="tiny muted">${profiles.filter((p) => p.active).length} ativo(s) de ${profiles.length} · executa todo dia às 10:00</span><span class="nx-strip-go">Gerenciar, importar e exportar →</span></a>
       <div class="grid-2" style="margin-top:1rem">
         <details class="panel p-more"><summary><h2 class="block-title">Controle de cidades</h2><span class="tiny muted">${new Set(cityAgg.map((c) => c.state)).size} estados · ${cityAgg.length} cidades</span></summary>
           <div class="panel-body">${table([
