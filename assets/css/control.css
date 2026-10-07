@@ -468,6 +468,8 @@ button.ms-var:hover { border-color: var(--aqua); color: var(--mist); }
 td:has(> .pc-fast.inline) { width: 1%; white-space: nowrap; }
 .pc-fast.inline { width: max-content; }
 .pipe-card .fa[data-fa="tag"] span { display: none; }
+.pipe-card .pc-fast { flex-wrap: wrap; row-gap: .3rem; }
+.pipe-card .fa { flex-shrink: 1; }
 .pipe-card .fa.sent { margin-left: auto; }
 .pipe-card .fa[data-fa="fav"] { order: 9; }
 .fa:hover { color: var(--mist); border-color: var(--aqua); }
