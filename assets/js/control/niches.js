@@ -290,6 +290,7 @@ ${JSON.stringify(example, null, 2)}`;
           <span class="spacer"></span>
           <button class="icon-btn" data-nx-dup="${esc(p.key)}" title="Duplicar">${icon('copy')}</button>
           <button class="icon-btn" data-nx-export="${esc(p.key)}" title="Exportar este nicho (JSON)">${icon('download')}</button>
+          <button class="icon-btn danger" data-nx-del="${esc(p.key)}" title="Excluir nicho">${icon('trash')}</button>
         </footer>
       </article>`;
     };
@@ -343,6 +344,17 @@ ${JSON.stringify(example, null, 2)}`;
           let key = `${p.key}-copia`; let n = 2;
           while (profiles.some((x) => x.key === key)) key = `${p.key}-copia-${n++}`;
           if (await CC.editProspectProfile(null, { ...toExport(p), key, name: `${p.name} (cópia)`, active: false })) { CC.toast('Nicho duplicado.'); CC.router.render(); }
+          return;
+        }
+        if (b.dataset.nxDel) {
+          const p = find(b.dataset.nxDel);
+          const n = leadCount[p.key] || 0;
+          const ok = await CC.confirmDialog(`Excluir o nicho "${p.name}"? O agente deixa de executá-lo e o histórico de execuções dele é apagado.${n ? ` Os ${n} lead(s) encontrados por ele continuam no CRM.` : ''} Dica: exporte o nicho antes se quiser guardar a configuração.`, { title: 'Excluir nicho', okLabel: 'Excluir', danger: true });
+          if (!ok) return;
+          const { error } = await CC.ctx.supabase.from('prospect_profiles').delete().eq('key', p.key);
+          if (error) throw error;
+          CC.toast(`Nicho "${p.name}" excluído.`);
+          CC.router.render();
           return;
         }
         if (b.dataset.nxExport) { const p = find(b.dataset.nxExport); exportProfiles([p], `nicho-${p.key}.json`); return; }
