@@ -29,7 +29,7 @@
   const SAVE_FIELDS = ['clients_count', 'nights_count', 'client_description', 'paid_clients', 'paid_extra', 'cleaning_laundry', 'host_fee_override', 'fixed_gas', 'fixed_electricity', 'fixed_internet', 'fixed_condo', 'variable_location', 'variable_description', 'variable_date', 'variable_total'];
   const PAY_FIELDS = ['host_fee_paid_at', 'host_fee_paid_amount', 'host_fee_payment_method', 'host_fee_note'];
   const PAY_METHODS = [['PIX', 'Pix'], ['TRANSFERENCIA', 'Transferência'], ['DINHEIRO', 'Dinheiro'], ['CARTAO', 'Cartão'], ['BOLETO', 'Boleto'], ['OUTRO', 'Outro']];
-  const PAY_LABEL = { PAGO: 'Pago', ATRASADO: 'Atrasado', A_VENCER: 'A vencer', EM_ANDAMENTO: 'Mês em andamento', FUTURO: 'Previsto', SEM_VALOR: 'Sem comissão' };
+  const PAY_LABEL = { PAGO: 'Pago', PARCIAL: 'Falta pagar', ATRASADO: 'Atrasado', A_VENCER: 'A vencer', EM_ANDAMENTO: 'Mês em andamento', FUTURO: 'Previsto', SEM_VALOR: 'Sem comissão' };
 
   const state = {
     ctx: null,
@@ -93,8 +93,8 @@
   const { autoCleaning, calcMonth, isFuture, paymentStatus, paymentTotals } = window.CDEVSheetCalc;
   const totalsFor = (sheet) => window.CDEVSheetCalc.totals(sheet, state.months);
   const payChip = (p) => {
-    const icon = p.key === 'PAGO' ? ICON.check : p.key === 'ATRASADO' ? ICON.alert : ICON.clock;
-    const text = p.key === 'PAGO' ? 'Pago' : p.key === 'ATRASADO' ? `Atrasado ${p.daysLate}d` : p.key === 'A_VENCER' ? `Vence ${fmtDateShort(p.dueISO)}` : PAY_LABEL[p.key];
+    const icon = p.key === 'PAGO' ? ICON.check : p.key === 'ATRASADO' || p.key === 'PARCIAL' ? ICON.alert : ICON.clock;
+    const text = p.key === 'PAGO' ? 'Pago' : p.key === 'PARCIAL' ? `Falta ${money.format(p.remaining)}` : p.key === 'ATRASADO' ? `Atrasado ${p.daysLate}d` : p.key === 'A_VENCER' ? `Vence ${fmtDateShort(p.dueISO)}` : PAY_LABEL[p.key];
     return `<span class="pay-chip pay-${p.key}" title="Comissão do coanfitrião: ${esc(PAY_LABEL[p.key])}">${icon}${esc(text)}</span>`;
   };
 
@@ -254,19 +254,21 @@
       const method = PAY_METHODS.find(([k]) => k === row.host_fee_payment_method)?.[1] || '';
       let action = '';
       if (edit && p.key === 'PAGO') action = `<button class="btn" type="button" data-unpay="${i}" title="Desfazer pagamento">Desfazer</button>`;
+      else if (edit && p.key === 'PARCIAL') action = `<button class="btn btn-ok" type="button" data-pay-rest="${i}" title="Registrar o restante (${money.format(p.remaining)}) como pago hoje">${ICON.check}Quitar</button><button class="btn" type="button" data-unpay="${i}" title="Desfazer pagamento">Desfazer</button>`;
       else if (edit && ['ATRASADO', 'A_VENCER', 'EM_ANDAMENTO'].includes(p.key)) action = `<button class="btn btn-ok" type="button" data-pay="${i}">${ICON.check}Pago</button>`;
-      const paidInfo = p.key === 'PAGO'
-        ? `<b>${money.format(p.paidAmount)}</b><span class="sub">${fmtDate(row.host_fee_paid_at)}${method ? ` · ${esc(method)}` : ''}${Math.abs(p.difference) >= 0.01 ? ` · <span style="color:#e07b24">${p.difference > 0 ? '+' : ''}${money.format(p.difference)}</span>` : ''}</span>${row.host_fee_note ? `<span class="sub">${esc(row.host_fee_note)}</span>` : ''}`
+      const paidInfo = p.key === 'PAGO' || p.key === 'PARCIAL'
+        ? `<b>${money.format(p.paidAmount)}</b>${p.key === 'PARCIAL' ? `<span class="sub" style="color:#f0a15c">falta ${money.format(p.remaining)} de ${money.format(p.amount)}${p.late ? ` · vencido há ${p.daysLate}d` : ''}</span>` : ''}<span class="sub">registrado em ${fmtDate(row.host_fee_paid_at)}${method ? ` · ${esc(method)}` : ''}${Math.abs(p.difference) >= 0.01 ? ` · <span style="color:#e07b24">${p.difference > 0 ? '+' : ''}${money.format(p.difference)}</span>` : ''}</span>${row.host_fee_note ? `<span class="sub">${esc(row.host_fee_note)}</span>` : ''}`
         : '<span class="sub">—</span>';
       return `<tr data-month-row="${i}" class="${p.key === 'FUTURO' ? 'is-future' : ''}">
           <td class="left"><button type="button" class="month-link" data-open-month="${i}">${MONTHS_FULL[row.month_num - 1]}</button></td>
           <td><b>${money.format(p.amount)}</b><span class="sub">vence ${fmtDate(p.dueISO)}</span></td>
           <td class="left">${payChip(p)}</td>
-          <td>${paidInfo}</td>
-          <td class="actions">${action}</td>
+          <td class="pay-info">${paidInfo}</td>
+          <td class="actions">${action ? `<div class="pay-acts">${action}</div>` : ''}</td>
         </tr>`;
     }).join('');
-    const bulk = edit && t.overdueCount > 1 ? `<button class="btn" type="button" data-pay-overdue title="Marca todos os meses atrasados como pagos na data de vencimento">${ICON.check}Quitar ${t.overdueCount} atrasados</button>` : '';
+    const lateFull = state.months.filter((r) => paymentStatus(r, sheet).key === 'ATRASADO').length;
+    const bulk = edit && lateFull > 1 ? `<button class="btn" type="button" data-pay-overdue title="Marca todos os meses atrasados como pagos na data de vencimento">${ICON.check}Quitar ${lateFull} atrasados</button>` : '';
     $('#pay-table').innerHTML = `<thead><tr><th class="left">Mês</th><th>Comissão</th><th class="left">Status</th><th>Pagamento</th><th class="actions">${bulk}</th></tr></thead>
       <tbody>${rows}</tbody>
       <tfoot><tr><td class="left">Total</td><td>${money.format(state.months.reduce((a, r) => a + Math.max(0, calcMonth(r, sheet).hostFee), 0))}</td><td></td><td>${money.format(t.received)}</td><td></td></tr></tfoot>`;
@@ -307,6 +309,18 @@
     try {
       await savePayment(i, { host_fee_paid_at: todayISO(), host_fee_paid_amount: Number(p.amount.toFixed(2)), host_fee_payment_method: row.host_fee_payment_method || 'PIX' });
       showToast(`Comissão de ${MONTHS_FULL[row.month_num - 1]} marcada como paga.`);
+    } catch (e) { showToast(e.message || 'Não foi possível registrar o pagamento.', 'error'); }
+  };
+  const payRest = async (i) => {
+    const sheet = activeSpreadsheet(); const row = state.months[i];
+    const p = paymentStatus(row, sheet);
+    if (p.key !== 'PARCIAL') return;
+    const ok = window.confirm(`${MONTHS_FULL[row.month_num - 1]}: comissão total ${money.format(p.amount)}, já registrado ${money.format(p.paidAmount)} em ${fmtDate(row.host_fee_paid_at)}.\nRegistrar o restante (${money.format(p.remaining)}) como pago hoje?`);
+    if (!ok) return;
+    const hist = `Parcial ${money.format(p.paidAmount)} em ${fmtDate(row.host_fee_paid_at)}; restante ${money.format(p.remaining)} em ${fmtDate(todayISO())}`;
+    try {
+      await savePayment(i, { host_fee_paid_at: todayISO(), host_fee_paid_amount: Number(p.amount.toFixed(2)), host_fee_note: [row.host_fee_note, hist].filter(Boolean).join(' · ') });
+      showToast(`Comissão de ${MONTHS_FULL[row.month_num - 1]} quitada.`);
     } catch (e) { showToast(e.message || 'Não foi possível registrar o pagamento.', 'error'); }
   };
   const undoPay = async (i) => {
@@ -460,6 +474,13 @@
       </div>`;
   };
 
+  const payStateHtml = (p) => {
+    if (p.key === 'PAGO') return `<div class="ps ok"><span>Registrado como pago em <b>${fmtDate(p.paidAt)}</b></span><span>Pago <b>${money.format(p.paidAmount)}</b>${Math.abs(p.difference) >= 0.01 ? ` (${p.difference > 0 ? '+' : ''}${money.format(p.difference)})` : ''} · nada pendente</span></div>`;
+    if (p.key === 'PARCIAL') return `<div class="ps warn"><span>Registrado como pago em <b>${fmtDate(p.paidAt)}</b>, mas o valor pago é menor que a comissão.</span><span>Pago <b>${money.format(p.paidAmount)}</b> · <b class="due-left">Falta pagar ${money.format(p.remaining)}</b>${p.late ? ` · vencido há ${p.daysLate} dias` : ''}</span></div>`;
+    if (p.key === 'SEM_VALOR' || p.key === 'FUTURO') return '';
+    return `<div class="ps ${p.key === 'ATRASADO' ? 'warn' : ''}"><span>Nenhum pagamento registrado.</span><span><b class="due-left">Falta pagar ${money.format(p.amount)}</b>${p.key === 'ATRASADO' ? ` · vencido há ${p.daysLate} dias` : ''}</span></div>`;
+  };
+
   const payBoxHtml = (draft, sheet, disabled) => {
     const p = paymentStatus(draft, sheet);
     const paid = Boolean(draft.host_fee_paid_at);
@@ -467,7 +488,8 @@
     const canMark = !disabled && ['ATRASADO', 'A_VENCER', 'EM_ANDAMENTO'].includes(p.key);
     return `<div class="md-pay">
         <div class="md-pay-head"><strong>Comissão</strong>${payChip(p)}</div>
-        <div><span class="amount">${money.format(p.amount)}</span><div class="due">Vencimento ${fmtDate(p.dueISO)}</div></div>
+        <div><span class="mc-label">Comissão total</span><span class="amount">${money.format(p.amount)}</span><div class="due">Vencimento ${fmtDate(p.dueISO)}</div></div>
+        <div class="md-pay-state" data-md-paystate>${payStateHtml(p)}</div>
         ${paid || !disabled ? `
         <div class="md-grid">
           <div class="md-field"><label for="md-paid-at">Pago em</label><div class="md-input"><input id="md-paid-at" type="date" data-md="host_fee_paid_at" value="${esc(draft.host_fee_paid_at || '')}" ${dis}></div></div>
@@ -476,6 +498,7 @@
           <div class="md-field full"><label for="md-paid-note">Observação</label><div class="md-input"><input id="md-paid-note" type="text" data-md="host_fee_note" value="${esc(draft.host_fee_note || '')}" placeholder="comprovante, referência…" ${dis}></div></div>
         </div>` : ''}
         ${canMark ? `<button class="btn btn-ok" type="button" data-md-paynow>${ICON.check}Marcar como pago hoje</button>` : ''}
+        ${!disabled && p.key === 'PARCIAL' ? `<button class="btn btn-ok" type="button" data-md-payrest>${ICON.check}Quitar restante hoje</button>` : ''}
         ${!disabled && paid ? '<button class="btn" type="button" data-md-unpay>Desfazer pagamento</button>' : ''}
       </div>`;
   };
@@ -509,6 +532,7 @@
           <aside class="md-side">
             <div><span class="mc-label" style="margin-bottom:.5rem">Resultado do mês</span><div id="md-waterfall">${waterfallHtml(m.draft, sheet)}</div></div>
             <div id="md-pay">${payBoxHtml(m.draft, sheet, !edit)}</div>
+            <div id="md-airbnb">${window.CDEVAirbnb ? window.CDEVAirbnb.monthBoxHtml(sheet, m.draft, { editable: edit }) : ''}</div>
           </aside>
         </div>
         <div class="md-foot">
@@ -532,8 +556,10 @@
     const p = paymentStatus(m.draft, sheet);
     const head = $('.md-pay-head', dialog); if (head) head.innerHTML = `<strong>Comissão</strong>${payChip(p)}`;
     const amt = $('.md-pay .amount', dialog); if (amt) amt.textContent = money.format(p.amount);
+    const ps = $('[data-md-paystate]', dialog); if (ps) ps.innerHTML = payStateHtml(p);
     const pa = $('#md-paid-amount', dialog); if (pa) pa.placeholder = toInput(p.amount);
     const save = $('[data-md-save]', dialog); if (save) save.disabled = !modalChanged();
+    const ab = $('#md-airbnb', dialog); if (ab && window.CDEVAirbnb) ab.innerHTML = window.CDEVAirbnb.monthBoxHtml(sheet, m.draft, { editable: canEdit() });
   };
 
   const openMonth = (index) => {
@@ -628,7 +654,7 @@
         tr.sub td { font-weight: 700; border-top: 1px solid #b9ccd3; } tr.total td { font-weight: 800; font-size: 14px; background: #eef5f7; }
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; } .box { border: 1px solid #d5e1e5; border-radius: 8px; padding: 10px 12px; }
         .status { display: inline-block; padding: 2px 8px; border-radius: 99px; font-weight: 700; font-size: 11px; background: #eef5f7; }
-        .st-PAGO { background: #e3f5ec; color: #1d7a4e; } .st-ATRASADO { background: #fdebdc; color: #b3540f; }
+        .st-PAGO { background: #e3f5ec; color: #1d7a4e; } .st-ATRASADO, .st-PARCIAL { background: #fdebdc; color: #b3540f; }
         footer { margin-top: 24px; padding-top: 8px; border-top: 1px solid #d5e1e5; color: #5b7078; font-size: 10px; display: flex; justify-content: space-between; }
         .pre { white-space: pre-wrap; }
       </style></head><body>
@@ -655,7 +681,7 @@
         <div><h2>Hóspedes</h2><div class="box pre">${guests ? esc(guests) : '<span class="muted">Sem hóspedes registrados.</span>'}</div></div>
         <div><h2>Comissão do coanfitrião</h2><div class="box">
           <div><b style="font-size:15px">${m(p.amount)}</b> · vencimento ${fmtDate(p.dueISO)}</div>
-          <div style="margin-top:6px"><span class="status st-${p.key}">${esc(PAY_LABEL[p.key])}</span>${p.key === 'PAGO' ? ` em ${fmtDate(row.host_fee_paid_at)} · ${m(p.paidAmount)}${method ? ` · ${esc(method)}` : ''}` : ''}</div>
+          <div style="margin-top:6px"><span class="status st-${p.key}">${esc(PAY_LABEL[p.key])}</span>${p.key === 'PAGO' || p.key === 'PARCIAL' ? ` · registrado em ${fmtDate(row.host_fee_paid_at)} · pago ${m(p.paidAmount)}${method ? ` · ${esc(method)}` : ''}` : ''}${p.key === 'PARCIAL' ? ` · <b style="color:#b3540f">falta pagar ${m(p.remaining)}</b>` : ''}</div>
           ${row.host_fee_note ? `<div class="muted" style="margin-top:4px">${esc(row.host_fee_note)}</div>` : ''}
         </div></div>
       </div>
@@ -705,6 +731,21 @@
       if (e.target.closest('[data-md-paynow]')) {
         const d = state.modal.draft; const p = paymentStatus(d, activeSpreadsheet());
         d.host_fee_paid_at = todayISO(); d.host_fee_paid_amount = Number(p.amount.toFixed(2)); d.host_fee_payment_method = d.host_fee_payment_method || 'PIX';
+        await saveModal(); return;
+      }
+      if (e.target.closest('[data-md-airbnb]')) {
+        const sheet = activeSpreadsheet(); const d = state.modal.draft;
+        const v = window.CDEVAirbnb.fillValues(window.CDEVAirbnb.monthAgg(window.CDEVAirbnb.get(sheet.property_name).bookings, sheet.year, d.month_num));
+        Object.assign(d, v);
+        renderModal(); refreshModalCalc();
+        showToast('Dados do Airbnb aplicados. Revise e salve o mês.');
+        return;
+      }
+      if (e.target.closest('[data-md-payrest]')) {
+        const d = state.modal.draft; const p = paymentStatus(d, activeSpreadsheet());
+        const hist = `Parcial ${money.format(p.paidAmount)} em ${fmtDate(d.host_fee_paid_at)}; restante ${money.format(p.remaining)} em ${fmtDate(todayISO())}`;
+        d.host_fee_note = [d.host_fee_note, hist].filter(Boolean).join(' · ');
+        d.host_fee_paid_at = todayISO(); d.host_fee_paid_amount = Number(p.amount.toFixed(2));
         await saveModal(); return;
       }
       if (e.target.closest('[data-md-unpay]')) {
@@ -864,6 +905,7 @@
     $('#view-months').hidden = view !== 'months';
     $('#view-payments').hidden = view !== 'payments';
     $('#view-table').hidden = view !== 'table';
+    $('#view-calendar').hidden = view !== 'calendar';
     try { localStorage.setItem('cdev:sheet-view', view); } catch (e) { /* sem storage */ }
     renderAll();
   };
@@ -873,7 +915,46 @@
     if (state.view === 'months') { renderSummary(); renderChart(); renderMonthGrid(); }
     if (state.view === 'payments') renderPayments();
     if (state.view === 'table') renderTable();
+    if (state.view === 'calendar') renderCalendar();
     updateDirtyUi();
+  };
+
+  // ---------------------------------------------------------------- Calendario do Airbnb (somente leitura)
+  const renderCalendar = () => {
+    const sheet = activeSpreadsheet(); const el = $('#view-calendar');
+    if (!sheet || !el || !window.CDEVAirbnb) return;
+    window.CDEVAirbnb.renderView(el, { ctx: state.ctx, sheet, admin: isAdmin(), editable: canEdit(), months: state.months, onFill: fillFromAirbnb });
+  };
+  const loadAirbnb = async () => {
+    const sheet = activeSpreadsheet();
+    if (!sheet || !window.CDEVAirbnb) return;
+    try { await window.CDEVAirbnb.ensure(state.ctx, sheet.property_name, { admin: isAdmin() }); }
+    catch (e) { console.warn('airbnb', e); }
+  };
+  const fillFromAirbnb = async (monthNums) => {
+    const sheet = activeSpreadsheet(); if (!sheet) return;
+    if (state.dirty.size) { showToast('Salve ou descarte as alterações da tabela antes de preencher.', 'error'); return; }
+    const A = window.CDEVAirbnb; const bookings = A.get(sheet.property_name).bookings;
+    const LABEL = { clients_count: 'reservas', nights_count: 'noites', paid_clients: 'valor', client_description: 'hóspedes' };
+    const plan = monthNums.map((mn) => {
+      const row = state.months.find((r) => r.month_num === mn); const agg = A.monthAgg(bookings, sheet.year, mn);
+      if (!row || !agg.reservations.length) return null; // sem dados do Airbnb: nao mexe (o .ics nao guarda reservas antigas)
+      const v = A.fillValues(agg);
+      const patch = {}; Object.entries(v).forEach(([k, val]) => { if (String(row[k] ?? '') !== String(val ?? '') && !(k !== 'client_description' && Number(row[k] || 0) === Number(val))) patch[k] = val; });
+      return Object.keys(patch).length ? { row, patch, agg } : null;
+    }).filter(Boolean);
+    if (!plan.length) { showToast('A planilha já confere com o calendário do Airbnb.'); return; }
+    const lines = plan.map((x) => `• ${MONTHS_FULL[x.row.month_num - 1]}: ${Object.keys(x.patch).map((k) => LABEL[k]).join(', ')}${x.agg.missingValue ? ` (${x.agg.missingValue} reserva(s) sem valor)` : ''}`).join('\n');
+    if (!window.confirm(`Preencher a planilha com o calendário do Airbnb?\n\n${lines}\n\nDespesas e comissão não mudam. Meses sem reservas no calendário não são alterados.`)) return;
+    try {
+      state.ignoreRealtimeUntil = Date.now() + 8000;
+      for (const x of plan) {
+        const { error } = await state.ctx.supabase.from('property_spreadsheet_months').update({ ...x.patch, updated_at: new Date().toISOString() }).eq('id', x.row.id);
+        if (error) throw error;
+      }
+      await loadMonths({ silent: true });
+      showToast(`${plan.length} ${plan.length === 1 ? 'mês preenchido' : 'meses preenchidos'} com o calendário do Airbnb.`);
+    } catch (e) { showToast(e.message || 'Não foi possível preencher.', 'error'); }
   };
 
   const renderActiveSpreadsheet = () => {
@@ -885,6 +966,7 @@
     renderSpreadsheetList();
     renderHero();
     renderAll();
+    loadAirbnb();
   };
 
   // ---------------------------------------------------------------- Dados
@@ -987,7 +1069,7 @@
     const lines = state.months.map((r) => {
       const c = calcMonth(r, sheet); const p = paymentStatus(r, sheet);
       return [MONTHS_FULL[r.month_num - 1], r.clients_count, r.nights_count, pct(c.occupancy), r.client_description, num(r.paid_clients), num(r.paid_extra), num(c.gross), num(c.cleaning), num(c.hostFee),
-        PAY_LABEL[p.key], fmtDate(p.dueISO), fmtDate(r.host_fee_paid_at), p.key === 'PAGO' ? num(p.paidAmount) : '', num(c.revenueTotal),
+        PAY_LABEL[p.key], fmtDate(p.dueISO), fmtDate(r.host_fee_paid_at), p.key === 'PAGO' || p.key === 'PARCIAL' ? num(p.paidAmount) : '', num(c.revenueTotal),
         num(r.fixed_gas), num(r.fixed_electricity), num(r.fixed_internet), num(r.fixed_condo), num(c.fixedTotal), r.variable_location, r.variable_description, r.variable_date, num(c.variableTotal), num(c.netProfit)].map(q).join(';');
     });
     const t = totalsFor(sheet); const pt = paymentTotals(sheet, state.months);
@@ -1027,6 +1109,7 @@
       if (opener && !opener.closest('#month-dialog')) { openMonth(Number(opener.dataset.openMonth)); return; }
       const pay = e.target.closest('[data-pay]'); if (pay) { quickPay(Number(pay.dataset.pay)); return; }
       const unpay = e.target.closest('[data-unpay]'); if (unpay) { undoPay(Number(unpay.dataset.unpay)); return; }
+      const rest = e.target.closest('[data-pay-rest]'); if (rest) { payRest(Number(rest.dataset.payRest)); return; }
       if (e.target.closest('[data-pay-overdue]')) payOverdue();
     });
 
@@ -1082,13 +1165,20 @@
     state.settings = state.ctx.settings;
     $('#user-email').textContent = state.ctx.profile.email || state.ctx.session.user.email;
     $('#user-role').textContent = isAdmin() ? 'admin' : 'proprietário';
-    try { const v = localStorage.getItem('cdev:sheet-view'); if (['months', 'payments', 'table'].includes(v)) state.view = v; } catch (e) { /* sem storage */ }
-    const fromUrl = new URLSearchParams(location.search).get('view'); if (['months', 'payments', 'table'].includes(fromUrl)) state.view = fromUrl;
+    try { const v = localStorage.getItem('cdev:sheet-view'); if (['months', 'payments', 'table', 'calendar'].includes(v)) state.view = v; } catch (e) { /* sem storage */ }
+    const fromUrl = new URLSearchParams(location.search).get('view'); if (['months', 'payments', 'table', 'calendar'].includes(fromUrl)) state.view = fromUrl;
     bindEvents();
     $$('[data-view]').forEach((b) => { const on = b.dataset.view === state.view; b.classList.toggle('active', on); b.setAttribute('aria-selected', String(on)); });
     $('#view-months').hidden = state.view !== 'months';
     $('#view-payments').hidden = state.view !== 'payments';
     $('#view-table').hidden = state.view !== 'table';
+    $('#view-calendar').hidden = state.view !== 'calendar';
+    if (window.CDEVAirbnb) window.CDEVAirbnb.onChange(() => {
+      if (state.view === 'calendar') renderCalendar();
+      const ab = state.modal && $('#md-airbnb'); const sheet = activeSpreadsheet();
+      if (ab && sheet) ab.innerHTML = window.CDEVAirbnb.monthBoxHtml(sheet, state.modal.draft, { editable: canEdit() });
+    });
+    window.addEventListener('cdev:toast', (e) => showToast(String(e.detail || '')));
     try {
       await loadSpreadsheets();
       await loadMonths();

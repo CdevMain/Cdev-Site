@@ -223,6 +223,13 @@
       .pay-chip { display: inline-flex; align-items: center; gap: .3rem; white-space: nowrap; border-radius: 999px; padding: .18rem .55rem; font-family: var(--fm); font-size: 10.5px; letter-spacing: .04em; border: 1px solid transparent; }
       .pay-chip svg { width: .75rem; height: .75rem; }
       .pay-PAGO { color: #7fd1a8; background: rgba(46,160,110,.12); border-color: rgba(46,160,110,.35); }
+      .pay-PARCIAL { color: #f0a15c; background: rgba(224,123,36,.14); border-color: rgba(224,123,36,.45); }
+      .md-pay-state .ps { display: grid; gap: .25rem; font-size: var(--fs-xs); color: #a9c0c8; padding: .55rem .65rem; border-radius: 8px; background: rgba(30,98,117,.1); border: 1px solid var(--line); }
+      .md-pay-state .ps b { color: #e8f2f5; font-weight: 600; }
+      .md-pay-state .ps.ok { background: rgba(46,160,110,.1); border-color: rgba(46,160,110,.3); }
+      .md-pay-state .ps.warn { background: rgba(224,123,36,.1); border-color: rgba(224,123,36,.4); }
+      .md-pay-state .ps .due-left { color: #f0a15c; }
+      .md-pay .mc-label { display: block; margin-bottom: .1rem; }
       .pay-ATRASADO { color: #f0a15c; background: rgba(224,123,36,.14); border-color: rgba(224,123,36,.45); }
       .pay-A_VENCER { color: #e8d27a; background: rgba(214,180,60,.1); border-color: rgba(214,180,60,.35); }
       .pay-EM_ANDAMENTO { color: #6fb7cc; background: rgba(43,139,165,.1); border-color: rgba(43,139,165,.35); }
@@ -235,6 +242,11 @@
       .pay-table td.actions, .pay-table th.actions { text-align: right !important; white-space: nowrap; }
       .pay-table thead th:first-child, .pay-table tbody td:first-child, .pay-table tfoot td:first-child { position: static; }
       .pay-table td { vertical-align: middle; }
+      .pay-table td.pay-info { white-space: normal; max-width: 14rem; }
+      .pay-table td.pay-info .sub { white-space: normal; overflow-wrap: anywhere; line-height: 1.45; }
+      .pay-table th.actions { white-space: normal; }
+      .pay-table th.actions .btn { white-space: normal; text-align: center; max-width: 9.5rem; }
+      .pay-acts { display: inline-flex; flex-direction: column; align-items: stretch; gap: .3rem; }
       .pay-table td b { font-family: var(--fm); font-weight: 500; }
       .pay-table td .sub { display: block; margin-top: .15rem; color: #6f8d98; font-family: var(--fm); font-size: 11px; white-space: nowrap; }
       .pay-table tbody td:first-child .month-link { color: #e8f2f5; font-weight: 700; text-transform: none; letter-spacing: 0; font-family: var(--fd); font-size: var(--fs-sm); }
@@ -406,6 +418,10 @@
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"/><path d="M2 10h20"/></svg>
                     Comissões <span id="pay-badge" class="pay-chip pay-ATRASADO" hidden></span>
                   </button>
+                  <button class="segmented-tab" data-view="calendar" role="tab" aria-selected="false">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+                    Calendário
+                  </button>
                   <button class="segmented-tab" data-view="table" role="tab" aria-selected="false">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M3 9h18M3 15h18"/><rect width="18" height="18" x="3" y="3" rx="2"/></svg>
                     Tabela completa
@@ -433,6 +449,8 @@
                   <table class="fin-table pay-table" id="pay-table"></table>
                 </div>
               </div>
+
+              <div id="view-calendar" class="view-body" hidden></div>
 
               <div id="view-table" class="view-body flush" hidden>
                 <div class="sub-bar">
@@ -464,7 +482,8 @@
   <script src="/assets/js/supabase.config.js"></script>
   <script src="/assets/js/cdev-auth.js?v=20260926b"></script>
   <script src="/assets/js/admin-shell.js?v=20260928"></script>
-  <script src="/assets/js/sheet-calc.js?v=20260929"></script>
-  <script src="/assets/js/dashboard.js?v=20261001"></script>
+  <script src="/assets/js/sheet-calc.js?v=20261016"></script>
+  <script src="/assets/js/airbnb-calendar.js?v=20261016"></script>
+  <script src="/assets/js/dashboard.js?v=20261016b"></script>
 </body>
 </html>

@@ -54,7 +54,7 @@
   };
 
   // Comissao do coanfitriao: vence no dia commission_due_day do mes seguinte.
-  // PAGO | SEM_VALOR | FUTURO | EM_ANDAMENTO | A_VENCER | ATRASADO
+  // PAGO | PARCIAL (registrado como pago, mas o valor pago e menor que a comissao total) | SEM_VALOR | FUTURO | EM_ANDAMENTO | A_VENCER | ATRASADO
   const ymd = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   const commissionDue = (sheet, row) => new Date(sheet.year, row.month_num, Math.min(28, Math.max(1, toNumber(sheet.commission_due_day) || 10)));
   const paymentStatus = (row, sheet, now = new Date()) => {
@@ -63,21 +63,27 @@
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const amount = Math.max(0, c.hostFee);
     const paidAmount = row.host_fee_paid_at ? (isEmpty(row.host_fee_paid_amount) ? amount : toNumber(row.host_fee_paid_amount)) : 0;
+    const remaining = row.host_fee_paid_at ? Math.max(0, amount - paidAmount) : amount;
     let key;
-    if (row.host_fee_paid_at) key = 'PAGO';
+    if (row.host_fee_paid_at) key = remaining >= 0.01 ? 'PARCIAL' : 'PAGO';
     else if (amount < 0.005) key = 'SEM_VALOR';
     else if (isFuture(sheet, row, now)) key = 'FUTURO';
     else if (sheet.year === now.getFullYear() && row.month_num === now.getMonth() + 1) key = 'EM_ANDAMENTO';
     else if (today > due) key = 'ATRASADO';
     else key = 'A_VENCER';
-    const daysLate = key === 'ATRASADO' ? Math.round((today - due) / 86400000) : 0;
-    return { key, amount, paidAmount, due, dueISO: ymd(due), daysLate, difference: key === 'PAGO' ? paidAmount - amount : 0 };
+    const late = key === 'ATRASADO' || (key === 'PARCIAL' && today > due);
+    const daysLate = late ? Math.round((today - due) / 86400000) : 0;
+    return { key, amount, paidAmount, remaining: key === 'PAGO' ? 0 : remaining, late, paidAt: row.host_fee_paid_at || null, due, dueISO: ymd(due), daysLate, difference: key === 'PAGO' ? paidAmount - amount : 0 };
   };
   const paymentTotals = (sheet, months, now = new Date()) => {
     const t = { received: 0, pending: 0, overdue: 0, overdueCount: 0, pendingCount: 0, paidCount: 0 };
     (months || []).forEach((row) => {
       const p = paymentStatus(row, sheet, now);
       if (p.key === 'PAGO') { t.received += p.paidAmount; t.paidCount += 1; }
+      else if (p.key === 'PARCIAL') {
+        t.received += p.paidAmount; t.pending += p.remaining; t.pendingCount += 1; t.partialCount = (t.partialCount || 0) + 1;
+        if (p.late) { t.overdue += p.remaining; t.overdueCount += 1; }
+      }
       else if (p.key === 'ATRASADO') { t.overdue += p.amount; t.overdueCount += 1; t.pending += p.amount; t.pendingCount += 1; }
       else if (p.key === 'A_VENCER' || p.key === 'EM_ANDAMENTO') { t.pending += p.amount; t.pendingCount += 1; }
     });
